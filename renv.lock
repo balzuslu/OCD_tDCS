@@ -11,10 +11,10 @@
   "Packages": {
     "MASS": {
       "Package": "MASS",
-      "Version": "7.3-51.4",
+      "Version": "7.3-53",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "a94714e63996bc284b8795ec50defc07"
+      "Hash": "d1bc1c8e9c0ace57ec9ffea01021d45f"
     },
     "Matrix": {
       "Package": "Matrix",
@@ -86,6 +86,13 @@
       "Repository": "CRAN",
       "Hash": "b7d7f1e926dfcd57c74ce93f5c048e80"
     },
+    "class": {
+      "Package": "class",
+      "Version": "7.3-15",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "4fba6a022803b6c3f30fd023be3fa818"
+    },
     "cli": {
       "Package": "cli",
       "Version": "2.1.0",
@@ -99,6 +106,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "6b436e95723d1f0e861224dd9b094dfb"
+    },
+    "cowplot": {
+      "Package": "cowplot",
+      "Version": "1.1.0",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "870b41daf1a4c3640f2e3407a40c31b9"
     },
     "crayon": {
       "Package": "crayon",
@@ -141,6 +155,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "d0509913b27ea898189ee664b6030dc2"
+    },
+    "e1071": {
+      "Package": "e1071",
+      "Version": "1.7-4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "7e9462e3e3e565f51fbec181dfcab890"
     },
     "ellipsis": {
       "Package": "ellipsis",
