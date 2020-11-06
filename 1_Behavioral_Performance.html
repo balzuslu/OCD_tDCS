@@ -1,0 +1,2322 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Behavioral Performance</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/united.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="web_style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+.tocify-subheader {
+  display: inline;
+}
+.tocify-subheader .tocify-item {
+  font-size: 0.95em;
+}
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Efficacy of tDCS in modulating neurocognitive markers of OCD</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">
+    <span class="glyphicon glyphicon-info-sign"></span>
+     
+    Task &amp; Data
+  </a>
+</li>
+<li>
+  <a href="1_Behavioral_Performance.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-hand-up"></span>
+     
+    Behavioral Performance
+  </a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="mailto:luisa.balzus@hu-berlin.de">
+    <span class="fa fa-envelope fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Behavioral Performance</h1>
+
+</div>
+
+
+<!-- Set general settings -->
+<p><br><br></p>
+<div id="data-cleaning" class="section level2">
+<h2>Data Cleaning</h2>
+<hr />
+<pre class="r"><code># Load data
+load(file = &quot;./data/Single_Trial_Data.rda&quot;)
+
+
+# Exclude missing responses, RT outliers and trials with ERP artifacts
+single_trial_data_clean &lt;- single_trial_data %&gt;%
+  dplyr::filter(
+      response_type != &quot;miss&quot; &amp;
+      rt_invalid  == FALSE &amp;
+      !is.nan(MFN_0_100_FCz)
+  ) # (54998 of 55680 trials left)
+
+
+# Create some variables: numeric word accuracy, correctness of previous response, post-error accuracy (pea), and post-correct accuracy (pca)
+single_trial_data_clean &lt;- single_trial_data_clean %&gt;%
+  dplyr::mutate(
+    accuracy_numeric = ifelse(response_type == &quot;correct&quot;, 1, 0), 
+ #   previous_trial_correct = lag(response_type == &quot;correct&quot;),
+    pea = ifelse(lag(response_type == &quot;correct&quot;) == FALSE &amp; response_type == &quot;correct&quot;, 1,
+                 ifelse(lag(response_type == &quot;correct&quot;) == FALSE &amp; response_type == &quot;incorrect&quot;, 0, NA)),
+    pca = ifelse(lag(response_type == &quot;correct&quot;) == TRUE &amp; response_type == &quot;correct&quot;, 1,
+                 ifelse(lag(response_type == &quot;correct&quot;) == TRUE &amp; response_type == &quot;incorrect&quot;, 0, NA))    
+    )
+
+
+# Create column with single-trial PES (RTpost-error − RTpre-error for all CCEC sequences)
+single_trial_data_clean$pes &lt;- NA
+ 
+for (i in 3:(nrow(single_trial_data_clean)-1)) {
+  if (single_trial_data_clean[i,]$response_type == &quot;incorrect&quot; &amp; 
+      single_trial_data_clean[(i+1),]$response_type == &quot;correct&quot; &amp;     
+      single_trial_data_clean[(i-1),]$response_type == &quot;correct&quot; &amp; 
+      single_trial_data_clean[(i-2),]$response_type == &quot;correct&quot;) {
+    single_trial_data_clean[i,]$pes &lt;- (single_trial_data_clean[(i+1),]$rt) - (single_trial_data_clean[(i-1),]$rt)
+  }
+}
+
+
+# Make categorical variables factors
+single_trial_data_clean$participant_id     &lt;- as.factor(single_trial_data_clean$participant_id) 
+single_trial_data_clean$group              &lt;- as.factor(single_trial_data_clean$group)
+single_trial_data_clean$session            &lt;- as.factor(single_trial_data_clean$session)
+single_trial_data_clean$stimulation        &lt;- as.factor(single_trial_data_clean$stimulation)
+single_trial_data_clean$stimulus_type      &lt;- as.factor(single_trial_data_clean$stimulus_type)
+single_trial_data_clean$response_type      &lt;- as.factor(single_trial_data_clean$response_type)
+single_trial_data_clean$response_type_2nd  &lt;- as.factor(single_trial_data_clean$response_type_2nd)</code></pre>
+<p>Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch.</p>
+<pre class="r"><code># Calculate percentage of excluded trials
+excluded_trials &lt;- single_trial_data %&gt;%
+  group_by(group, participant_id, session) %&gt;%
+  dplyr::summarize(
+    invalid_rt   = sum(!is.na(rt_invalid) &amp; rt_invalid != FALSE) / length(participant_id) * 100,
+    misses       = sum(response_type == &quot;miss&quot;) / length(participant_id) * 100,
+    EEG_artifact = sum(is.nan(MFN_0_100_FCz)) / length(participant_id) * 100,
+   ) %&gt;%
+  group_by(group) %&gt;%
+  # Calculate M and SD of the variables
+  dplyr::summarise_each(list(mean,sd,min,max), -c(participant_id, session))
+
+
+# Create dataframe and change order of rows for display
+table_excluded_trials &lt;- as.data.frame(excluded_trials[,c(1,2,5,8,11,3,6,9,12,4,7,10,13)])
+
+
+# Display percentage of excluded trials
+my_table_template(table_excluded_trials,
+  caption = &quot;Excluded Trials (in %)&quot;, 
+  col_names = c(&quot;Group&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;min&quot;, &quot;max&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;min&quot;, &quot;max&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;min&quot;, &quot;max&quot;),
+  header_above_config = c(&quot; &quot; = 1, &quot;RT &lt; 100 / &gt; 800 ms&quot; = 4, &quot;Misses&quot; = 4, &quot;EEG artifact&quot; = 4)
+)</code></pre>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Excluded Trials (in %)
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+RT &lt; 100 / &gt; 800 ms
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Misses
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+EEG artifact
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+Group
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:right;">
+SD
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:right;">
+SD
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:right;">
+SD
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+HC
+</td>
+<td style="text-align:right;">
+0.03
+</td>
+<td style="text-align:right;">
+0.10
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.42
+</td>
+<td style="text-align:right;">
+0.66
+</td>
+<td style="text-align:right;">
+1.07
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+5.00
+</td>
+<td style="text-align:right;">
+0.29
+</td>
+<td style="text-align:right;">
+0.50
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+2.08
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+OCD
+</td>
+<td style="text-align:right;">
+0.04
+</td>
+<td style="text-align:right;">
+0.11
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.62
+</td>
+<td style="text-align:right;">
+0.60
+</td>
+<td style="text-align:right;">
+0.75
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+2.71
+</td>
+<td style="text-align:right;">
+0.84
+</td>
+<td style="text-align:right;">
+1.18
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+5.42
+</td>
+</tr>
+</tbody>
+</table>
+<p><br><br></p>
+</div>
+<div id="descriptive-statistics" class="section level2">
+<h2>Descriptive Statistics</h2>
+<hr />
+<div id="means-and-cis" class="section level3">
+<h3>Means and CIs</h3>
+<pre class="r"><code>##### RT
+# Calculate descriptive statistics for RT per condition
+descriptive_statistics_rt &lt;- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = &quot;rt&quot;,
+  withinvars    = c(&quot;response_type&quot;, &quot;stimulus_type&quot;, &quot;stimulation&quot;, &quot;session&quot;),
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+) %&gt;%
+  # Round numeric values to two decimals
+  dplyr::mutate_if(is.numeric, round, digits = 2
+  ) %&gt;%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_rt       = paste0(&quot;[&quot;, rt - ci, &quot;, &quot;, rt + ci, &quot;]&quot;)
+  ) %&gt;%
+  # Select columns to be displayed
+  dplyr::select(c(&quot;group&quot;, &quot;response_type&quot;, &quot;stimulus_type&quot;, &quot;stimulation&quot;, &quot;session&quot;, &quot;rt&quot;, &quot;ci_rt&quot;, &quot;ci&quot;))
+
+
+# Split and re-merge RT table to display both groups next to each other
+descriptive_statistics_rt_display &lt;-  split(descriptive_statistics_rt, descriptive_statistics_rt$group)
+descriptive_statistics_rt_display &lt;-  left_join(descriptive_statistics_rt_display$HC, descriptive_statistics_rt_display$OCD, by = c(&quot;stimulus_type&quot;, &quot;response_type&quot;, &quot;stimulation&quot;, &quot;session&quot;))
+
+
+# Display descriptive statistics for RT (and select columns)
+my_table_template(descriptive_statistics_rt_display[,c(2:7,10:11)],
+  caption = &quot;Behavioral Performance: RT (in ms)&quot;,
+  col_names = c(&quot;Response type&quot;, &quot;Stimulus type&quot;, &quot;Stimulation&quot;, &quot;Session&quot;, &quot;M&quot;, &quot;95% CI&quot;, &quot;M&quot;, &quot;95% CI&quot;),
+  header_above_config = c(&quot; &quot; = 4, &quot;HC&quot; = 2, &quot;OCD&quot; = 2),
+  footnote_config = c(general = &quot;Confidence intervals are adjusted for within-participant designs as described by Morey (2008).&quot;)
+)
+
+
+
+##### Accuracy
+# Calculate descriptive statistics for accuracy per condition
+descriptive_statistics_accuracy &lt;- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = &quot;accuracy_numeric&quot;,
+  withinvars    = c(&quot;stimulus_type&quot;, &quot;stimulation&quot;, &quot;session&quot;),
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+) %&gt;%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100)
+  )  %&gt;%  
+  # Round numeric values to two decimals
+  dplyr::mutate_if(is.numeric, round, digits = 2
+  ) %&gt;%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_accuracy = paste0(&quot;[&quot;, accuracy_numeric - ci, &quot;, &quot;, accuracy_numeric + ci, &quot;]&quot;)
+  ) %&gt;%
+  # Select columns to be displayed
+  dplyr::select(c(&quot;group&quot;, &quot;stimulus_type&quot;, &quot;stimulation&quot;, &quot;session&quot;, &quot;accuracy_numeric&quot;, &quot;ci_accuracy&quot;, &quot;ci&quot;))
+
+
+# Split and re-merge accuracy table to display both groups next to each other
+descriptive_statistics_accuracy_display &lt;-  split(descriptive_statistics_accuracy, descriptive_statistics_accuracy$group)
+descriptive_statistics_accuracy_display &lt;-  left_join(descriptive_statistics_accuracy_display$HC, descriptive_statistics_accuracy_display$OCD, by = c(&quot;stimulus_type&quot;, &quot;stimulation&quot;, &quot;session&quot;))
+
+
+# Display descriptive statistics for Accuracy (and select columns)
+my_table_template(descriptive_statistics_accuracy_display[,c(2:6,9:10)],
+  caption = &quot;Behavioral Performance: Accuracy (in %)&quot;,
+  col_names = c(&quot;Stimulus type&quot;, &quot;Stimulation&quot;, &quot;Session&quot;, &quot;M&quot;, &quot;95% CI&quot;, &quot;M&quot;, &quot;95% CI&quot;),
+  header_above_config = c(&quot; &quot; = 3, &quot;HC&quot; = 2, &quot;OCD&quot; = 2),
+  footnote_config = c(general = &quot;Confidence intervals are adjusted for within-participant designs as described by Morey (2008).&quot;)
+)
+
+
+
+##### PES
+# Calculate descriptive statistics for PES per condition
+descriptive_statistics_pes &lt;- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+  measurevar    = &quot;pes&quot;,
+  withinvars    = c(&quot;stimulation&quot;, &quot;session&quot;),
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+) %&gt;%
+  # Round numeric values to two decimals
+  dplyr::mutate_if(is.numeric, round, digits = 2
+  ) %&gt;%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_pca = paste0(&quot;[&quot;, pes - ci, &quot;, &quot;, pes + ci, &quot;]&quot;)
+  )
+
+
+# Split and re-merge PEA table to display both groups next to each other
+descriptive_statistics_pes_display &lt;-  split(descriptive_statistics_pes, descriptive_statistics_pes$group)
+descriptive_statistics_pes_display &lt;-  left_join(descriptive_statistics_pes_display$HC, descriptive_statistics_pes_display$OCD, by = c(&quot;stimulation&quot;, &quot;session&quot;))
+
+
+# Display descriptive statistics for PES (and select columns)
+my_table_template(descriptive_statistics_pes_display[,c(2,3,5,10,13,18)],
+  caption = &quot;Behavioral Performance: Post-Error Slowing (in %)&quot;,
+  col_names = c(&quot;Stimulation&quot;, &quot;Session&quot;, &quot;M&quot;, &quot;95% CI&quot;, &quot;M&quot;, &quot;95% CI&quot;),
+  header_above_config = c(&quot; &quot; = 2, &quot;HC&quot; = 2, &quot;OCD&quot; = 2),
+  footnote_config = c(general = &quot;Confidence intervals are adjusted for within-participant designs as described by Morey (2008).&quot;)
+)
+
+
+
+##### PEA
+# Calculate descriptive statistics for post-error accuracy per condition
+descriptive_statistics_pea &lt;- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pea),],
+  measurevar    = &quot;pea&quot;,
+  withinvars    = c(&quot;stimulation&quot;, &quot;session&quot;),
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+) %&gt;%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100)
+  )  %&gt;%  
+  # Round numeric values to two decimals
+  dplyr::mutate_if(is.numeric, round, digits = 2
+  ) %&gt;%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_pea = paste0(&quot;[&quot;, pea - ci, &quot;, &quot;, pea + ci, &quot;]&quot;)
+  )
+
+# Split and re-merge PEA table to display both groups next to each other
+descriptive_statistics_pea_display &lt;-  split(descriptive_statistics_pea, descriptive_statistics_pea$group)
+descriptive_statistics_pea_display &lt;-  left_join(descriptive_statistics_pea_display$HC, descriptive_statistics_pea_display$OCD, by = c(&quot;stimulation&quot;, &quot;session&quot;))
+
+
+# Display descriptive statistics for PEA (and select columns)
+my_table_template(descriptive_statistics_pea_display[,c(2,3,5,10,13,18)],
+  caption = &quot;Behavioral Performance: Post-Error Accuracy (in %)&quot;,
+  col_names = c(&quot;Stimulation&quot;, &quot;Session&quot;, &quot;M&quot;, &quot;95% CI&quot;, &quot;M&quot;, &quot;95% CI&quot;),
+  header_above_config = c(&quot; &quot; = 2, &quot;HC&quot; = 2, &quot;OCD&quot; = 2),
+  footnote_config = c(general = &quot;Confidence intervals are adjusted for within-participant designs as described by Morey (2008).&quot;)
+)
+
+
+
+##### PCA
+# Calculate descriptive statistics for post-correct accuracy per condition
+descriptive_statistics_pca &lt;- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pca),],
+  measurevar    = &quot;pca&quot;,
+  withinvars    = c(&quot;stimulation&quot;, &quot;session&quot;),
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+) %&gt;%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100)
+  )  %&gt;%  
+  # Round numeric values to two decimals
+  dplyr::mutate_if(is.numeric, round, digits = 2
+  ) %&gt;%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_pca = paste0(&quot;[&quot;, pca - ci, &quot;, &quot;, pca + ci, &quot;]&quot;)
+  )
+
+
+# Split and re-merge PCA table to display both groups next to each other
+descriptive_statistics_pca_display &lt;-  split(descriptive_statistics_pca, descriptive_statistics_pca$group)
+descriptive_statistics_pca_display &lt;-  left_join(descriptive_statistics_pca_display$HC, descriptive_statistics_pca_display$OCD, by = c(&quot;stimulation&quot;, &quot;session&quot;))
+
+
+# Display descriptive statistics for PCA (and select columns)
+my_table_template(descriptive_statistics_pca_display[,c(2,3,5,10,13,18)],
+  caption = &quot;Behavioral Performance: Post-Correct Accuracy (in %)&quot;,
+  col_names = c(&quot;Stimulation&quot;, &quot;Session&quot;, &quot;M&quot;, &quot;95% CI&quot;, &quot;M&quot;, &quot;95% CI&quot;),
+  header_above_config = c(&quot; &quot; = 2, &quot;HC&quot; = 2, &quot;OCD&quot; = 2),
+  footnote_config = c(general = &quot;Confidence intervals are adjusted for within-participant designs as described by Morey (2008).&quot;)
+)</code></pre>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; border-bottom: 0;">
+<caption style="font-size: initial !important;">
+Behavioral Performance: RT (in ms)
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="4">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+HC
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+OCD
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+Response type
+</th>
+<th style="text-align:left;">
+Stimulus type
+</th>
+<th style="text-align:left;">
+Stimulation
+</th>
+<th style="text-align:left;">
+Session
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+correct
+</td>
+<td style="text-align:left;">
+congruent
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+370.19
+</td>
+<td style="text-align:left;">
+[368.1, 372.28]
+</td>
+<td style="text-align:right;">
+395.53
+</td>
+<td style="text-align:left;">
+[393.1, 397.96]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+correct
+</td>
+<td style="text-align:left;">
+congruent
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+376.26
+</td>
+<td style="text-align:left;">
+[374.15, 378.37]
+</td>
+<td style="text-align:right;">
+381.49
+</td>
+<td style="text-align:left;">
+[379.22, 383.76]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+correct
+</td>
+<td style="text-align:left;">
+congruent
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+384.65
+</td>
+<td style="text-align:left;">
+[382.43, 386.87]
+</td>
+<td style="text-align:right;">
+398.52
+</td>
+<td style="text-align:left;">
+[395.89, 401.15]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+correct
+</td>
+<td style="text-align:left;">
+congruent
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+357.55
+</td>
+<td style="text-align:left;">
+[355.58, 359.52]
+</td>
+<td style="text-align:right;">
+370.95
+</td>
+<td style="text-align:left;">
+[369.08, 372.82]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+correct
+</td>
+<td style="text-align:left;">
+incongruent
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+432.26
+</td>
+<td style="text-align:left;">
+[429.95, 434.57]
+</td>
+<td style="text-align:right;">
+451.13
+</td>
+<td style="text-align:left;">
+[448.64, 453.62]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+correct
+</td>
+<td style="text-align:left;">
+incongruent
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+431.80
+</td>
+<td style="text-align:left;">
+[429.58, 434.02]
+</td>
+<td style="text-align:right;">
+435.59
+</td>
+<td style="text-align:left;">
+[433.16, 438.02]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+correct
+</td>
+<td style="text-align:left;">
+incongruent
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+447.19
+</td>
+<td style="text-align:left;">
+[444.87, 449.51]
+</td>
+<td style="text-align:right;">
+452.79
+</td>
+<td style="text-align:left;">
+[450.08, 455.5]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+correct
+</td>
+<td style="text-align:left;">
+incongruent
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+423.06
+</td>
+<td style="text-align:left;">
+[420.8, 425.32]
+</td>
+<td style="text-align:right;">
+426.78
+</td>
+<td style="text-align:left;">
+[424.63, 428.93]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incorrect
+</td>
+<td style="text-align:left;">
+congruent
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+344.44
+</td>
+<td style="text-align:left;">
+[317.52, 371.36]
+</td>
+<td style="text-align:right;">
+338.38
+</td>
+<td style="text-align:left;">
+[315.66, 361.1]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incorrect
+</td>
+<td style="text-align:left;">
+congruent
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+359.15
+</td>
+<td style="text-align:left;">
+[320.23, 398.07]
+</td>
+<td style="text-align:right;">
+385.73
+</td>
+<td style="text-align:left;">
+[357.39, 414.07]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incorrect
+</td>
+<td style="text-align:left;">
+congruent
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+334.06
+</td>
+<td style="text-align:left;">
+[309.35, 358.77]
+</td>
+<td style="text-align:right;">
+354.80
+</td>
+<td style="text-align:left;">
+[329.89, 379.71]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incorrect
+</td>
+<td style="text-align:left;">
+congruent
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+322.58
+</td>
+<td style="text-align:left;">
+[289.72, 355.44]
+</td>
+<td style="text-align:right;">
+355.52
+</td>
+<td style="text-align:left;">
+[325.22, 385.82]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incorrect
+</td>
+<td style="text-align:left;">
+incongruent
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+326.34
+</td>
+<td style="text-align:left;">
+[321.36, 331.32]
+</td>
+<td style="text-align:right;">
+341.48
+</td>
+<td style="text-align:left;">
+[335.43, 347.53]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incorrect
+</td>
+<td style="text-align:left;">
+incongruent
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+352.19
+</td>
+<td style="text-align:left;">
+[344.64, 359.74]
+</td>
+<td style="text-align:right;">
+345.75
+</td>
+<td style="text-align:left;">
+[338.49, 353.01]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incorrect
+</td>
+<td style="text-align:left;">
+incongruent
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+343.78
+</td>
+<td style="text-align:left;">
+[335.75, 351.81]
+</td>
+<td style="text-align:right;">
+346.77
+</td>
+<td style="text-align:left;">
+[339.4, 354.14]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incorrect
+</td>
+<td style="text-align:left;">
+incongruent
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+326.69
+</td>
+<td style="text-align:left;">
+[321.93, 331.45]
+</td>
+<td style="text-align:right;">
+340.29
+</td>
+<td style="text-align:left;">
+[335.02, 345.56]
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<span style="font-style: italic;">Note: </span>
+</td>
+</tr>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<sup></sup> Confidence intervals are adjusted for within-participant designs as described by Morey (2008).
+</td>
+</tr>
+</tfoot>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; border-bottom: 0;">
+<caption style="font-size: initial !important;">
+Behavioral Performance: Accuracy (in %)
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="3">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+HC
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+OCD
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+Stimulus type
+</th>
+<th style="text-align:left;">
+Stimulation
+</th>
+<th style="text-align:left;">
+Session
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+congruent
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+98.77
+</td>
+<td style="text-align:left;">
+[98.36, 99.18]
+</td>
+<td style="text-align:right;">
+98.46
+</td>
+<td style="text-align:left;">
+[98.03, 98.89]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+congruent
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+98.85
+</td>
+<td style="text-align:left;">
+[98.47, 99.23]
+</td>
+<td style="text-align:right;">
+98.68
+</td>
+<td style="text-align:left;">
+[98.26, 99.1]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+congruent
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+98.54
+</td>
+<td style="text-align:left;">
+[98.12, 98.96]
+</td>
+<td style="text-align:right;">
+98.18
+</td>
+<td style="text-align:left;">
+[97.69, 98.67]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+congruent
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+99.01
+</td>
+<td style="text-align:left;">
+[98.64, 99.38]
+</td>
+<td style="text-align:right;">
+98.70
+</td>
+<td style="text-align:left;">
+[98.3, 99.1]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incongruent
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+87.02
+</td>
+<td style="text-align:left;">
+[85.81, 88.23]
+</td>
+<td style="text-align:right;">
+91.44
+</td>
+<td style="text-align:left;">
+[90.45, 92.43]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incongruent
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+88.74
+</td>
+<td style="text-align:left;">
+[87.64, 89.84]
+</td>
+<td style="text-align:right;">
+90.41
+</td>
+<td style="text-align:left;">
+[89.35, 91.47]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incongruent
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+90.10
+</td>
+<td style="text-align:left;">
+[89.06, 91.14]
+</td>
+<td style="text-align:right;">
+90.89
+</td>
+<td style="text-align:left;">
+[89.85, 91.93]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incongruent
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+86.32
+</td>
+<td style="text-align:left;">
+[85.08, 87.56]
+</td>
+<td style="text-align:right;">
+89.31
+</td>
+<td style="text-align:left;">
+[88.22, 90.4]
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<span style="font-style: italic;">Note: </span>
+</td>
+</tr>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<sup></sup> Confidence intervals are adjusted for within-participant designs as described by Morey (2008).
+</td>
+</tr>
+</tfoot>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; border-bottom: 0;">
+<caption style="font-size: initial !important;">
+Behavioral Performance: Post-Error Slowing (in %)
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="2">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+HC
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+OCD
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+Stimulation
+</th>
+<th style="text-align:left;">
+Session
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+38.40
+</td>
+<td style="text-align:left;">
+[28.33, 48.47]
+</td>
+<td style="text-align:right;">
+47.26
+</td>
+<td style="text-align:left;">
+[34.96, 59.56]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+21.65
+</td>
+<td style="text-align:left;">
+[9.97, 33.33]
+</td>
+<td style="text-align:right;">
+33.84
+</td>
+<td style="text-align:left;">
+[21.46, 46.22]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+42.42
+</td>
+<td style="text-align:left;">
+[29.03, 55.81]
+</td>
+<td style="text-align:right;">
+50.07
+</td>
+<td style="text-align:left;">
+[36.63, 63.51]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+23.36
+</td>
+<td style="text-align:left;">
+[12.83, 33.89]
+</td>
+<td style="text-align:right;">
+27.38
+</td>
+<td style="text-align:left;">
+[16.74, 38.02]
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<span style="font-style: italic;">Note: </span>
+</td>
+</tr>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<sup></sup> Confidence intervals are adjusted for within-participant designs as described by Morey (2008).
+</td>
+</tr>
+</tfoot>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; border-bottom: 0;">
+<caption style="font-size: initial !important;">
+Behavioral Performance: Post-Error Accuracy (in %)
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="2">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+HC
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+OCD
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+Stimulation
+</th>
+<th style="text-align:left;">
+Session
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+95.79
+</td>
+<td style="text-align:left;">
+[93.77, 97.81]
+</td>
+<td style="text-align:right;">
+95.81
+</td>
+<td style="text-align:left;">
+[93.45, 98.17]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+93.82
+</td>
+<td style="text-align:left;">
+[91.23, 96.41]
+</td>
+<td style="text-align:right;">
+93.41
+</td>
+<td style="text-align:left;">
+[90.51, 96.31]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+94.83
+</td>
+<td style="text-align:left;">
+[92.39, 97.27]
+</td>
+<td style="text-align:right;">
+96.94
+</td>
+<td style="text-align:left;">
+[94.87, 99.01]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+94.48
+</td>
+<td style="text-align:left;">
+[92.14, 96.82]
+</td>
+<td style="text-align:right;">
+96.22
+</td>
+<td style="text-align:left;">
+[94.14, 98.3]
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<span style="font-style: italic;">Note: </span>
+</td>
+</tr>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<sup></sup> Confidence intervals are adjusted for within-participant designs as described by Morey (2008).
+</td>
+</tr>
+</tfoot>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; border-bottom: 0;">
+<caption style="font-size: initial !important;">
+Behavioral Performance: Post-Correct Accuracy (in %)
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="2">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+HC
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+OCD
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+Stimulation
+</th>
+<th style="text-align:left;">
+Session
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+92.68
+</td>
+<td style="text-align:left;">
+[91.93, 93.43]
+</td>
+<td style="text-align:right;">
+94.92
+</td>
+<td style="text-align:left;">
+[94.32, 95.52]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+93.80
+</td>
+<td style="text-align:left;">
+[93.13, 94.47]
+</td>
+<td style="text-align:right;">
+94.61
+</td>
+<td style="text-align:left;">
+[93.97, 95.25]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+94.31
+</td>
+<td style="text-align:left;">
+[93.67, 94.95]
+</td>
+<td style="text-align:right;">
+94.41
+</td>
+<td style="text-align:left;">
+[93.75, 95.07]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+92.52
+</td>
+<td style="text-align:left;">
+[91.77, 93.27]
+</td>
+<td style="text-align:right;">
+93.87
+</td>
+<td style="text-align:left;">
+[93.21, 94.53]
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<span style="font-style: italic;">Note: </span>
+</td>
+</tr>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<sup></sup> Confidence intervals are adjusted for within-participant designs as described by Morey (2008).
+</td>
+</tr>
+</tfoot>
+</table>
+<p><br> To quantify PES robust, we used the method proposed by Dutilh et al. (2012). “A single-trial value of PES was computed by performing a pairwise comparison of correct trials around each error (RTpost-error − RTpre-error). The mean PES was computed by averaging these differences. This method ensures that post-error and post-correct trials originate from the same time periods in the data set and thus controls for global fluctuations in motivation and attention (Dutilh et al., 2012).” To avoid the effects of consecutive errors on RTs, we considered only error trials that were preceded by at least two correct responses and followed by at least one correct response (i.e., sequences of CCEC trials, where ‘C’ represents correct trials and ‘E’ represents error trials). We further quantified accuracy following incorrect and correct responses (post-error accuracy and post-correct accuracy). <br><br></p>
+</div>
+<div id="plots" class="section level3">
+<h3>Plots</h3>
+<pre class="r"><code># Calcuate means and CIs adjusted for within-participant factors (without session)
+descriptive_statistics_rt_no_session &lt;- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = &quot;rt&quot;,
+  withinvars    = c(&quot;response_type&quot;, &quot;stimulus_type&quot;, &quot;stimulation&quot;),
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+)
+
+descriptive_statistics_accuracy_no_session &lt;- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = &quot;accuracy_numeric&quot;,
+  withinvars    = c(&quot;stimulus_type&quot;, &quot;stimulation&quot;),
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+) %&gt;%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100))
+
+
+descriptive_statistics_pes_no_session &lt;- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+  measurevar    = &quot;pes&quot;,
+  withinvars    = &quot;stimulation&quot;,
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+)
+
+descriptive_statistics_pea_no_session &lt;- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pea),],
+  measurevar    = &quot;pea&quot;,
+  withinvars    = &quot;stimulation&quot;,
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+) %&gt;%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100))
+
+descriptive_statistics_pca_no_session &lt;- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pca),],
+  measurevar    = &quot;pca&quot;,
+  withinvars    = &quot;stimulation&quot;,
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+) %&gt;%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100))
+
+
+# Create plot RT  
+plot_rt &lt;- ggplot(descriptive_statistics_rt_no_session, 
+                  aes(x = stimulation, y = rt, fill = group)) +
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
+  geom_errorbar(aes(ymax = rt + ci, ymin = rt - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;RT (ms)&quot;) +
+  coord_cartesian(ylim = c(200, 500)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;)  +
+  facet_wrap(.~ response_type + stimulus_type, nrow = 1) +
+  guides(fill = guide_legend(nrow = 1, title.position = &quot;left&quot;)) 
+
+  
+# Create plot accuracy
+plot_accuracy &lt;- ggplot(descriptive_statistics_accuracy_no_session, 
+                        aes(x = stimulation, y = accuracy_numeric, fill = group)) +
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
+  geom_errorbar(aes(ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci),
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Accuracy (%)&quot;) +
+  coord_cartesian(ylim = c(80, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group&quot;) +
+  facet_wrap(.~ stimulus_type, nrow = 1)
+
+
+# Create plot PES  
+plot_pes &lt;- ggplot(descriptive_statistics_pes_no_session, 
+                  aes(x = stimulation, y = pes, fill = group)) +
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
+  geom_errorbar(aes(ymax = pes + ci, ymin = pes - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-error slowing (ms)&quot;) +
+  coord_cartesian(ylim = c(0, 70)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) 
+
+
+# Create plot PEA
+plot_pea &lt;- ggplot(descriptive_statistics_pea_no_session, 
+                  aes(x = stimulation, y = pea, fill = group)) +
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
+  geom_errorbar(aes(ymax = pea + ci, ymin = pea - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-error accuracy (%)&quot;) +
+  coord_cartesian(ylim = c(80, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;)  
+
+
+# Create plot PCA
+plot_pca &lt;- ggplot(descriptive_statistics_pca_no_session, 
+                  aes(x = stimulation, y = pca, fill = group)) +
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
+  geom_errorbar(aes(ymax = pca + ci, ymin = pca - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-correct accuracy (%)&quot;) +
+  coord_cartesian(ylim = c(80, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;)  
+
+
+# Create common legend for plots (function from http://www.sthda.com/english/wiki/wiki.php?id_contents=7930#add-a-common-legend-for-multiple-ggplot2-graphs)
+get_legend &lt;- function(myggplot) {
+  tmp      &lt;- ggplot_gtable(ggplot_build(myggplot))
+  leg      &lt;- which(sapply(tmp$grobs, function(x) x$name) == &quot;guide-box&quot;)
+  legend   &lt;- tmp$grobs[[leg]]
+  return(legend)
+}
+legend    &lt;- get_legend(plot_rt)
+
+
+# Remove previous legends from plots
+plot_rt       &lt;- plot_rt       + theme(legend.position = &quot;none&quot;)
+plot_accuracy &lt;- plot_accuracy + theme(legend.position = &quot;none&quot;)
+plot_pes      &lt;- plot_pes      + theme(legend.position = &quot;none&quot;)
+plot_pea      &lt;- plot_pea      + theme(legend.position = &quot;none&quot;)
+plot_pca      &lt;- plot_pca      + theme(legend.position = &quot;none&quot;)
+
+
+# Arrange plots
+figure_behav &lt;- ggdraw() +
+  draw_plot(plot_rt,       x =  0,   y = .5,  width = .65, height = .5) +
+  draw_plot(plot_accuracy, x = .65,  y = .5,  width = .35, height = .5) +
+  draw_plot(plot_pes,      x =  0,   y = .15, width = .33, height = .4) +
+  draw_plot(plot_pea,      x = .33,  y = .15, width = .33, height = .4) +
+  draw_plot(plot_pca,      x = .66,  y = .15, width = .33, height = .4) +
+  draw_plot(legend,        x = .27,  y = .05, width = .5,  height = .1)   +
+  draw_plot_label(c(&quot;A&quot;, &quot;B&quot;, &quot;C&quot;, &quot;D&quot;, &quot;E&quot;), c(0, .65, 0, .33, .66), c(1, 1, .585, .585, .585), size = 15)
+
+
+# Save plot
+ggsave(&quot;figure_behav.tiff&quot;, width = 16, height = 15, units = &quot;cm&quot;, dpi=600, compression = &quot;lzw&quot;)
+
+
+# Display plot
+figure_behav</code></pre>
+<div class="figure">
+<img src="1_Behavioral_Performance_files/figure-html/descriptive-statistics-plot-rt-acc-1.png" alt="Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulus type, response type, stimulation condition, and group. Error bars represent 95% confidence intervals adjusted for within-participant designs as described by Morey (2008)." width="768" />
+<p class="caption">
+Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulus type, response type, stimulation condition, and group. Error bars represent 95% confidence intervals adjusted for within-participant designs as described by Morey (2008).
+</p>
+</div>
+<p><br></p>
+</div>
+<div id="plots-including-session" class="section level3">
+<h3>Plots including session</h3>
+<pre class="r"><code># Create plot RT
+plot_rt_session &lt;- ggplot(descriptive_statistics_rt, 
+                  aes(x = stimulation, y = rt, fill = group)) +
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
+  geom_errorbar(aes(ymax = rt + ci, ymin = rt - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;RT (ms)&quot;) +
+  coord_cartesian(ylim = c(200, 500)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;)  +
+  facet_wrap(.~ response_type + stimulus_type + session, nrow = 1) +
+  guides(fill = guide_legend(nrow = 1, title.position = &quot;left&quot;)) 
+
+  
+# Create plot accuracy
+plot_accuracy_session &lt;- ggplot(descriptive_statistics_accuracy, 
+                        aes(x = stimulation, y = accuracy_numeric, fill = group)) +
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
+  geom_errorbar(aes(ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci),
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Accuracy (%)&quot;) +
+  coord_cartesian(ylim = c(80, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group&quot;) +
+  facet_wrap(.~ stimulus_type + session, nrow = 1)
+
+
+# Create plot PES  
+plot_pes_session &lt;- ggplot(descriptive_statistics_pes, 
+                  aes(x = stimulation, y = pes, fill = group)) +
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
+  geom_errorbar(aes(ymax = pes + ci, ymin = pes - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-error slowing (ms)&quot;) +
+  coord_cartesian(ylim = c(0, 70)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +  
+  facet_wrap(.~ session, nrow = 1)
+
+
+# Create plot PEA
+plot_pea_session &lt;- ggplot(descriptive_statistics_pea, 
+                  aes(x = stimulation, y = pea, fill = group)) +
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
+  geom_errorbar(aes(ymax = pea + ci, ymin = pea - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-error accuracy (%)&quot;) +
+  coord_cartesian(ylim = c(80, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;)  +  
+  facet_wrap(.~ session, nrow = 1)
+
+
+# Create plot PCA
+plot_pca_session &lt;- ggplot(descriptive_statistics_pca, 
+                  aes(x = stimulation, y = pca, fill = group)) +
+  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
+  geom_errorbar(aes(ymax = pca + ci, ymin = pca - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-correct accuracy (%)&quot;) +
+  coord_cartesian(ylim = c(80, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;)  +  
+  facet_wrap(.~ session, nrow = 1) 
+
+
+# Create common legend for plots (function from http://www.sthda.com/english/wiki/wiki.php?id_contents=7930#add-a-common-legend-for-multiple-ggplot2-graphs)
+get_legend &lt;- function(myggplot) {
+  tmp      &lt;- ggplot_gtable(ggplot_build(myggplot))
+  leg      &lt;- which(sapply(tmp$grobs, function(x) x$name) == &quot;guide-box&quot;)
+  legend   &lt;- tmp$grobs[[leg]]
+  return(legend)
+}
+legend    &lt;- get_legend(plot_rt_session)
+
+
+# Remove previous legends from plots
+plot_rt_session       &lt;- plot_rt_session       + theme(legend.position = &quot;none&quot;)
+plot_accuracy_session &lt;- plot_accuracy_session + theme(legend.position = &quot;none&quot;)
+plot_pes_session      &lt;- plot_pes_session      + theme(legend.position = &quot;none&quot;)
+plot_pea_session      &lt;- plot_pea_session      + theme(legend.position = &quot;none&quot;)
+plot_pca_session      &lt;- plot_pca_session      + theme(legend.position = &quot;none&quot;)
+
+
+# Arrange plots
+figure_behav_session &lt;- ggdraw() +
+  draw_plot(plot_rt_session,       x =  0,   y = .66,  width = 1,   height = .33) +
+  draw_plot(plot_accuracy_session, x =  0,   y = .33,  width = .5,  height = .33) +
+  draw_plot(legend,                x = .6,   y = .36,  width = .5,  height = .33) +
+  draw_plot(plot_pes_session,      x =  0,   y = .0,   width = .33, height = .33) +
+  draw_plot(plot_pea_session,      x = .33,  y = .0,   width = .33, height = .33) +
+  draw_plot(plot_pca_session,      x = .66,  y = .0,   width = .33, height = .33) +
+  draw_plot_label(c(&quot;A&quot;, &quot;B&quot;, &quot;C&quot;,&quot;D&quot;,&quot;E&quot;), c(0, 0, 0, 0.33, 0.66), c(1, .66, .33, .33, .33), size = 15)
+
+#plot_grid(plot_rt_session, plot_accuracy_session, plot_grid(plot_pes_session, plot_pea_session, plot_pca_session), labels = &quot;AUTO&quot;, rows = 2)
+
+# Save plot
+ ggsave(&quot;figure_behav_session.tiff&quot;, width = 20, height = 25, units = &quot;cm&quot;, dpi=600, compression = &quot;lzw&quot;)
+
+
+# Display plot
+figure_behav_session</code></pre>
+<div class="figure">
+<img src="1_Behavioral_Performance_files/figure-html/descriptive-statistics-plot-including-session-1.png" alt="Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulation condition, group, and session. Error bars represent 95% confidence intervals adjusted for within-participant designs as described by Morey (2008)." width="960" />
+<p class="caption">
+Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulation condition, group, and session. Error bars represent 95% confidence intervals adjusted for within-participant designs as described by Morey (2008).
+</p>
+</div>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = false;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
