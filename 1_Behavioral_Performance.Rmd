@@ -1,0 +1,610 @@
+---
+title: "Behavioral Performance"
+output: 
+  html_document
+
+---
+
+<!-- Set general settings -->
+
+```{r setup, include = FALSE}
+
+# Set general settings for markdown file
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  comment = "",
+  results = "hold"
+)
+
+
+# Clear environment
+rm(list = ls())
+
+
+# Enable/disable caching of time-consuming code chunks
+knitr_cache_enabled = TRUE
+
+
+# Load packages
+library(dplyr)      # for data manipulation
+library(knitr)      # for integrating computing and reporting in markdown
+library(kableExtra) # for customizing appearance of tables
+library(ggplot2)    # for plotting
+library(cowplot)    # for arranging plots
+
+
+# Load functions
+source("./functions/summarySEwithinO.R")  # Function provided by R-cookbook: http://www.cookbook-r.com/Graphs/Plotting_means_and_error_bars_(ggplot2)/
+source("./functions/my_table_template.R") # Function to create table template
+
+
+# Turn off scientific notation
+options(scipen = 999)
+
+
+# Set figure theme and colors
+my_figure_theme <- theme_classic(base_size = 11) +
+  theme(legend.position = "bottom", strip.background = element_rect(fill="grey95", linetype = "blank"), axis.ticks.x = element_blank(), axis.title.y = element_text(vjust = -0.5)) 
+# instad of theme_classic: + theme_apa(base_size = 11)
+
+my_figure_colors <- c("#8ea6b4", "#465369")
+
+
+
+# Prepare labels for (G)LMM tables
+
+```
+<br><br>
+
+## Data Cleaning
+***
+```{r load-and-clean-data, cache = TRUE}
+
+# Load data
+load(file = "./data/Single_Trial_Data.rda")
+
+
+# Exclude missing responses, RT outliers and trials with ERP artifacts
+single_trial_data_clean <- single_trial_data %>%
+  dplyr::filter(
+      response_type != "miss" &
+      rt_invalid  == FALSE &
+      !is.nan(MFN_0_100_FCz)
+  ) # (54998 of 55680 trials left)
+
+
+# Create some variables: numeric word accuracy, correctness of previous response, post-error accuracy (pea), and post-correct accuracy (pca)
+single_trial_data_clean <- single_trial_data_clean %>%
+  dplyr::mutate(
+    accuracy_numeric = ifelse(response_type == "correct", 1, 0), 
+ #   previous_trial_correct = lag(response_type == "correct"),
+    pea = ifelse(lag(response_type == "correct") == FALSE & response_type == "correct", 1,
+                 ifelse(lag(response_type == "correct") == FALSE & response_type == "incorrect", 0, NA)),
+    pca = ifelse(lag(response_type == "correct") == TRUE & response_type == "correct", 1,
+                 ifelse(lag(response_type == "correct") == TRUE & response_type == "incorrect", 0, NA))    
+    )
+
+
+# Create column with single-trial PES (RTpost-error − RTpre-error for all CCEC sequences)
+single_trial_data_clean$pes <- NA
+ 
+for (i in 3:(nrow(single_trial_data_clean)-1)) {
+  if (single_trial_data_clean[i,]$response_type == "incorrect" & 
+      single_trial_data_clean[(i+1),]$response_type == "correct" &     
+      single_trial_data_clean[(i-1),]$response_type == "correct" & 
+      single_trial_data_clean[(i-2),]$response_type == "correct") {
+    single_trial_data_clean[i,]$pes <- (single_trial_data_clean[(i+1),]$rt) - (single_trial_data_clean[(i-1),]$rt)
+  }
+}
+
+
+# Make categorical variables factors
+single_trial_data_clean$participant_id     <- as.factor(single_trial_data_clean$participant_id) 
+single_trial_data_clean$group              <- as.factor(single_trial_data_clean$group)
+single_trial_data_clean$session            <- as.factor(single_trial_data_clean$session)
+single_trial_data_clean$stimulation        <- as.factor(single_trial_data_clean$stimulation)
+single_trial_data_clean$stimulus_type      <- as.factor(single_trial_data_clean$stimulus_type)
+single_trial_data_clean$response_type      <- as.factor(single_trial_data_clean$response_type)
+single_trial_data_clean$response_type_2nd  <- as.factor(single_trial_data_clean$response_type_2nd)
+```
+
+Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch.
+
+```{r excluded-trials}
+
+# Calculate percentage of excluded trials
+excluded_trials <- single_trial_data %>%
+  group_by(group, participant_id, session) %>%
+  dplyr::summarize(
+    invalid_rt   = sum(!is.na(rt_invalid) & rt_invalid != FALSE) / length(participant_id) * 100,
+    misses       = sum(response_type == "miss") / length(participant_id) * 100,
+    EEG_artifact = sum(is.nan(MFN_0_100_FCz)) / length(participant_id) * 100,
+   ) %>%
+  group_by(group) %>%
+  # Calculate M and SD of the variables
+  dplyr::summarise_each(list(mean,sd,min,max), -c(participant_id, session))
+
+
+# Create dataframe and change order of rows for display
+table_excluded_trials <- as.data.frame(excluded_trials[,c(1,2,5,8,11,3,6,9,12,4,7,10,13)])
+
+
+# Display percentage of excluded trials
+my_table_template(table_excluded_trials,
+  caption = "Excluded Trials (in %)", 
+  col_names = c("Group", "M", "SD", "min", "max", "M", "SD", "min", "max", "M", "SD", "min", "max"),
+  header_above_config = c(" " = 1, "RT < 100 / > 800 ms" = 4, "Misses" = 4, "EEG artifact" = 4)
+)
+```
+<br><br>
+
+## Descriptive Statistics
+***
+### Means and CIs
+
+```{r descriptive-statistics-table}
+
+##### RT
+# Calculate descriptive statistics for RT per condition
+descriptive_statistics_rt <- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = "rt",
+  withinvars    = c("response_type", "stimulus_type", "stimulation", "session"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) %>%
+  # Round numeric values to two decimals
+  dplyr::mutate_if(is.numeric, round, digits = 2
+  ) %>%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_rt       = paste0("[", rt - ci, ", ", rt + ci, "]")
+  ) %>%
+  # Select columns to be displayed
+  dplyr::select(c("group", "response_type", "stimulus_type", "stimulation", "session", "rt", "ci_rt", "ci"))
+
+
+# Split and re-merge RT table to display both groups next to each other
+descriptive_statistics_rt_display <-  split(descriptive_statistics_rt, descriptive_statistics_rt$group)
+descriptive_statistics_rt_display <-  left_join(descriptive_statistics_rt_display$HC, descriptive_statistics_rt_display$OCD, by = c("stimulus_type", "response_type", "stimulation", "session"))
+
+
+# Display descriptive statistics for RT (and select columns)
+my_table_template(descriptive_statistics_rt_display[,c(2:7,10:11)],
+  caption = "Behavioral Performance: RT (in ms)",
+  col_names = c("Response type", "Stimulus type", "Stimulation", "Session", "M", "95% CI", "M", "95% CI"),
+  header_above_config = c(" " = 4, "HC" = 2, "OCD" = 2),
+  footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
+)
+
+
+
+##### Accuracy
+# Calculate descriptive statistics for accuracy per condition
+descriptive_statistics_accuracy <- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = "accuracy_numeric",
+  withinvars    = c("stimulus_type", "stimulation", "session"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) %>%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100)
+  )  %>%  
+  # Round numeric values to two decimals
+  dplyr::mutate_if(is.numeric, round, digits = 2
+  ) %>%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_accuracy = paste0("[", accuracy_numeric - ci, ", ", accuracy_numeric + ci, "]")
+  ) %>%
+  # Select columns to be displayed
+  dplyr::select(c("group", "stimulus_type", "stimulation", "session", "accuracy_numeric", "ci_accuracy", "ci"))
+
+
+# Split and re-merge accuracy table to display both groups next to each other
+descriptive_statistics_accuracy_display <-  split(descriptive_statistics_accuracy, descriptive_statistics_accuracy$group)
+descriptive_statistics_accuracy_display <-  left_join(descriptive_statistics_accuracy_display$HC, descriptive_statistics_accuracy_display$OCD, by = c("stimulus_type", "stimulation", "session"))
+
+
+# Display descriptive statistics for Accuracy (and select columns)
+my_table_template(descriptive_statistics_accuracy_display[,c(2:6,9:10)],
+  caption = "Behavioral Performance: Accuracy (in %)",
+  col_names = c("Stimulus type", "Stimulation", "Session", "M", "95% CI", "M", "95% CI"),
+  header_above_config = c(" " = 3, "HC" = 2, "OCD" = 2),
+  footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
+)
+
+
+
+##### PES
+# Calculate descriptive statistics for PES per condition
+descriptive_statistics_pes <- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+  measurevar    = "pes",
+  withinvars    = c("stimulation", "session"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) %>%
+  # Round numeric values to two decimals
+  dplyr::mutate_if(is.numeric, round, digits = 2
+  ) %>%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_pca = paste0("[", pes - ci, ", ", pes + ci, "]")
+  )
+
+
+# Split and re-merge PEA table to display both groups next to each other
+descriptive_statistics_pes_display <-  split(descriptive_statistics_pes, descriptive_statistics_pes$group)
+descriptive_statistics_pes_display <-  left_join(descriptive_statistics_pes_display$HC, descriptive_statistics_pes_display$OCD, by = c("stimulation", "session"))
+
+
+# Display descriptive statistics for PES (and select columns)
+my_table_template(descriptive_statistics_pes_display[,c(2,3,5,10,13,18)],
+  caption = "Behavioral Performance: Post-Error Slowing (in %)",
+  col_names = c("Stimulation", "Session", "M", "95% CI", "M", "95% CI"),
+  header_above_config = c(" " = 2, "HC" = 2, "OCD" = 2),
+  footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
+)
+
+
+
+##### PEA
+# Calculate descriptive statistics for post-error accuracy per condition
+descriptive_statistics_pea <- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pea),],
+  measurevar    = "pea",
+  withinvars    = c("stimulation", "session"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) %>%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100)
+  )  %>%  
+  # Round numeric values to two decimals
+  dplyr::mutate_if(is.numeric, round, digits = 2
+  ) %>%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_pea = paste0("[", pea - ci, ", ", pea + ci, "]")
+  )
+
+# Split and re-merge PEA table to display both groups next to each other
+descriptive_statistics_pea_display <-  split(descriptive_statistics_pea, descriptive_statistics_pea$group)
+descriptive_statistics_pea_display <-  left_join(descriptive_statistics_pea_display$HC, descriptive_statistics_pea_display$OCD, by = c("stimulation", "session"))
+
+
+# Display descriptive statistics for PEA (and select columns)
+my_table_template(descriptive_statistics_pea_display[,c(2,3,5,10,13,18)],
+  caption = "Behavioral Performance: Post-Error Accuracy (in %)",
+  col_names = c("Stimulation", "Session", "M", "95% CI", "M", "95% CI"),
+  header_above_config = c(" " = 2, "HC" = 2, "OCD" = 2),
+  footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
+)
+
+
+
+##### PCA
+# Calculate descriptive statistics for post-correct accuracy per condition
+descriptive_statistics_pca <- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pca),],
+  measurevar    = "pca",
+  withinvars    = c("stimulation", "session"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) %>%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100)
+  )  %>%  
+  # Round numeric values to two decimals
+  dplyr::mutate_if(is.numeric, round, digits = 2
+  ) %>%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_pca = paste0("[", pca - ci, ", ", pca + ci, "]")
+  )
+
+
+# Split and re-merge PCA table to display both groups next to each other
+descriptive_statistics_pca_display <-  split(descriptive_statistics_pca, descriptive_statistics_pca$group)
+descriptive_statistics_pca_display <-  left_join(descriptive_statistics_pca_display$HC, descriptive_statistics_pca_display$OCD, by = c("stimulation", "session"))
+
+
+# Display descriptive statistics for PCA (and select columns)
+my_table_template(descriptive_statistics_pca_display[,c(2,3,5,10,13,18)],
+  caption = "Behavioral Performance: Post-Correct Accuracy (in %)",
+  col_names = c("Stimulation", "Session", "M", "95% CI", "M", "95% CI"),
+  header_above_config = c(" " = 2, "HC" = 2, "OCD" = 2),
+  footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
+)
+```
+<br>
+To quantify PES robust, we used the method proposed by Dutilh et al. (2012). "A single-trial value of PES was computed by performing a pairwise comparison of correct trials around each error (RTpost-error − RTpre-error). The mean PES was computed by averaging these differences. This method ensures that post-error and post-correct trials originate from the same time periods in the data set and thus controls for global fluctuations in motivation and attention (Dutilh et al., 2012)." To avoid the effects of consecutive errors on RTs, we considered only error trials that were preceded by at least two correct responses and followed by at least one correct response (i.e., sequences of CCEC trials, where ‘C’ represents correct trials and ‘E’ represents error trials). We further quantified accuracy following incorrect and correct responses (post-error accuracy and post-correct accuracy).
+<br><br>
+
+### Plots
+
+```{r descriptive-statistics-plot-rt-acc, fig.width = 8, fig.height = 7, fig.cap = "Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulus type, response type, stimulation condition, and group. Error bars represent 95% confidence intervals adjusted for within-participant designs as described by Morey (2008)."}
+
+# Calcuate means and CIs adjusted for within-participant factors (without session)
+descriptive_statistics_rt_no_session <- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = "rt",
+  withinvars    = c("response_type", "stimulus_type", "stimulation"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+)
+
+descriptive_statistics_accuracy_no_session <- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = "accuracy_numeric",
+  withinvars    = c("stimulus_type", "stimulation"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) %>%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100))
+
+
+descriptive_statistics_pes_no_session <- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+  measurevar    = "pes",
+  withinvars    = "stimulation",
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+)
+
+descriptive_statistics_pea_no_session <- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pea),],
+  measurevar    = "pea",
+  withinvars    = "stimulation",
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) %>%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100))
+
+descriptive_statistics_pca_no_session <- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pca),],
+  measurevar    = "pca",
+  withinvars    = "stimulation",
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) %>%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100))
+
+
+# Create plot RT  
+plot_rt <- ggplot(descriptive_statistics_rt_no_session, 
+                  aes(x = stimulation, y = rt, fill = group)) +
+  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
+  geom_errorbar(aes(ymax = rt + ci, ymin = rt - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = "\nStimulation condition", y = "RT (ms)") +
+  coord_cartesian(ylim = c(200, 500)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = "Group:")  +
+  facet_wrap(.~ response_type + stimulus_type, nrow = 1) +
+  guides(fill = guide_legend(nrow = 1, title.position = "left")) 
+
+  
+# Create plot accuracy
+plot_accuracy <- ggplot(descriptive_statistics_accuracy_no_session, 
+                        aes(x = stimulation, y = accuracy_numeric, fill = group)) +
+  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
+  geom_errorbar(aes(ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci),
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = "\nStimulation condition", y = "Accuracy (%)") +
+  coord_cartesian(ylim = c(80, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = "Group") +
+  facet_wrap(.~ stimulus_type, nrow = 1)
+
+
+# Create plot PES  
+plot_pes <- ggplot(descriptive_statistics_pes_no_session, 
+                  aes(x = stimulation, y = pes, fill = group)) +
+  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
+  geom_errorbar(aes(ymax = pes + ci, ymin = pes - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = "\nStimulation condition", y = "Post-error slowing (ms)") +
+  coord_cartesian(ylim = c(0, 70)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") 
+
+
+# Create plot PEA
+plot_pea <- ggplot(descriptive_statistics_pea_no_session, 
+                  aes(x = stimulation, y = pea, fill = group)) +
+  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
+  geom_errorbar(aes(ymax = pea + ci, ymin = pea - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = "\nStimulation condition", y = "Post-error accuracy (%)") +
+  coord_cartesian(ylim = c(80, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = "Group:")  
+
+
+# Create plot PCA
+plot_pca <- ggplot(descriptive_statistics_pca_no_session, 
+                  aes(x = stimulation, y = pca, fill = group)) +
+  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
+  geom_errorbar(aes(ymax = pca + ci, ymin = pca - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = "\nStimulation condition", y = "Post-correct accuracy (%)") +
+  coord_cartesian(ylim = c(80, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = "Group:")  
+
+
+# Create common legend for plots (function from http://www.sthda.com/english/wiki/wiki.php?id_contents=7930#add-a-common-legend-for-multiple-ggplot2-graphs)
+get_legend <- function(myggplot) {
+  tmp      <- ggplot_gtable(ggplot_build(myggplot))
+  leg      <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend   <- tmp$grobs[[leg]]
+  return(legend)
+}
+legend    <- get_legend(plot_rt)
+
+
+# Remove previous legends from plots
+plot_rt       <- plot_rt       + theme(legend.position = "none")
+plot_accuracy <- plot_accuracy + theme(legend.position = "none")
+plot_pes      <- plot_pes      + theme(legend.position = "none")
+plot_pea      <- plot_pea      + theme(legend.position = "none")
+plot_pca      <- plot_pca      + theme(legend.position = "none")
+
+
+# Arrange plots
+figure_behav <- ggdraw() +
+  draw_plot(plot_rt,       x =  0,   y = .5,  width = .65, height = .5) +
+  draw_plot(plot_accuracy, x = .65,  y = .5,  width = .35, height = .5) +
+  draw_plot(plot_pes,      x =  0,   y = .15, width = .33, height = .4) +
+  draw_plot(plot_pea,      x = .33,  y = .15, width = .33, height = .4) +
+  draw_plot(plot_pca,      x = .66,  y = .15, width = .33, height = .4) +
+  draw_plot(legend,        x = .27,  y = .05, width = .5,  height = .1)   +
+  draw_plot_label(c("A", "B", "C", "D", "E"), c(0, .65, 0, .33, .66), c(1, 1, .585, .585, .585), size = 15)
+
+
+# Save plot
+ggsave("figure_behav.tiff", width = 16, height = 15, units = "cm", dpi=600, compression = "lzw")
+
+
+# Display plot
+figure_behav
+``` 
+<br>
+
+### Plots including session
+
+```{r descriptive-statistics-plot-including-session, fig.width = 10, fig.height = 15, fig.cap = "Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulation condition, group, and session. Error bars represent 95% confidence intervals adjusted for within-participant designs as described by Morey (2008)."}
+
+# Create plot RT
+plot_rt_session <- ggplot(descriptive_statistics_rt, 
+                  aes(x = stimulation, y = rt, fill = group)) +
+  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
+  geom_errorbar(aes(ymax = rt + ci, ymin = rt - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = "\nStimulation condition", y = "RT (ms)") +
+  coord_cartesian(ylim = c(200, 500)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = "Group:")  +
+  facet_wrap(.~ response_type + stimulus_type + session, nrow = 1) +
+  guides(fill = guide_legend(nrow = 1, title.position = "left")) 
+
+  
+# Create plot accuracy
+plot_accuracy_session <- ggplot(descriptive_statistics_accuracy, 
+                        aes(x = stimulation, y = accuracy_numeric, fill = group)) +
+  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
+  geom_errorbar(aes(ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci),
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = "\nStimulation condition", y = "Accuracy (%)") +
+  coord_cartesian(ylim = c(80, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = "Group") +
+  facet_wrap(.~ stimulus_type + session, nrow = 1)
+
+
+# Create plot PES  
+plot_pes_session <- ggplot(descriptive_statistics_pes, 
+                  aes(x = stimulation, y = pes, fill = group)) +
+  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
+  geom_errorbar(aes(ymax = pes + ci, ymin = pes - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = "\nStimulation condition", y = "Post-error slowing (ms)") +
+  coord_cartesian(ylim = c(0, 70)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") +  
+  facet_wrap(.~ session, nrow = 1)
+
+
+# Create plot PEA
+plot_pea_session <- ggplot(descriptive_statistics_pea, 
+                  aes(x = stimulation, y = pea, fill = group)) +
+  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
+  geom_errorbar(aes(ymax = pea + ci, ymin = pea - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = "\nStimulation condition", y = "Post-error accuracy (%)") +
+  coord_cartesian(ylim = c(80, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = "Group:")  +  
+  facet_wrap(.~ session, nrow = 1)
+
+
+# Create plot PCA
+plot_pca_session <- ggplot(descriptive_statistics_pca, 
+                  aes(x = stimulation, y = pca, fill = group)) +
+  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
+  geom_errorbar(aes(ymax = pca + ci, ymin = pca - ci), 
+                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
+  my_figure_theme +
+  labs(x = "\nStimulation condition", y = "Post-correct accuracy (%)") +
+  coord_cartesian(ylim = c(80, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
+  scale_fill_manual(values = my_figure_colors, name = "Group:")  +  
+  facet_wrap(.~ session, nrow = 1) 
+
+
+# Create common legend for plots (function from http://www.sthda.com/english/wiki/wiki.php?id_contents=7930#add-a-common-legend-for-multiple-ggplot2-graphs)
+get_legend <- function(myggplot) {
+  tmp      <- ggplot_gtable(ggplot_build(myggplot))
+  leg      <- which(sapply(tmp$grobs, function(x) x$name) == "guide-box")
+  legend   <- tmp$grobs[[leg]]
+  return(legend)
+}
+legend    <- get_legend(plot_rt_session)
+
+
+# Remove previous legends from plots
+plot_rt_session       <- plot_rt_session       + theme(legend.position = "none")
+plot_accuracy_session <- plot_accuracy_session + theme(legend.position = "none")
+plot_pes_session      <- plot_pes_session      + theme(legend.position = "none")
+plot_pea_session      <- plot_pea_session      + theme(legend.position = "none")
+plot_pca_session      <- plot_pca_session      + theme(legend.position = "none")
+
+
+# Arrange plots
+figure_behav_session <- ggdraw() +
+  draw_plot(plot_rt_session,       x =  0,   y = .66,  width = 1,   height = .33) +
+  draw_plot(plot_accuracy_session, x =  0,   y = .33,  width = .5,  height = .33) +
+  draw_plot(legend,                x = .6,   y = .36,  width = .5,  height = .33) +
+  draw_plot(plot_pes_session,      x =  0,   y = .0,   width = .33, height = .33) +
+  draw_plot(plot_pea_session,      x = .33,  y = .0,   width = .33, height = .33) +
+  draw_plot(plot_pca_session,      x = .66,  y = .0,   width = .33, height = .33) +
+  draw_plot_label(c("A", "B", "C","D","E"), c(0, 0, 0, 0.33, 0.66), c(1, .66, .33, .33, .33), size = 15)
+
+#plot_grid(plot_rt_session, plot_accuracy_session, plot_grid(plot_pes_session, plot_pea_session, plot_pca_session), labels = "AUTO", rows = 2)
+
+# Save plot
+ ggsave("figure_behav_session.tiff", width = 20, height = 25, units = "cm", dpi=600, compression = "lzw")
+
+
+# Display plot
+figure_behav_session
+```  
+
+
+
