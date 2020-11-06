@@ -439,7 +439,7 @@ single_trial_data_clean &lt;- single_trial_data %&gt;%
 single_trial_data_clean &lt;- single_trial_data_clean %&gt;%
   dplyr::mutate(
     accuracy_numeric = ifelse(response_type == &quot;correct&quot;, 1, 0), 
- #   previous_trial_correct = lag(response_type == &quot;correct&quot;),
+    accuracy_prev_trial = ifelse(lag(response_type == &quot;correct&quot;, default = TRUE) == TRUE, &quot;correct&quot;, &quot;incorrect&quot;),
     pea = ifelse(lag(response_type == &quot;correct&quot;) == FALSE &amp; response_type == &quot;correct&quot;, 1,
                  ifelse(lag(response_type == &quot;correct&quot;) == FALSE &amp; response_type == &quot;incorrect&quot;, 0, NA)),
     pca = ifelse(lag(response_type == &quot;correct&quot;) == TRUE &amp; response_type == &quot;correct&quot;, 1,
@@ -467,7 +467,8 @@ single_trial_data_clean$session            &lt;- as.factor(single_trial_data_cle
 single_trial_data_clean$stimulation        &lt;- as.factor(single_trial_data_clean$stimulation)
 single_trial_data_clean$stimulus_type      &lt;- as.factor(single_trial_data_clean$stimulus_type)
 single_trial_data_clean$response_type      &lt;- as.factor(single_trial_data_clean$response_type)
-single_trial_data_clean$response_type_2nd  &lt;- as.factor(single_trial_data_clean$response_type_2nd)</code></pre>
+single_trial_data_clean$response_type_2nd  &lt;- as.factor(single_trial_data_clean$response_type_2nd)
+single_trial_data_clean$accuracy_prev_trial  &lt;- as.factor(single_trial_data_clean$accuracy_prev_trial)</code></pre>
 <p>Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch.</p>
 <pre class="r"><code># Calculate percentage of excluded trials
 excluded_trials &lt;- single_trial_data %&gt;%
@@ -644,6 +645,217 @@ OCD
 </tbody>
 </table>
 <p><br><br></p>
+</div>
+<div id="data-inspection" class="section level2">
+<h2>Data Inspection</h2>
+<hr />
+<div id="rt-per-participant" class="section level3">
+<h3>RT per participant</h3>
+<pre class="r"><code>rt_per_participant &lt;- ggplot(single_trial_data_clean, aes(x = response_type, y = rt)) + 
+  geom_point(position = &quot;jitter&quot;, aes(color = stimulus_type)) + 
+  ggtitle(&quot;RT per participant&quot;) + 
+  my_figure_theme + 
+  facet_wrap(~ participant_id + session, ncol = 10) +
+  scale_color_manual(values = my_figure_colors) 
+rt_per_participant</code></pre>
+<p><img src="1_Behavioral_Performance_files/figure-html/plot-RT-per-subject-and-response-type-1.png" width="1152" /> <br></p>
+</div>
+<div id="distribution" class="section level3">
+<h3>Distribution</h3>
+<pre class="r"><code># Plot distribution RT
+hist_rt &lt;- ggplot(single_trial_data_clean, aes(x = rt)) +
+  geom_histogram(aes(y = ..density..), color=&quot;gray33&quot;, fill = &quot;#8ea6b4&quot;, size = 1) +
+  stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$rt, na.rm = TRUE), 
+                                     sd = sd(single_trial_data_clean$rt, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
+  geom_vline(aes(xintercept = mean(rt, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  labs (title = &quot;Histogram RT&quot;, x = &quot;RT&quot;, y = &quot;Density&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+qqplot_rt &lt;- ggplot(single_trial_data_clean, aes(sample = rt)) +
+  stat_qq(color = &quot;#8ea6b4&quot;) +
+  stat_qq_line() +
+  labs (title = &quot;Q-Q-Plot RT&quot;, x = &quot;Theoretical Quantiles&quot;, y = &quot;Sample Quantiles&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Plot distribution log RT
+hist_rt_log &lt;- ggplot(single_trial_data_clean, aes(x = rt_log)) +
+  geom_histogram(aes(y = ..density..), color=&quot;gray33&quot;, fill = &quot;#8ea6b4&quot;, size = 1) +
+  stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$rt_log, na.rm = TRUE), 
+                                     sd = sd(single_trial_data_clean$rt_log, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
+  geom_vline(aes(xintercept = mean(rt_log, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  labs (title = &quot;Histogram log(RT)&quot;, x = &quot;log(RT)&quot;, y = &quot;Density&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+qqplot_rt_log &lt;- ggplot(single_trial_data_clean, aes(sample = rt_log)) +
+  stat_qq(color = &quot;#8ea6b4&quot;) +
+  stat_qq_line() +
+  labs (title = &quot;Q-Q-Plot log(RT)&quot;, x = &quot;Theoretical Quantiles&quot;, y = &quot;Sample Quantiles&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Plot distribution PES
+hist_pes &lt;- ggplot(single_trial_data_clean, aes(x = pes)) +
+  geom_histogram(aes(y = ..density..), color=&quot;gray33&quot;, fill = &quot;#8ea6b4&quot;, size = 1) +
+  stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$pes, na.rm = TRUE), 
+                                     sd = sd(single_trial_data_clean$pes, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
+  geom_vline(aes(xintercept = mean(pes, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  labs (title = &quot;Histogram PES&quot;, x = &quot;PES&quot;, y = &quot;Density&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5))  
+
+qqplot_pes &lt;- ggplot(single_trial_data_clean, aes(sample = pes)) +
+  stat_qq(color = &quot;#8ea6b4&quot;) +
+  stat_qq_line() +
+  labs (title = &quot;Q-Q-Plot PES&quot;, x = &quot;Theoretical Quantiles&quot;, y = &quot;Sample Quantiles&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+## For accuracy, post-error and post-correct accuracy we need the aggregated values as only for those we can make a histogram 7 q-q plot (to check normality for ANOVA)
+accuracy_aggregated &lt;- single_trial_data_clean %&gt;%
+  group_by(participant_id, session) %&gt;%
+  dplyr::summarize(
+    mean_accuracy = sum(accuracy_numeric) / length(participant_id) * 100,
+    mean_pea      = sum(pea, na.rm = TRUE) / length(participant_id[!is.na(pea)]) * 100,
+    mean_pca      = sum(pca, na.rm = TRUE) / length(participant_id[!is.na(pca)]) * 100)
+
+
+# Plot distribution accuracy 
+hist_accuracy &lt;- ggplot(accuracy_aggregated, aes(x = mean_accuracy)) +
+  geom_histogram(aes(y = ..density..), color=&quot;gray33&quot;, fill = &quot;#8ea6b4&quot;, size = 1) +
+  stat_function(fun = dnorm, args = list(mean = mean(accuracy_aggregated$mean_accuracy, na.rm = TRUE), 
+                                     sd = sd(accuracy_aggregated$mean_accuracy, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
+  geom_vline(aes(xintercept = mean(mean_accuracy, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  labs (title = &quot;Histogram Mean Accuracy&quot;, x = &quot;Mean Accuracy&quot;, y = &quot;Density&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+qqplot_accuracy &lt;- ggplot(accuracy_aggregated, aes(sample = mean_accuracy)) +
+  stat_qq(color = &quot;#8ea6b4&quot;) +
+  stat_qq_line() +
+  labs (title = &quot;Q-Q-Plot Accuracy&quot;, x = &quot;Theoretical Quantiles&quot;, y = &quot;Sample Quantiles&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Plot distribution PEA 
+hist_pea &lt;- ggplot(accuracy_aggregated, aes(x = mean_pea)) +
+  geom_histogram(aes(y = ..density..), color=&quot;gray33&quot;, fill = &quot;#8ea6b4&quot;, size = 1) +
+  stat_function(fun = dnorm, args = list(mean = mean(accuracy_aggregated$mean_pea, na.rm = TRUE), 
+                                     sd = sd(accuracy_aggregated$mean_pea, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
+  geom_vline(aes(xintercept = mean(mean_pea, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  labs (title = &quot;Histogram Mean Post-Error Accuracy&quot;, x = &quot;Post-Error Accuracy&quot;, y = &quot;Density&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+qqplot_pea &lt;- ggplot(accuracy_aggregated, aes(sample = mean_pea)) +
+  stat_qq(color = &quot;#8ea6b4&quot;) +
+  stat_qq_line() +
+  labs (title = &quot;Q-Q-Plot Mean Post-Error Accuracy&quot;, x = &quot;Theoretical Quantiles&quot;, y = &quot;Sample Quantiles&quot;) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Plot distribution PCA 
+hist_pca &lt;- ggplot(accuracy_aggregated, aes(x = mean_pca)) +
+  geom_histogram(aes(y = ..density..), color=&quot;gray33&quot;, fill = &quot;#8ea6b4&quot;, size = 1) +
+  stat_function(fun = dnorm, args = list(mean = mean(accuracy_aggregated$mean_pca, na.rm = TRUE), 
+                                     sd = sd(accuracy_aggregated$mean_pca, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
+  geom_vline(aes(xintercept = mean(mean_pca, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  labs (title = &quot;Histogram Mean Post-Correct Accuracy&quot;, x = &quot;Post-Correct Accuracy&quot;, y = &quot;Density&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+qqplot_pca &lt;- ggplot(accuracy_aggregated, aes(sample = mean_pca)) +
+  stat_qq(color = &quot;#8ea6b4&quot;) +
+  stat_qq_line() +
+  labs (title = &quot;Q-Q-Plot Mean Post-Correct Accuracy&quot;, x = &quot;Theoretical Quantiles&quot;, y = &quot;Sample Quantiles&quot;) +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+ggdraw() +
+  draw_plot(hist_rt,        x =  0,   y = .80, width = .5,  height = .16) +
+  draw_plot(qqplot_rt,      x =  .5,  y = .80, width = .5,  height = .16) +
+  draw_plot(hist_rt_log,    x =  0,   y = .64, width = .5,  height = .16) +
+  draw_plot(qqplot_rt_log,  x =  .5,  y = .64, width = .5,  height = .16) +
+  draw_plot(hist_pes,       x =  0,   y = .48, width = .5,  height = .16) +
+  draw_plot(qqplot_pes,     x =  .5,  y = .48, width = .5,  height = .16) +
+  draw_plot(hist_accuracy,  x =  0,   y = .32, width = .5,  height = .16) +
+  draw_plot(qqplot_accuracy,x =  .5,  y = .32, width = .5,  height = .16) +
+  draw_plot(hist_pea,       x =  0,   y = .16, width = .5,  height = .16) +
+  draw_plot(qqplot_pea,     x =  .5,  y = .16, width = .5,  height = .16) +
+  draw_plot(hist_pca,       x =  0,   y = 0,   width = .5,  height = .16) +
+  draw_plot(qqplot_pca,     x =  .5,  y = 0,   width = .5,  height = .16) </code></pre>
+<p><img src="1_Behavioral_Performance_files/figure-html/inspect-distribution-1.png" width="768" /> <br><br></p>
+</div>
+<div id="check-rt-normality" class="section level3">
+<h3>Check RT Normality</h3>
+<p>For the single-trial data, Shapiro-Wilk is not suitable, as it always returns a significant result for such large samples (additionally, it can handle only samples up to 5000). Hence, we have to rely on visual inspection (see above) and values of skewness and kurtosis. Values for skewness and kurtosis between -2 and +2 are considered acceptable in order to prove normal univariate distribution (George &amp; Mallery, 2010).</p>
+<pre class="r"><code>normality_rt &lt;- round(data.frame(matrix(c(skewness(single_trial_data_clean$rt),
+                                          kurtosis(single_trial_data_clean$rt),
+                                          skewness(single_trial_data_clean$rt_log),
+                                          kurtosis(single_trial_data_clean$rt_log),
+                                          skewness(single_trial_data_clean[!is.na(single_trial_data_clean$pes),]$pes),
+                                          kurtosis(single_trial_data_clean[!is.na(single_trial_data_clean$pes),]$pes)),
+                                        nrow=2,ncol=3)),digits = 1)
+rownames(normality_rt) &lt;- c(&quot;Skewness&quot;,&quot;Kurtosis&quot;)
+colnames(normality_rt) &lt;- c(&quot;RT&quot;,&quot;log(RT)&quot;, &quot;PES&quot;)
+
+my_table_template(normality_rt)</code></pre>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<thead>
+<tr>
+<th style="text-align:right;">
+RT
+</th>
+<th style="text-align:right;">
+log(RT)
+</th>
+<th style="text-align:right;">
+PES
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0.9
+</td>
+<td style="text-align:right;">
+0.3
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+1.4
+</td>
+<td style="text-align:right;">
+0.2
+</td>
+<td style="text-align:right;">
+1.3
+</td>
+</tr>
+</tbody>
+</table>
+<p><br></p>
+</div>
+<div id="determine-rt-transformation" class="section level3">
+<h3>Determine RT transformation</h3>
+<p>LMM analysis of RT will be conducted on log-transformed RT values to meet the assumption of normally distributed residuals. The appropriate transformation was validated (?) using the Box–Cox procedure (Box &amp; Cox, 1964).</p>
+<pre class="r"><code># Arrange plots
+par(mfrow = c(1, 2)) 
+
+# Determine transformation of RT by estimating optimal lambda using Box–Cox procedure
+bc_rt &lt;- boxcox(rt ~ 1, data = single_trial_data_clean)
+optlambda_rt &lt;- bc_rt$x[which.max(bc_rt$y)]
+
+# Determine transformation of PES by estimating optimal lambda using Box–Cox procedure
+bc_pes &lt;- boxcox(pes+1000 ~ 1, data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),])</code></pre>
+<p><img src="1_Behavioral_Performance_files/figure-html/RT-determine-transformation-1.png" width="768" /></p>
+<pre class="r"><code>optlambda_pes &lt;- bc_pes$x[which.max(bc_pes$y)]
+
+# Reset plot layout
+par(mfrow = c(1, 1)) </code></pre>
+<p>For RT (left plot), the optimal lambda is -0.42, suggesting that log transformation (for lambda = 0) is appropriate. Actually, for lambda = -0.5, the most appropriate transformation would be Y^-0.5 = 1/(√(Y)), but this does not seem very common to me. As our lambda is not far from 0, I chose log transformation, which is more commonly used. For PES (right plot), the optimal lambda is 0.75, suggesting that no transformation (for lambda = 1) is needed. <br><br></p>
+</div>
 </div>
 <div id="descriptive-statistics" class="section level2">
 <h2>Descriptive Statistics</h2>
@@ -2237,7 +2449,175 @@ figure_behav_session</code></pre>
 Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulation condition, group, and session. Error bars represent 95% confidence intervals adjusted for within-participant designs as described by Morey (2008).
 </p>
 </div>
+<p><br><br></p>
 </div>
+</div>
+<div id="glmm-analyses" class="section level2">
+<h2>(G)LMM Analyses</h2>
+<hr />
+<p>RT and accuracy were modeled using a linear mixed-effects model (LMM) and a binomial generalized linear mixed-effects model (GLMM), respectively. In both models, stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), session (T1, T2), response type of the previous trial N-1 (correct, incorrect), and, where applicable, response type (correct, incorrect) were specified as fixed factors and participants as random factors. <br><br> Fixed effects were coded usingeffect coding (this equals sliding difference contrastsfor two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants and word stimuli, as well as random slopes for all fixed factors and their interactions. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).</p>
+<pre class="r"><code># Define contrasts (sliding difference contrasts)
+contrasts(single_trial_data_clean$stimulus_type)          &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$response_type)          &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$stimulation)            &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$group)                  &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$session)                &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$accuracy_prev_trial) &lt;- contr.sdif(2)
+
+
+# Add contrasts as numerical covariates via model matrix*
+model_matrix &lt;- model.matrix(~ stimulus_type * response_type * stimulation * group * session * accuracy_prev_trial, single_trial_data_clean)
+
+
+# Attach the model matrix (64 columns) to the dataframe
+single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 64)] &lt;- model_matrix
+
+
+# Assign descriptive names to the contrasts
+names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 63):ncol(single_trial_data_clean)] &lt;- c(&quot;Grand Mean&quot;, &quot;incongruent_congruent&quot;, &quot;incorrect_correct&quot;, &quot;verum_sham&quot;, &quot;OCD_HC&quot;, &quot;T2_T1&quot;, &quot;prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:incorrect_correct&quot;, 
+  &quot;incongruent_congruent:verum_sham&quot;, &quot;incorrect_correct:verum_sham&quot;, &quot;incongruent_congruent:OCD_HC&quot;, &quot;incorrect_correct:OCD_HC&quot;, &quot;verum_sham:OCD_HC&quot;, 
+  &quot;incongruent_congruent:T2_T1&quot;, &quot;incorrect_correct:T2_T1&quot;, &quot;verum_sham:T2_T1&quot;, &quot;OCD_HC:T2_T1&quot;, &quot;incongruent_congruent:prev_trial_incorrect_correct&quot;, 
+  &quot;incorrect_correct:prev_trial_incorrect_correct&quot;, &quot;verum_sham:prev_trial_incorrect_correct&quot;, &quot;OCD_HC:prev_trial_incorrect_correct&quot;, &quot;T2_T1:prev_trial_incorrect_correct&quot;, 
+  &quot;incongruent_congruent:incorrect_correct:verum_sham&quot;, &quot;incongruent_congruent:incorrect_correct:OCD_HC&quot;, &quot;incongruent_congruent:verum_sham:OCD_HC&quot;, 
+  &quot;incorrect_correct:verum_sham:OCD_HC&quot;, &quot;incongruent_congruent:incorrect_correct:T2_T1&quot;, &quot;incongruent_congruent:verum_sham:T2_T1&quot;, &quot;incorrect_correct:verum_sham:T2_T1&quot;, 
+  &quot;incongruent_congruent:OCD_HC:T2_T1&quot;, &quot;incorrect_correct:OCD_HC:T2_T1&quot;, &quot;verum_sham:OCD_HC:T2_T1&quot;, &quot;incongruent_congruent:incorrect_correct:prev_trial_incorrect_correct&quot;, 
+  &quot;incongruent_congruent:verum_sham:prev_trial_incorrect_correct&quot;, &quot;incorrect_correct:verum_sham:prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:OCD_HC:prev_trial_incorrect_correct&quot;, 
+  &quot;incorrect_correct:OCD_HC:prev_trial_incorrect_correct&quot;, &quot;verum_sham:OCD_HC:prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:T2_T1:prev_trial_incorrect_correct&quot;, 
+  &quot;incorrect_correct:T2_T1:prev_trial_incorrect_correct&quot;, &quot;verum_sham:T2_T1:prev_trial_incorrect_correct&quot;, &quot;OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, 
+  &quot;incongruent_congruent:incorrect_correct:verum_sham:OCD_HC&quot;, &quot;incongruent_congruent:incorrect_correct:verum_sham:T2_T1&quot;, &quot;incongruent_congruent:incorrect_correct:OCD_HC:T2_T1&quot;, 
+  &quot;incongruent_congruent:verum_sham:OCD_HC:T2_T1&quot;, &quot;incorrect_correct:verum_sham:OCD_HC:T2_T1&quot;, &quot;incongruent_congruent:incorrect_correct:verum_sham:prev_trial_incorrect_correct&quot;, 
+  &quot;incongruent_congruent:incorrect_correct:OCD_HC:prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:verum_sham:OCD_HC:prev_trial_incorrect_correct&quot;, 
+  &quot;incorrect_correct:verum_sham:OCD_HC:prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:incorrect_correct:T2_T1:prev_trial_incorrect_correct&quot;, 
+  &quot;incongruent_congruent:verum_sham:T2_T1:prev_trial_incorrect_correct&quot;, &quot;incorrect_correct:verum_sham:T2_T1:prev_trial_incorrect_correct&quot;, 
+  &quot;incongruent_congruent:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, &quot;incorrect_correct:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, &quot;verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, 
+  &quot;incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:T2_T1&quot;, &quot;incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:prev_trial_incorrect_correct&quot;, 
+  &quot;incongruent_congruent:incorrect_correct:verum_sham:T2_T1:prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:incorrect_correct:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, 
+  &quot;incongruent_congruent:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, &quot;incorrect_correct:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;)
+
+
+# *Note: For the random effects, we needed to enter the separate random effect terms in the models to enable
+# double-bar notation (||). This allows fitting a model that sets correlations of the random terms to zero.</code></pre>
+<p><br></p>
+<pre class="r"><code>#### 1) Run model with maximal random-effects structure
+LMM_rt_max &lt;- lmer(rt_log ~ stimulation * (response_type + group + session + accuracy_prev_trial + stimulus_type + response_type:group + stimulus_type:group + accuracy_prev_trial:response_type) +
+  (1 + verum_sham + incorrect_correct + OCD_HC + T2_T1 + prev_trial_incorrect_correct+ incongruent_congruent || participant_id),
+data = single_trial_data_clean,
+REML = FALSE,
+control = lmerControl(optimizer = &quot;bobyqa&quot;)
+)
+
+
+# Check model output
+summary(LMM_rt_max) # Singular fit</code></pre>
+<pre><code>Linear mixed model fit by maximum likelihood . t-tests use Satterthwaite&#39;s
+  method [lmerModLmerTest]
+Formula: 
+rt_log ~ stimulation * (response_type + group + session + accuracy_prev_trial +  
+    stimulus_type + response_type:group + stimulus_type:group +  
+    accuracy_prev_trial:response_type) + (1 + verum_sham + incorrect_correct +  
+    OCD_HC + T2_T1 + prev_trial_incorrect_correct + incongruent_congruent ||  
+    participant_id)
+   Data: single_trial_data_clean
+Control: lmerControl(optimizer = &quot;bobyqa&quot;)
+
+     AIC      BIC   logLik deviance df.resid 
+-52800.7 -52568.9  26426.4 -52852.7    54972 
+
+Scaled residuals: 
+    Min      1Q  Median      3Q     Max 
+-7.7207 -0.5937 -0.0525  0.5408  6.0428 
+
+Random effects:
+ Groups           Name                         Variance    Std.Dev.
+ participant_id   (Intercept)                  0.000002642 0.001626
+ participant_id.1 verum_sham                   0.000422997 0.020567
+ participant_id.2 incorrect_correct            0.004834075 0.069528
+ participant_id.3 OCD_HC                       0.022634923 0.150449
+ participant_id.4 T2_T1                        0.001660791 0.040753
+ participant_id.5 prev_trial_incorrect_correct 0.000969087 0.031130
+ participant_id.6 incongruent_congruent        0.001034510 0.032164
+ Residual                                      0.022049411 0.148490
+Number of obs: 54998, groups:  participant_id, 58
+
+Fixed effects:
+                                                            Estimate
+(Intercept)                                                5.8875769
+stimulation2-1                                            -0.0112153
+response_type2-1                                          -0.2427272
+group2-1                                                   0.0316542
+session2-1                                                -0.0353659
+accuracy_prev_trial2-1                                     0.0153673
+stimulus_type2-1                                           0.1407228
+response_type2-1:group2-1                                  0.0005323
+group2-1:stimulus_type2-1                                 -0.0181220
+response_type2-1:accuracy_prev_trial2-1                   -0.0324023
+stimulation2-1:response_type2-1                           -0.0149283
+stimulation2-1:group2-1                                    0.0056502
+stimulation2-1:session2-1                                 -0.0783456
+stimulation2-1:accuracy_prev_trial2-1                     -0.0165866
+stimulation2-1:stimulus_type2-1                            0.0070036
+stimulation2-1:response_type2-1:group2-1                   0.0313995
+stimulation2-1:group2-1:stimulus_type2-1                  -0.0118074
+stimulation2-1:response_type2-1:accuracy_prev_trial2-1    -0.0371071
+                                                          Std. Error
+(Intercept)                                                0.0104081
+stimulation2-1                                             0.0087013
+response_type2-1                                           0.0111867
+group2-1                                                   0.0200903
+session2-1                                                 0.0061304
+accuracy_prev_trial2-1                                     0.0076029
+stimulus_type2-1                                           0.0044171
+response_type2-1:group2-1                                  0.0191566
+group2-1:stimulus_type2-1                                  0.0088342
+response_type2-1:accuracy_prev_trial2-1                    0.0126393
+stimulation2-1:response_type2-1                            0.0125889
+stimulation2-1:group2-1                                    0.0132049
+stimulation2-1:session2-1                                  0.0401495
+stimulation2-1:accuracy_prev_trial2-1                      0.0125180
+stimulation2-1:stimulus_type2-1                            0.0025861
+stimulation2-1:response_type2-1:group2-1                   0.0111049
+stimulation2-1:group2-1:stimulus_type2-1                   0.0051721
+stimulation2-1:response_type2-1:accuracy_prev_trial2-1     0.0249821
+                                                                  df t value
+(Intercept)                                               67.3030710 565.673
+stimulation2-1                                           235.4843598  -1.289
+response_type2-1                                         105.9653734 -21.698
+group2-1                                                  58.2698881   1.576
+session2-1                                                57.9861953  -5.769
+accuracy_prev_trial2-1                                   312.3918510   2.021
+stimulus_type2-1                                          57.9985310  31.859
+response_type2-1:group2-1                                 57.1137980   0.028
+group2-1:stimulus_type2-1                                 57.9988719  -2.051
+response_type2-1:accuracy_prev_trial2-1                52883.2015195  -2.564
+stimulation2-1:response_type2-1                        54521.8449462  -1.186
+stimulation2-1:group2-1                                   78.0037527   0.428
+stimulation2-1:session2-1                                 58.0899663  -1.951
+stimulation2-1:accuracy_prev_trial2-1                  54023.6779805  -1.325
+stimulation2-1:stimulus_type2-1                        54747.8912369   2.708
+stimulation2-1:response_type2-1:group2-1               54786.5676588   2.828
+stimulation2-1:group2-1:stimulus_type2-1               54747.1453827  -2.283
+stimulation2-1:response_type2-1:accuracy_prev_trial2-1 54502.3794979  -1.485
+                                                                   Pr(&gt;|t|)    
+(Intercept)                                            &lt; 0.0000000000000002 ***
+stimulation2-1                                                      0.19869    
+response_type2-1                                       &lt; 0.0000000000000002 ***
+group2-1                                                            0.12053    
+session2-1                                                      0.000000327 ***
+accuracy_prev_trial2-1                                              0.04411 *  
+stimulus_type2-1                                       &lt; 0.0000000000000002 ***
+response_type2-1:group2-1                                           0.97793    
+group2-1:stimulus_type2-1                                           0.04476 *  
+response_type2-1:accuracy_prev_trial2-1                             0.01036 *  
+stimulation2-1:response_type2-1                                     0.23569    
+stimulation2-1:group2-1                                             0.66991    
+stimulation2-1:session2-1                                           0.05584 .  
+stimulation2-1:accuracy_prev_trial2-1                               0.18517    
+stimulation2-1:stimulus_type2-1                                     0.00677 ** 
+stimulation2-1:response_type2-1:group2-1                            0.00469 ** 
+stimulation2-1:group2-1:stimulus_type2-1                            0.02244 *  
+stimulation2-1:response_type2-1:accuracy_prev_trial2-1              0.13746    
+---
+Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
 </div>
 
 

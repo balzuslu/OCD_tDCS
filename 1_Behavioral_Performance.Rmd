@@ -32,6 +32,10 @@ library(knitr)      # for integrating computing and reporting in markdown
 library(kableExtra) # for customizing appearance of tables
 library(ggplot2)    # for plotting
 library(cowplot)    # for arranging plots
+library(e1071)      # for functions skewness and kurtosis
+library(MASS)       # for boxcox function and contrast definition
+library(lme4)       # for (G)LMMs
+library(lmerTest)   # for LMM p values (Satterthwaite's method for approximating dfs for the t and F tests)
 
 
 # Load functions
@@ -78,7 +82,7 @@ single_trial_data_clean <- single_trial_data %>%
 single_trial_data_clean <- single_trial_data_clean %>%
   dplyr::mutate(
     accuracy_numeric = ifelse(response_type == "correct", 1, 0), 
- #   previous_trial_correct = lag(response_type == "correct"),
+    accuracy_prev_trial = ifelse(lag(response_type == "correct", default = TRUE) == TRUE, "correct", "incorrect"),
     pea = ifelse(lag(response_type == "correct") == FALSE & response_type == "correct", 1,
                  ifelse(lag(response_type == "correct") == FALSE & response_type == "incorrect", 0, NA)),
     pca = ifelse(lag(response_type == "correct") == TRUE & response_type == "correct", 1,
@@ -107,6 +111,7 @@ single_trial_data_clean$stimulation        <- as.factor(single_trial_data_clean$
 single_trial_data_clean$stimulus_type      <- as.factor(single_trial_data_clean$stimulus_type)
 single_trial_data_clean$response_type      <- as.factor(single_trial_data_clean$response_type)
 single_trial_data_clean$response_type_2nd  <- as.factor(single_trial_data_clean$response_type_2nd)
+single_trial_data_clean$accuracy_prev_trial  <- as.factor(single_trial_data_clean$accuracy_prev_trial)
 ```
 
 Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch.
@@ -137,6 +142,191 @@ my_table_template(table_excluded_trials,
   header_above_config = c(" " = 1, "RT < 100 / > 800 ms" = 4, "Misses" = 4, "EEG artifact" = 4)
 )
 ```
+<br><br>
+
+## Data Inspection
+***
+### RT per participant 
+
+```{r plot-RT-per-subject-and-response-type, fig.width = 12, fig.height = 20}
+
+rt_per_participant <- ggplot(single_trial_data_clean, aes(x = response_type, y = rt)) + 
+  geom_point(position = "jitter", aes(color = stimulus_type)) + 
+  ggtitle("RT per participant") + 
+  my_figure_theme + 
+  facet_wrap(~ participant_id + session, ncol = 10) +
+  scale_color_manual(values = my_figure_colors) 
+rt_per_participant
+```
+<br>
+
+### Distribution
+
+```{r inspect-distribution, fig.width = 8, fig.height = 16}
+
+# Plot distribution RT
+hist_rt <- ggplot(single_trial_data_clean, aes(x = rt)) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$rt, na.rm = TRUE), 
+                                     sd = sd(single_trial_data_clean$rt, na.rm = TRUE)), color = "black", size = 0.5) +
+  geom_vline(aes(xintercept = mean(rt, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
+  labs (title = "Histogram RT", x = "RT", y = "Density") + 
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+qqplot_rt <- ggplot(single_trial_data_clean, aes(sample = rt)) +
+  stat_qq(color = "#8ea6b4") +
+  stat_qq_line() +
+  labs (title = "Q-Q-Plot RT", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Plot distribution log RT
+hist_rt_log <- ggplot(single_trial_data_clean, aes(x = rt_log)) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$rt_log, na.rm = TRUE), 
+                                     sd = sd(single_trial_data_clean$rt_log, na.rm = TRUE)), color = "black", size = 0.5) +
+  geom_vline(aes(xintercept = mean(rt_log, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
+  labs (title = "Histogram log(RT)", x = "log(RT)", y = "Density") + 
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+qqplot_rt_log <- ggplot(single_trial_data_clean, aes(sample = rt_log)) +
+  stat_qq(color = "#8ea6b4") +
+  stat_qq_line() +
+  labs (title = "Q-Q-Plot log(RT)", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Plot distribution PES
+hist_pes <- ggplot(single_trial_data_clean, aes(x = pes)) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$pes, na.rm = TRUE), 
+                                     sd = sd(single_trial_data_clean$pes, na.rm = TRUE)), color = "black", size = 0.5) +
+  geom_vline(aes(xintercept = mean(pes, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
+  labs (title = "Histogram PES", x = "PES", y = "Density") + 
+  theme(plot.title = element_text(hjust = 0.5))  
+
+qqplot_pes <- ggplot(single_trial_data_clean, aes(sample = pes)) +
+  stat_qq(color = "#8ea6b4") +
+  stat_qq_line() +
+  labs (title = "Q-Q-Plot PES", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+## For accuracy, post-error and post-correct accuracy we need the aggregated values as only for those we can make a histogram 7 q-q plot (to check normality for ANOVA)
+accuracy_aggregated <- single_trial_data_clean %>%
+  group_by(participant_id, session) %>%
+  dplyr::summarize(
+    mean_accuracy = sum(accuracy_numeric) / length(participant_id) * 100,
+    mean_pea      = sum(pea, na.rm = TRUE) / length(participant_id[!is.na(pea)]) * 100,
+    mean_pca      = sum(pca, na.rm = TRUE) / length(participant_id[!is.na(pca)]) * 100)
+
+
+# Plot distribution accuracy 
+hist_accuracy <- ggplot(accuracy_aggregated, aes(x = mean_accuracy)) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  stat_function(fun = dnorm, args = list(mean = mean(accuracy_aggregated$mean_accuracy, na.rm = TRUE), 
+                                     sd = sd(accuracy_aggregated$mean_accuracy, na.rm = TRUE)), color = "black", size = 0.5) +
+  geom_vline(aes(xintercept = mean(mean_accuracy, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
+  labs (title = "Histogram Mean Accuracy", x = "Mean Accuracy", y = "Density") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+qqplot_accuracy <- ggplot(accuracy_aggregated, aes(sample = mean_accuracy)) +
+  stat_qq(color = "#8ea6b4") +
+  stat_qq_line() +
+  labs (title = "Q-Q-Plot Accuracy", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Plot distribution PEA 
+hist_pea <- ggplot(accuracy_aggregated, aes(x = mean_pea)) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  stat_function(fun = dnorm, args = list(mean = mean(accuracy_aggregated$mean_pea, na.rm = TRUE), 
+                                     sd = sd(accuracy_aggregated$mean_pea, na.rm = TRUE)), color = "black", size = 0.5) +
+  geom_vline(aes(xintercept = mean(mean_pea, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
+  labs (title = "Histogram Mean Post-Error Accuracy", x = "Post-Error Accuracy", y = "Density") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+qqplot_pea <- ggplot(accuracy_aggregated, aes(sample = mean_pea)) +
+  stat_qq(color = "#8ea6b4") +
+  stat_qq_line() +
+  labs (title = "Q-Q-Plot Mean Post-Error Accuracy", x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Plot distribution PCA 
+hist_pca <- ggplot(accuracy_aggregated, aes(x = mean_pca)) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  stat_function(fun = dnorm, args = list(mean = mean(accuracy_aggregated$mean_pca, na.rm = TRUE), 
+                                     sd = sd(accuracy_aggregated$mean_pca, na.rm = TRUE)), color = "black", size = 0.5) +
+  geom_vline(aes(xintercept = mean(mean_pca, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
+  labs (title = "Histogram Mean Post-Correct Accuracy", x = "Post-Correct Accuracy", y = "Density") + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+qqplot_pca <- ggplot(accuracy_aggregated, aes(sample = mean_pca)) +
+  stat_qq(color = "#8ea6b4") +
+  stat_qq_line() +
+  labs (title = "Q-Q-Plot Mean Post-Correct Accuracy", x = "Theoretical Quantiles", y = "Sample Quantiles") +
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+ggdraw() +
+  draw_plot(hist_rt,        x =  0,   y = .80, width = .5,  height = .16) +
+  draw_plot(qqplot_rt,      x =  .5,  y = .80, width = .5,  height = .16) +
+  draw_plot(hist_rt_log,    x =  0,   y = .64, width = .5,  height = .16) +
+  draw_plot(qqplot_rt_log,  x =  .5,  y = .64, width = .5,  height = .16) +
+  draw_plot(hist_pes,       x =  0,   y = .48, width = .5,  height = .16) +
+  draw_plot(qqplot_pes,     x =  .5,  y = .48, width = .5,  height = .16) +
+  draw_plot(hist_accuracy,  x =  0,   y = .32, width = .5,  height = .16) +
+  draw_plot(qqplot_accuracy,x =  .5,  y = .32, width = .5,  height = .16) +
+  draw_plot(hist_pea,       x =  0,   y = .16, width = .5,  height = .16) +
+  draw_plot(qqplot_pea,     x =  .5,  y = .16, width = .5,  height = .16) +
+  draw_plot(hist_pca,       x =  0,   y = 0,   width = .5,  height = .16) +
+  draw_plot(qqplot_pca,     x =  .5,  y = 0,   width = .5,  height = .16) 
+```
+<br><br>
+
+### Check RT Normality 
+
+For the single-trial data, Shapiro-Wilk is not suitable, as it always returns a significant result for such large samples (additionally, it can handle only samples up to 5000). Hence, we have to rely on visual inspection (see above) and values of skewness and kurtosis. Values for skewness and kurtosis between -2 and +2 are considered acceptable in order to prove normal univariate distribution (George & Mallery, 2010).
+
+```{r normality-single-trial-RTs}
+
+normality_rt <- round(data.frame(matrix(c(skewness(single_trial_data_clean$rt),
+                                          kurtosis(single_trial_data_clean$rt),
+                                          skewness(single_trial_data_clean$rt_log),
+                                          kurtosis(single_trial_data_clean$rt_log),
+                                          skewness(single_trial_data_clean[!is.na(single_trial_data_clean$pes),]$pes),
+                                          kurtosis(single_trial_data_clean[!is.na(single_trial_data_clean$pes),]$pes)),
+                                        nrow=2,ncol=3)),digits = 1)
+rownames(normality_rt) <- c("Skewness","Kurtosis")
+colnames(normality_rt) <- c("RT","log(RT)", "PES")
+
+my_table_template(normality_rt)
+```
+<br>
+
+### Determine RT transformation
+
+LMM analysis of RT will be conducted on log-transformed RT values to meet the assumption of normally distributed residuals. The appropriate transformation was validated (?) using the Box–Cox procedure (Box & Cox, 1964). 
+
+```{r RT-determine-transformation, fig.width = 8, fig.height = 3}
+
+# Arrange plots
+par(mfrow = c(1, 2)) 
+
+# Determine transformation of RT by estimating optimal lambda using Box–Cox procedure
+bc_rt <- boxcox(rt ~ 1, data = single_trial_data_clean)
+optlambda_rt <- bc_rt$x[which.max(bc_rt$y)]
+
+# Determine transformation of PES by estimating optimal lambda using Box–Cox procedure
+bc_pes <- boxcox(pes+1000 ~ 1, data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),])
+optlambda_pes <- bc_pes$x[which.max(bc_pes$y)]
+
+# Reset plot layout
+par(mfrow = c(1, 1)) 
+```
+For RT (left plot), the optimal lambda is `r round(optlambda_rt, digits = 2)`, suggesting that log transformation (for lambda = 0) is appropriate. Actually, for lambda = -0.5, the most appropriate transformation would be Y^-0.5 = 1/(√(Y)), but this does not seem very common to me. As our lambda is not far from 0, I chose log transformation, which is more commonly used. 
+For PES (right plot), the optimal lambda is `r round(optlambda_pes, digits = 2)`, suggesting that no transformation (for lambda = 1) is needed.
 <br><br>
 
 ## Descriptive Statistics
@@ -605,6 +795,73 @@ figure_behav_session <- ggdraw() +
 # Display plot
 figure_behav_session
 ```  
+<br><br>
 
 
 
+## (G)LMM Analyses
+***
+
+RT and accuracy were modeled using a linear mixed-effects model (LMM) and a binomial generalized linear mixed-effects model (GLMM), respectively. In both models, stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), session (T1, T2), response type of the previous trial N-1 (correct, incorrect), and, where applicable, response type (correct, incorrect) were specified as fixed factors and participants as random factors. <br><br>
+Fixed effects were coded usingeffect coding (this equals sliding difference contrastsfor two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants and word stimuli, as well as random slopes for all fixed factors and their interactions. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).
+
+```{r RT-accuracy-(G)LMM-contrast-coding}
+
+# Define contrasts (sliding difference contrasts)
+contrasts(single_trial_data_clean$stimulus_type)          <- contr.sdif(2)
+contrasts(single_trial_data_clean$response_type)          <- contr.sdif(2)
+contrasts(single_trial_data_clean$stimulation)            <- contr.sdif(2)
+contrasts(single_trial_data_clean$group)                  <- contr.sdif(2)
+contrasts(single_trial_data_clean$session)                <- contr.sdif(2)
+contrasts(single_trial_data_clean$accuracy_prev_trial) <- contr.sdif(2)
+
+
+# Add contrasts as numerical covariates via model matrix*
+model_matrix <- model.matrix(~ stimulus_type * response_type * stimulation * group * session * accuracy_prev_trial, single_trial_data_clean)
+
+
+# Attach the model matrix (64 columns) to the dataframe
+single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 64)] <- model_matrix
+
+
+# Assign descriptive names to the contrasts
+names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 63):ncol(single_trial_data_clean)] <- c("Grand Mean", "incongruent_congruent", "incorrect_correct", "verum_sham", "OCD_HC", "T2_T1", "prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct", 
+  "incongruent_congruent:verum_sham", "incorrect_correct:verum_sham", "incongruent_congruent:OCD_HC", "incorrect_correct:OCD_HC", "verum_sham:OCD_HC", 
+  "incongruent_congruent:T2_T1", "incorrect_correct:T2_T1", "verum_sham:T2_T1", "OCD_HC:T2_T1", "incongruent_congruent:prev_trial_incorrect_correct", 
+  "incorrect_correct:prev_trial_incorrect_correct", "verum_sham:prev_trial_incorrect_correct", "OCD_HC:prev_trial_incorrect_correct", "T2_T1:prev_trial_incorrect_correct", 
+  "incongruent_congruent:incorrect_correct:verum_sham", "incongruent_congruent:incorrect_correct:OCD_HC", "incongruent_congruent:verum_sham:OCD_HC", 
+  "incorrect_correct:verum_sham:OCD_HC", "incongruent_congruent:incorrect_correct:T2_T1", "incongruent_congruent:verum_sham:T2_T1", "incorrect_correct:verum_sham:T2_T1", 
+  "incongruent_congruent:OCD_HC:T2_T1", "incorrect_correct:OCD_HC:T2_T1", "verum_sham:OCD_HC:T2_T1", "incongruent_congruent:incorrect_correct:prev_trial_incorrect_correct", 
+  "incongruent_congruent:verum_sham:prev_trial_incorrect_correct", "incorrect_correct:verum_sham:prev_trial_incorrect_correct", "incongruent_congruent:OCD_HC:prev_trial_incorrect_correct", 
+  "incorrect_correct:OCD_HC:prev_trial_incorrect_correct", "verum_sham:OCD_HC:prev_trial_incorrect_correct", "incongruent_congruent:T2_T1:prev_trial_incorrect_correct", 
+  "incorrect_correct:T2_T1:prev_trial_incorrect_correct", "verum_sham:T2_T1:prev_trial_incorrect_correct", "OCD_HC:T2_T1:prev_trial_incorrect_correct", 
+  "incongruent_congruent:incorrect_correct:verum_sham:OCD_HC", "incongruent_congruent:incorrect_correct:verum_sham:T2_T1", "incongruent_congruent:incorrect_correct:OCD_HC:T2_T1", 
+  "incongruent_congruent:verum_sham:OCD_HC:T2_T1", "incorrect_correct:verum_sham:OCD_HC:T2_T1", "incongruent_congruent:incorrect_correct:verum_sham:prev_trial_incorrect_correct", 
+  "incongruent_congruent:incorrect_correct:OCD_HC:prev_trial_incorrect_correct", "incongruent_congruent:verum_sham:OCD_HC:prev_trial_incorrect_correct", 
+  "incorrect_correct:verum_sham:OCD_HC:prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct:T2_T1:prev_trial_incorrect_correct", 
+  "incongruent_congruent:verum_sham:T2_T1:prev_trial_incorrect_correct", "incorrect_correct:verum_sham:T2_T1:prev_trial_incorrect_correct", 
+  "incongruent_congruent:OCD_HC:T2_T1:prev_trial_incorrect_correct", "incorrect_correct:OCD_HC:T2_T1:prev_trial_incorrect_correct", "verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct", 
+  "incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:T2_T1", "incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:prev_trial_incorrect_correct", 
+  "incongruent_congruent:incorrect_correct:verum_sham:T2_T1:prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct:OCD_HC:T2_T1:prev_trial_incorrect_correct", 
+  "incongruent_congruent:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct", "incorrect_correct:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct")
+
+
+# *Note: For the random effects, we needed to enter the separate random effect terms in the models to enable
+# double-bar notation (||). This allows fitting a model that sets correlations of the random terms to zero.
+```
+<br>
+
+```{r RT-LMM-specification}
+
+#### 1) Run model with maximal random-effects structure
+LMM_rt_max <- lmer(rt_log ~ stimulation * (response_type + group + session + accuracy_prev_trial + stimulus_type + response_type:group + stimulus_type:group + accuracy_prev_trial:response_type) +
+  (1 + verum_sham + incorrect_correct + OCD_HC + T2_T1 + prev_trial_incorrect_correct+ incongruent_congruent || participant_id),
+data = single_trial_data_clean,
+REML = FALSE,
+control = lmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+summary(LMM_rt_max) # Singular fit
+```
