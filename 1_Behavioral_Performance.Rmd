@@ -36,6 +36,8 @@ library(e1071)      # for functions skewness and kurtosis
 library(MASS)       # for boxcox function and contrast definition
 library(lme4)       # for (G)LMMs
 library(lmerTest)   # for LMM p values (Satterthwaite's method for approximating dfs for the t and F tests)
+library(sjPlot)     # for tab_model function to display (G)LMM results
+
 
 
 # Load functions
@@ -69,6 +71,20 @@ my_figure_colors <- c("#8ea6b4", "#465369")
 load(file = "./data/Single_Trial_Data.rda")
 
 
+
+# Create some variables: numeric word accuracy, correctness of previous response, post-error accuracy (pea), and post-correct accuracy (pca)
+# Important to do this before trial exclusion! Otherwise the previous trial in the table might not have been the previous trial in the task!
+single_trial_data <- single_trial_data %>%
+  dplyr::mutate(
+    accuracy_numeric = ifelse(response_type == "correct", 1, 0),
+    accuracy_prev_trial = ifelse(lag(response_type == "correct", default = TRUE) == TRUE, "correct", "incorrect"),
+    pea = ifelse(lag(response_type == "correct") == FALSE & response_type == "correct", 1,
+                 ifelse(lag(response_type == "correct") == FALSE & response_type == "incorrect", 0, NA)),
+    pca = ifelse(lag(response_type == "correct") == TRUE & response_type == "correct", 1,
+                 ifelse(lag(response_type == "correct") == TRUE & response_type == "incorrect", 0, NA))
+    ) 
+
+
 # Exclude missing responses, RT outliers and trials with ERP artifacts
 single_trial_data_clean <- single_trial_data %>%
   dplyr::filter(
@@ -78,26 +94,26 @@ single_trial_data_clean <- single_trial_data %>%
   ) # (54998 of 55680 trials left)
 
 
-# Create some variables: numeric word accuracy, correctness of previous response, post-error accuracy (pea), and post-correct accuracy (pca)
-single_trial_data_clean <- single_trial_data_clean %>%
-  dplyr::mutate(
-    accuracy_numeric = ifelse(response_type == "correct", 1, 0), 
-    accuracy_prev_trial = ifelse(lag(response_type == "correct", default = TRUE) == TRUE, "correct", "incorrect"),
-    pea = ifelse(lag(response_type == "correct") == FALSE & response_type == "correct", 1,
-                 ifelse(lag(response_type == "correct") == FALSE & response_type == "incorrect", 0, NA)),
-    pca = ifelse(lag(response_type == "correct") == TRUE & response_type == "correct", 1,
-                 ifelse(lag(response_type == "correct") == TRUE & response_type == "incorrect", 0, NA))    
-    )
+# Exclude congruent errors
+single_trial_data_clean$congruent_error <- NA
+single_trial_data_clean[(single_trial_data_clean$response_type == "incorrect" &
+                           single_trial_data_clean$stimulus_type == "congruent"),]$congruent_error <- TRUE
+# single_trial_data_clean <- single_trial_data_clean %>%
+#   dplyr::filter(is.na(congruent_error))
+  
+
 
 
 # Create column with single-trial PES (RTpost-error − RTpre-error for all CCEC sequences)
 single_trial_data_clean$pes <- NA
- 
+# also make sure to exclude sequences where a trial was excluded in between (or when error occurred in first or last trial)
+
 for (i in 3:(nrow(single_trial_data_clean)-1)) {
-  if (single_trial_data_clean[i,]$response_type == "incorrect" & 
-      single_trial_data_clean[(i+1),]$response_type == "correct" &     
-      single_trial_data_clean[(i-1),]$response_type == "correct" & 
-      single_trial_data_clean[(i-2),]$response_type == "correct") {
+  if (single_trial_data_clean[i,]$response_type == "incorrect" &
+      single_trial_data_clean[(i+1),]$response_type == "correct" &
+      single_trial_data_clean[(i-1),]$response_type == "correct" &
+      single_trial_data_clean[(i-2),]$response_type == "correct" &
+      single_trial_data_clean[(i+1),]$trial - single_trial_data_clean[(i-1),]$trial == 2) {
     single_trial_data_clean[i,]$pes <- (single_trial_data_clean[(i+1),]$rt) - (single_trial_data_clean[(i-1),]$rt)
   }
 }
@@ -114,7 +130,7 @@ single_trial_data_clean$response_type_2nd  <- as.factor(single_trial_data_clean$
 single_trial_data_clean$accuracy_prev_trial  <- as.factor(single_trial_data_clean$accuracy_prev_trial)
 ```
 
-Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch.
+Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch. We discarded incorrect responses to congruent stimuli from the RT analysis as these were very rare (0.67% of all trials; N = 372 trials). - Does this make sense?? 
 
 ```{r excluded-trials}
 
@@ -802,8 +818,8 @@ figure_behav_session
 ## (G)LMM Analyses
 ***
 
-RT and accuracy were modeled using a linear mixed-effects model (LMM) and a binomial generalized linear mixed-effects model (GLMM), respectively. In both models, stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), session (T1, T2), response type of the previous trial N-1 (correct, incorrect), and, where applicable, response type (correct, incorrect) were specified as fixed factors and participants as random factors. <br><br>
-Fixed effects were coded usingeffect coding (this equals sliding difference contrastsfor two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants and word stimuli, as well as random slopes for all fixed factors and their interactions. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).
+RT and accuracy were modeled using a linear mixed-effects model (LMM) and a binomial generalized linear mixed-effects model (GLMM), respectively. In both models, **stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), and, where applicable (= for RT), response type (correct, incorrect)** were specified as fixed factors and participants as random factors. <br><br>
+Fixed effects were coded using effect coding (this equals sliding difference contrasts for two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants, as well as random slopes for all main effects and interactions specified as fixed effects. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).
 
 ```{r RT-accuracy-(G)LMM-contrast-coding}
 
@@ -813,34 +829,24 @@ contrasts(single_trial_data_clean$response_type)          <- contr.sdif(2)
 contrasts(single_trial_data_clean$stimulation)            <- contr.sdif(2)
 contrasts(single_trial_data_clean$group)                  <- contr.sdif(2)
 contrasts(single_trial_data_clean$session)                <- contr.sdif(2)
-contrasts(single_trial_data_clean$accuracy_prev_trial) <- contr.sdif(2)
+contrasts(single_trial_data_clean$accuracy_prev_trial)    <- contr.sdif(2)
 
 
-# Add contrasts as numerical covariates via model matrix*
+# Add contrasts as numerical covariates via model matrix* (specify all possible contasts for now)
 model_matrix <- model.matrix(~ stimulus_type * response_type * stimulation * group * session * accuracy_prev_trial, single_trial_data_clean)
 
 
-# Attach the model matrix (64 columns) to the dataframe
+# Attach the model matrix (32 columns) to the dataframe
 single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 64)] <- model_matrix
 
 
 # Assign descriptive names to the contrasts
-names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 63):ncol(single_trial_data_clean)] <- c("Grand Mean", "incongruent_congruent", "incorrect_correct", "verum_sham", "OCD_HC", "T2_T1", "prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct", 
-  "incongruent_congruent:verum_sham", "incorrect_correct:verum_sham", "incongruent_congruent:OCD_HC", "incorrect_correct:OCD_HC", "verum_sham:OCD_HC", 
-  "incongruent_congruent:T2_T1", "incorrect_correct:T2_T1", "verum_sham:T2_T1", "OCD_HC:T2_T1", "incongruent_congruent:prev_trial_incorrect_correct", 
-  "incorrect_correct:prev_trial_incorrect_correct", "verum_sham:prev_trial_incorrect_correct", "OCD_HC:prev_trial_incorrect_correct", "T2_T1:prev_trial_incorrect_correct", 
-  "incongruent_congruent:incorrect_correct:verum_sham", "incongruent_congruent:incorrect_correct:OCD_HC", "incongruent_congruent:verum_sham:OCD_HC", 
-  "incorrect_correct:verum_sham:OCD_HC", "incongruent_congruent:incorrect_correct:T2_T1", "incongruent_congruent:verum_sham:T2_T1", "incorrect_correct:verum_sham:T2_T1", 
-  "incongruent_congruent:OCD_HC:T2_T1", "incorrect_correct:OCD_HC:T2_T1", "verum_sham:OCD_HC:T2_T1", "incongruent_congruent:incorrect_correct:prev_trial_incorrect_correct", 
-  "incongruent_congruent:verum_sham:prev_trial_incorrect_correct", "incorrect_correct:verum_sham:prev_trial_incorrect_correct", "incongruent_congruent:OCD_HC:prev_trial_incorrect_correct", 
-  "incorrect_correct:OCD_HC:prev_trial_incorrect_correct", "verum_sham:OCD_HC:prev_trial_incorrect_correct", "incongruent_congruent:T2_T1:prev_trial_incorrect_correct", 
-  "incorrect_correct:T2_T1:prev_trial_incorrect_correct", "verum_sham:T2_T1:prev_trial_incorrect_correct", "OCD_HC:T2_T1:prev_trial_incorrect_correct", 
-  "incongruent_congruent:incorrect_correct:verum_sham:OCD_HC", "incongruent_congruent:incorrect_correct:verum_sham:T2_T1", "incongruent_congruent:incorrect_correct:OCD_HC:T2_T1", 
+names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 63):ncol(single_trial_data_clean)] <- c("Grand Mean", "incongruent_congruent", "incorrect_correct", "verum_sham", "OCD_HC", "T2_T1", "prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct", "incongruent_congruent:verum_sham", "incorrect_correct:verum_sham", "incongruent_congruent:OCD_HC", "incorrect_correct:OCD_HC", "verum_sham:OCD_HC",  "incongruent_congruent:T2_T1", "incorrect_correct:T2_T1", "verum_sham:T2_T1", "OCD_HC:T2_T1", "incongruent_congruent:prev_trial_incorrect_correct", 
+  "incorrect_correct:prev_trial_incorrect_correct", "verum_sham:prev_trial_incorrect_correct", "OCD_HC:prev_trial_incorrect_correct", "T2_T1:prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct:verum_sham", "incongruent_congruent:incorrect_correct:OCD_HC", "incongruent_congruent:verum_sham:OCD_HC", "incorrect_correct:verum_sham:OCD_HC", "incongruent_congruent:incorrect_correct:T2_T1", "incongruent_congruent:verum_sham:T2_T1", "incorrect_correct:verum_sham:T2_T1", "incongruent_congruent:OCD_HC:T2_T1", "incorrect_correct:OCD_HC:T2_T1", "verum_sham:OCD_HC:T2_T1", "incongruent_congruent:incorrect_correct:prev_trial_incorrect_correct",  "incongruent_congruent:verum_sham:prev_trial_incorrect_correct", "incorrect_correct:verum_sham:prev_trial_incorrect_correct", "incongruent_congruent:OCD_HC:prev_trial_incorrect_correct",   "incorrect_correct:OCD_HC:prev_trial_incorrect_correct", "verum_sham:OCD_HC:prev_trial_incorrect_correct", "incongruent_congruent:T2_T1:prev_trial_incorrect_correct", "incorrect_correct:T2_T1:prev_trial_incorrect_correct", "verum_sham:T2_T1:prev_trial_incorrect_correct", "OCD_HC:T2_T1:prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct:verum_sham:OCD_HC", "incongruent_congruent:incorrect_correct:verum_sham:T2_T1", "incongruent_congruent:incorrect_correct:OCD_HC:T2_T1", 
   "incongruent_congruent:verum_sham:OCD_HC:T2_T1", "incorrect_correct:verum_sham:OCD_HC:T2_T1", "incongruent_congruent:incorrect_correct:verum_sham:prev_trial_incorrect_correct", 
   "incongruent_congruent:incorrect_correct:OCD_HC:prev_trial_incorrect_correct", "incongruent_congruent:verum_sham:OCD_HC:prev_trial_incorrect_correct", 
   "incorrect_correct:verum_sham:OCD_HC:prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct:T2_T1:prev_trial_incorrect_correct", 
-  "incongruent_congruent:verum_sham:T2_T1:prev_trial_incorrect_correct", "incorrect_correct:verum_sham:T2_T1:prev_trial_incorrect_correct", 
-  "incongruent_congruent:OCD_HC:T2_T1:prev_trial_incorrect_correct", "incorrect_correct:OCD_HC:T2_T1:prev_trial_incorrect_correct", "verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct", 
+  "incongruent_congruent:verum_sham:T2_T1:prev_trial_incorrect_correct", "incorrect_correct:verum_sham:T2_T1:prev_trial_incorrect_correct", "incongruent_congruent:OCD_HC:T2_T1:prev_trial_incorrect_correct", "incorrect_correct:OCD_HC:T2_T1:prev_trial_incorrect_correct", "verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct", 
   "incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:T2_T1", "incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:prev_trial_incorrect_correct", 
   "incongruent_congruent:incorrect_correct:verum_sham:T2_T1:prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct:OCD_HC:T2_T1:prev_trial_incorrect_correct", 
   "incongruent_congruent:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct", "incorrect_correct:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct")
@@ -851,17 +857,119 @@ names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 63):ncol(single_
 ```
 <br>
 
-```{r RT-LMM-specification}
+### LMM RT
 
-#### 1) Run model with maximal random-effects structure
-LMM_rt_max <- lmer(rt_log ~ stimulation * (response_type + group + session + accuracy_prev_trial + stimulus_type + response_type:group + stimulus_type:group + accuracy_prev_trial:response_type) +
-  (1 + verum_sham + incorrect_correct + OCD_HC + T2_T1 + prev_trial_incorrect_correct+ incongruent_congruent || participant_id),
-data = single_trial_data_clean,
-REML = FALSE,
+I decided to favor a model that only predicts all main effects and interactions only with the factor stimulation (rt ~ stimulation * (group + response type + stimulus type). This is the most sparse model for testing the effect of stimulation on RT (the random effects are specified according to the fixed effects). Other models could also be specified, additionally testing interactions with the factor group (rt ~ stimulation * group * (response type + stimulus type) or testing  all interactions (rt ~ stimulation * group * response type * stimulus type). Specifically, these models additionally test the following effects:  group:response_type, group:stimulus_type, group:response_type:stimulation, and group:stimulus_type:stimulation (this list refers to when congruent errors are excluded). Of these, group:stimulus_type was significant with p = .05 in the first preliminary analysis. But to me, these effects are of no prior interest, and/or difficult to interpret. Thus, I chose the simple model that only tests interactions with the factor stimulation.
+
+I thought about including session as fixed effect. But first, this was not stated in preregistration, and second, there is only a main effect, no interaction with stimulation (there is a trend though, but I do not find this effect to be meaningfully interpretable).
+
+Furthermore, I decided to test the stimulation effect on PES and PEA/PCA in sperate models. Including the factor correctness of previous trial would have led to overly complex models. Additionally, all trials would have been included then, preventing to use the robust (and preregistered) PES quantification by Dutilh et al., (2012).
+
+```{r LMM-RT}
+
+# Run model with maximal random-effects structure (I skipped model allowing correlations between radom effects here; check its convergence later)
+LMM_rt <- lmer(rt_log ~ stimulation * (group + response_type + stimulus_type) +
+  (1 + incongruent_congruent + incorrect_correct + verum_sham + verum_sham:incongruent_congruent + verum_sham:incorrect_correct || participant_id),
+data = single_trial_data_clean[is.na(single_trial_data_clean$congruent_error),],
+REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
 
 
 # Check model output
-summary(LMM_rt_max) # Singular fit
+# summary(LMM_rt) # Model does converge
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_rt)) # All terms explain variance
+
+
+# Display results (fixed effects)
+tab_model(LMM_rt,
+  dv.labels = "log(RT)", show.stat = TRUE, show.icc = FALSE, show.r2 = FALSE, 
+  show.re.var = FALSE, show.ngroups = FALSE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite"
+)
 ```
+<br>
+Responses are faster in the congruent than in the incongruent condition. Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation. 
+<br><br>
+
+### LMM PES
+
+```{r LMM-PES}
+
+# Run model with maximal random-effects structure (I skipped model allowing correlations between radom effects here; check its convergence later)
+LMM_pes <- lmer(pes ~ stimulation * group + stimulus_type +
+  (1 + verum_sham + stimulus_type || participant_id),
+data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(LMM_pes) # Model does converge
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_pes)) # All terms explain variance
+
+
+# Display results (fixed effects)
+tab_model(LMM_pes,
+  dv.labels = "PES", show.stat = TRUE, show.icc = FALSE, show.r2 = FALSE, 
+  show.re.var = FALSE, show.ngroups = FALSE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite"
+)
+```
+<br>
+There is PES. "One potential interfering factor in PES can be the flanker congruency of the respective trial." There was no effect of congruency on trial n on PES. There is no evidence for an effect of group or stimulation. When excluding congruent errors, there is a trend for more PES in OCD compared to HC. 
+<br><br>
+
+### GLMM Accuracy
+
+I included the factor accuracy of previous trial in the model, to directly test post-error/post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it in the same model. This was not preregistered.
+
+OR 
+
+Accuracy was first analyzed with only stimulation, group and stimulus type as fixed factors. Second, we included the factor previous accuracy to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered.
+
+```{r GLMM-accuracy}
+
+# Run model with maximal random-effects structure (I skipped model allowing correlations between radom effects here; check its convergence later)
+GLMM_accuracy <- glmer(accuracy_numeric ~ stimulation * (group + stimulus_type + accuracy_prev_trial) +
+  (1 + incongruent_congruent + verum_sham + prev_trial_incorrect_correct + verum_sham:incongruent_congruent + verum_sham:prev_trial_incorrect_correct  || participant_id),
+data = single_trial_data_clean,
+family = binomial,
+control = glmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(GLMM_accuracy) # Model does converge
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(GLMM_accuracy)) # All terms explain variance
+
+
+# Display results (fixed effects)
+tab_model(GLMM_accuracy,
+  dv.labels = "Accuracy", show.stat = TRUE, show.icc = FALSE, show.r2 = FALSE, 
+  show.re.var = FALSE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
+  string.ci = "95 % CI", string.p = "p value"
+)
+```
+<br>
+Accuracy is lower in the incongruent condition than in the congruent condition. Furthermore, accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy). There was no interaction involving congruency on trial n and response type on trial n − 1. There is no evidence for an effect of group or stimulation. (When removing congruent errors from this analysis, there is also an effect of group, with patients being more accurate than control participants.)
+<br><br>
+
+
+# Further thoughts 
+
+Include factor congruence for PES to avoid confound with congruency?
+
+See Riesel:  Post-error slowing was analyzed by comparing the difference between reaction times following correct incongruent trials with reaction times following errors in incongruent trials. Only incongruent trials were included in this analysis in order to avoid a confound with the congruency effect, and because errors occurred mainly in incongruent trials
+
+also adjust in plots when excluding congruent errors!

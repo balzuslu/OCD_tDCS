@@ -426,6 +426,20 @@ div.tocify {
 load(file = &quot;./data/Single_Trial_Data.rda&quot;)
 
 
+
+# Create some variables: numeric word accuracy, correctness of previous response, post-error accuracy (pea), and post-correct accuracy (pca)
+# Important to do this before trial exclusion! Otherwise the previous trial in the table might not have been the previous trial in the task!
+single_trial_data &lt;- single_trial_data %&gt;%
+  dplyr::mutate(
+    accuracy_numeric = ifelse(response_type == &quot;correct&quot;, 1, 0),
+    accuracy_prev_trial = ifelse(lag(response_type == &quot;correct&quot;, default = TRUE) == TRUE, &quot;correct&quot;, &quot;incorrect&quot;),
+    pea = ifelse(lag(response_type == &quot;correct&quot;) == FALSE &amp; response_type == &quot;correct&quot;, 1,
+                 ifelse(lag(response_type == &quot;correct&quot;) == FALSE &amp; response_type == &quot;incorrect&quot;, 0, NA)),
+    pca = ifelse(lag(response_type == &quot;correct&quot;) == TRUE &amp; response_type == &quot;correct&quot;, 1,
+                 ifelse(lag(response_type == &quot;correct&quot;) == TRUE &amp; response_type == &quot;incorrect&quot;, 0, NA))
+    ) 
+
+
 # Exclude missing responses, RT outliers and trials with ERP artifacts
 single_trial_data_clean &lt;- single_trial_data %&gt;%
   dplyr::filter(
@@ -435,26 +449,26 @@ single_trial_data_clean &lt;- single_trial_data %&gt;%
   ) # (54998 of 55680 trials left)
 
 
-# Create some variables: numeric word accuracy, correctness of previous response, post-error accuracy (pea), and post-correct accuracy (pca)
-single_trial_data_clean &lt;- single_trial_data_clean %&gt;%
-  dplyr::mutate(
-    accuracy_numeric = ifelse(response_type == &quot;correct&quot;, 1, 0), 
-    accuracy_prev_trial = ifelse(lag(response_type == &quot;correct&quot;, default = TRUE) == TRUE, &quot;correct&quot;, &quot;incorrect&quot;),
-    pea = ifelse(lag(response_type == &quot;correct&quot;) == FALSE &amp; response_type == &quot;correct&quot;, 1,
-                 ifelse(lag(response_type == &quot;correct&quot;) == FALSE &amp; response_type == &quot;incorrect&quot;, 0, NA)),
-    pca = ifelse(lag(response_type == &quot;correct&quot;) == TRUE &amp; response_type == &quot;correct&quot;, 1,
-                 ifelse(lag(response_type == &quot;correct&quot;) == TRUE &amp; response_type == &quot;incorrect&quot;, 0, NA))    
-    )
+# Exclude congruent errors
+single_trial_data_clean$congruent_error &lt;- NA
+single_trial_data_clean[(single_trial_data_clean$response_type == &quot;incorrect&quot; &amp;
+                           single_trial_data_clean$stimulus_type == &quot;congruent&quot;),]$congruent_error &lt;- TRUE
+# single_trial_data_clean &lt;- single_trial_data_clean %&gt;%
+#   dplyr::filter(is.na(congruent_error))
+  
+
 
 
 # Create column with single-trial PES (RTpost-error − RTpre-error for all CCEC sequences)
 single_trial_data_clean$pes &lt;- NA
- 
+# also make sure to exclude sequences where a trial was excluded in between (or when error occurred in first or last trial)
+
 for (i in 3:(nrow(single_trial_data_clean)-1)) {
-  if (single_trial_data_clean[i,]$response_type == &quot;incorrect&quot; &amp; 
-      single_trial_data_clean[(i+1),]$response_type == &quot;correct&quot; &amp;     
-      single_trial_data_clean[(i-1),]$response_type == &quot;correct&quot; &amp; 
-      single_trial_data_clean[(i-2),]$response_type == &quot;correct&quot;) {
+  if (single_trial_data_clean[i,]$response_type == &quot;incorrect&quot; &amp;
+      single_trial_data_clean[(i+1),]$response_type == &quot;correct&quot; &amp;
+      single_trial_data_clean[(i-1),]$response_type == &quot;correct&quot; &amp;
+      single_trial_data_clean[(i-2),]$response_type == &quot;correct&quot; &amp;
+      single_trial_data_clean[(i+1),]$trial - single_trial_data_clean[(i-1),]$trial == 2) {
     single_trial_data_clean[i,]$pes &lt;- (single_trial_data_clean[(i+1),]$rt) - (single_trial_data_clean[(i-1),]$rt)
   }
 }
@@ -469,7 +483,7 @@ single_trial_data_clean$stimulus_type      &lt;- as.factor(single_trial_data_cle
 single_trial_data_clean$response_type      &lt;- as.factor(single_trial_data_clean$response_type)
 single_trial_data_clean$response_type_2nd  &lt;- as.factor(single_trial_data_clean$response_type_2nd)
 single_trial_data_clean$accuracy_prev_trial  &lt;- as.factor(single_trial_data_clean$accuracy_prev_trial)</code></pre>
-<p>Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch.</p>
+<p>Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch. We discarded incorrect responses to congruent stimuli from the RT analysis as these were very rare (0.67% of all trials; N = 372 trials). - Does this make sense?? For accuracy and</p>
 <pre class="r"><code># Calculate percentage of excluded trials
 excluded_trials &lt;- single_trial_data %&gt;%
   group_by(group, participant_id, session) %&gt;%
@@ -819,7 +833,7 @@ PES
 0.3
 </td>
 <td style="text-align:right;">
-0.2
+0.1
 </td>
 </tr>
 <tr>
@@ -854,7 +868,7 @@ bc_pes &lt;- boxcox(pes+1000 ~ 1, data = single_trial_data_clean[!is.na(single_t
 
 # Reset plot layout
 par(mfrow = c(1, 1)) </code></pre>
-<p>For RT (left plot), the optimal lambda is -0.42, suggesting that log transformation (for lambda = 0) is appropriate. Actually, for lambda = -0.5, the most appropriate transformation would be Y^-0.5 = 1/(√(Y)), but this does not seem very common to me. As our lambda is not far from 0, I chose log transformation, which is more commonly used. For PES (right plot), the optimal lambda is 0.75, suggesting that no transformation (for lambda = 1) is needed. <br><br></p>
+<p>For RT (left plot), the optimal lambda is -0.42, suggesting that log transformation (for lambda = 0) is appropriate. Actually, for lambda = -0.5, the most appropriate transformation would be Y^-0.5 = 1/(√(Y)), but this does not seem very common to me. As our lambda is not far from 0, I chose log transformation, which is more commonly used. For PES (right plot), the optimal lambda is 0.79, suggesting that no transformation (for lambda = 1) is needed. <br><br></p>
 </div>
 </div>
 <div id="descriptive-statistics" class="section level2">
@@ -1809,16 +1823,16 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-38.40
+38.22
 </td>
 <td style="text-align:left;">
-[28.33, 48.47]
+[28.25, 48.19]
 </td>
 <td style="text-align:right;">
-47.26
+47.11
 </td>
 <td style="text-align:left;">
-[34.96, 59.56]
+[34.27, 59.95]
 </td>
 </tr>
 <tr>
@@ -1829,16 +1843,16 @@ sham
 T2
 </td>
 <td style="text-align:right;">
-21.65
+21.16
 </td>
 <td style="text-align:left;">
-[9.97, 33.33]
+[9.63, 32.69]
 </td>
 <td style="text-align:right;">
-33.84
+32.99
 </td>
 <td style="text-align:left;">
-[21.46, 46.22]
+[20.57, 45.41]
 </td>
 </tr>
 <tr>
@@ -1849,16 +1863,16 @@ verum
 T1
 </td>
 <td style="text-align:right;">
-42.42
+42.98
 </td>
 <td style="text-align:left;">
-[29.03, 55.81]
+[29.2, 56.76]
 </td>
 <td style="text-align:right;">
-50.07
+53.52
 </td>
 <td style="text-align:left;">
-[36.63, 63.51]
+[39.96, 67.08]
 </td>
 </tr>
 <tr>
@@ -1869,16 +1883,16 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-23.36
+21.29
 </td>
 <td style="text-align:left;">
-[12.83, 33.89]
+[11.19, 31.39]
 </td>
 <td style="text-align:right;">
-27.38
+27.49
 </td>
 <td style="text-align:left;">
-[16.74, 38.02]
+[16.66, 38.32]
 </td>
 </tr>
 </tbody>
@@ -1944,16 +1958,16 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-95.79
+95.38
 </td>
 <td style="text-align:left;">
-[93.77, 97.81]
+[93.31, 97.45]
 </td>
 <td style="text-align:right;">
-95.81
+95.20
 </td>
 <td style="text-align:left;">
-[93.45, 98.17]
+[92.81, 97.59]
 </td>
 </tr>
 <tr>
@@ -1964,16 +1978,16 @@ sham
 T2
 </td>
 <td style="text-align:right;">
-93.82
+93.54
 </td>
 <td style="text-align:left;">
-[91.23, 96.41]
+[91.05, 96.03]
 </td>
 <td style="text-align:right;">
-93.41
+93.67
 </td>
 <td style="text-align:left;">
-[90.51, 96.31]
+[90.94, 96.4]
 </td>
 </tr>
 <tr>
@@ -1984,16 +1998,16 @@ verum
 T1
 </td>
 <td style="text-align:right;">
-94.83
+95.02
 </td>
 <td style="text-align:left;">
-[92.39, 97.27]
+[92.71, 97.33]
 </td>
 <td style="text-align:right;">
-96.94
+96.14
 </td>
 <td style="text-align:left;">
-[94.87, 99.01]
+[94.01, 98.27]
 </td>
 </tr>
 <tr>
@@ -2004,16 +2018,16 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-94.48
+94.64
 </td>
 <td style="text-align:left;">
-[92.14, 96.82]
+[92.37, 96.91]
 </td>
 <td style="text-align:right;">
-96.22
+96.36
 </td>
 <td style="text-align:left;">
-[94.14, 98.3]
+[94.36, 98.36]
 </td>
 </tr>
 </tbody>
@@ -2079,16 +2093,16 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-92.68
+92.70
 </td>
 <td style="text-align:left;">
-[91.93, 93.43]
+[91.95, 93.45]
 </td>
 <td style="text-align:right;">
-94.92
+94.95
 </td>
 <td style="text-align:left;">
-[94.32, 95.52]
+[94.35, 95.55]
 </td>
 </tr>
 <tr>
@@ -2099,16 +2113,16 @@ sham
 T2
 </td>
 <td style="text-align:right;">
-93.80
+93.82
 </td>
 <td style="text-align:left;">
-[93.13, 94.47]
+[93.15, 94.49]
 </td>
 <td style="text-align:right;">
-94.61
+94.60
 </td>
 <td style="text-align:left;">
-[93.97, 95.25]
+[93.96, 95.24]
 </td>
 </tr>
 <tr>
@@ -2119,16 +2133,16 @@ verum
 T1
 </td>
 <td style="text-align:right;">
-94.31
+94.29
 </td>
 <td style="text-align:left;">
-[93.67, 94.95]
+[93.65, 94.93]
 </td>
 <td style="text-align:right;">
-94.41
+94.44
 </td>
 <td style="text-align:left;">
-[93.75, 95.07]
+[93.78, 95.1]
 </td>
 </tr>
 <tr>
@@ -2139,16 +2153,16 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-92.52
+92.50
 </td>
 <td style="text-align:left;">
-[91.77, 93.27]
+[91.75, 93.25]
 </td>
 <td style="text-align:right;">
-93.87
+93.85
 </td>
 <td style="text-align:left;">
-[93.21, 94.53]
+[93.18, 94.52]
 </td>
 </tr>
 </tbody>
@@ -2455,169 +2469,530 @@ Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, 
 <div id="glmm-analyses" class="section level2">
 <h2>(G)LMM Analyses</h2>
 <hr />
-<p>RT and accuracy were modeled using a linear mixed-effects model (LMM) and a binomial generalized linear mixed-effects model (GLMM), respectively. In both models, stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), session (T1, T2), response type of the previous trial N-1 (correct, incorrect), and, where applicable, response type (correct, incorrect) were specified as fixed factors and participants as random factors. <br><br> Fixed effects were coded usingeffect coding (this equals sliding difference contrastsfor two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants and word stimuli, as well as random slopes for all fixed factors and their interactions. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).</p>
+<p>RT and accuracy were modeled using a linear mixed-effects model (LMM) and a binomial generalized linear mixed-effects model (GLMM), respectively. In both models, <strong>stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), and, where applicable (= for RT), response type (correct, incorrect)</strong> were specified as fixed factors and participants as random factors. <br><br> Fixed effects were coded using effect coding (this equals sliding difference contrasts for two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants, as well as random slopes for all main effects and interactions specified as fixed effects. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).</p>
 <pre class="r"><code># Define contrasts (sliding difference contrasts)
 contrasts(single_trial_data_clean$stimulus_type)          &lt;- contr.sdif(2)
 contrasts(single_trial_data_clean$response_type)          &lt;- contr.sdif(2)
 contrasts(single_trial_data_clean$stimulation)            &lt;- contr.sdif(2)
 contrasts(single_trial_data_clean$group)                  &lt;- contr.sdif(2)
 contrasts(single_trial_data_clean$session)                &lt;- contr.sdif(2)
-contrasts(single_trial_data_clean$accuracy_prev_trial) &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$accuracy_prev_trial)    &lt;- contr.sdif(2)
 
 
 # Add contrasts as numerical covariates via model matrix*
-model_matrix &lt;- model.matrix(~ stimulus_type * response_type * stimulation * group * session * accuracy_prev_trial, single_trial_data_clean)
+model_matrix &lt;- model.matrix(~ stimulus_type * response_type * stimulation * group * session, single_trial_data_clean)
 
 
-# Attach the model matrix (64 columns) to the dataframe
-single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 64)] &lt;- model_matrix
+# Attach the model matrix (32 columns) to the dataframe
+single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 32)] &lt;- model_matrix
 
 
 # Assign descriptive names to the contrasts
-names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 63):ncol(single_trial_data_clean)] &lt;- c(&quot;Grand Mean&quot;, &quot;incongruent_congruent&quot;, &quot;incorrect_correct&quot;, &quot;verum_sham&quot;, &quot;OCD_HC&quot;, &quot;T2_T1&quot;, &quot;prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:incorrect_correct&quot;, 
-  &quot;incongruent_congruent:verum_sham&quot;, &quot;incorrect_correct:verum_sham&quot;, &quot;incongruent_congruent:OCD_HC&quot;, &quot;incorrect_correct:OCD_HC&quot;, &quot;verum_sham:OCD_HC&quot;, 
-  &quot;incongruent_congruent:T2_T1&quot;, &quot;incorrect_correct:T2_T1&quot;, &quot;verum_sham:T2_T1&quot;, &quot;OCD_HC:T2_T1&quot;, &quot;incongruent_congruent:prev_trial_incorrect_correct&quot;, 
-  &quot;incorrect_correct:prev_trial_incorrect_correct&quot;, &quot;verum_sham:prev_trial_incorrect_correct&quot;, &quot;OCD_HC:prev_trial_incorrect_correct&quot;, &quot;T2_T1:prev_trial_incorrect_correct&quot;, 
-  &quot;incongruent_congruent:incorrect_correct:verum_sham&quot;, &quot;incongruent_congruent:incorrect_correct:OCD_HC&quot;, &quot;incongruent_congruent:verum_sham:OCD_HC&quot;, 
-  &quot;incorrect_correct:verum_sham:OCD_HC&quot;, &quot;incongruent_congruent:incorrect_correct:T2_T1&quot;, &quot;incongruent_congruent:verum_sham:T2_T1&quot;, &quot;incorrect_correct:verum_sham:T2_T1&quot;, 
-  &quot;incongruent_congruent:OCD_HC:T2_T1&quot;, &quot;incorrect_correct:OCD_HC:T2_T1&quot;, &quot;verum_sham:OCD_HC:T2_T1&quot;, &quot;incongruent_congruent:incorrect_correct:prev_trial_incorrect_correct&quot;, 
-  &quot;incongruent_congruent:verum_sham:prev_trial_incorrect_correct&quot;, &quot;incorrect_correct:verum_sham:prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:OCD_HC:prev_trial_incorrect_correct&quot;, 
-  &quot;incorrect_correct:OCD_HC:prev_trial_incorrect_correct&quot;, &quot;verum_sham:OCD_HC:prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:T2_T1:prev_trial_incorrect_correct&quot;, 
-  &quot;incorrect_correct:T2_T1:prev_trial_incorrect_correct&quot;, &quot;verum_sham:T2_T1:prev_trial_incorrect_correct&quot;, &quot;OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, 
-  &quot;incongruent_congruent:incorrect_correct:verum_sham:OCD_HC&quot;, &quot;incongruent_congruent:incorrect_correct:verum_sham:T2_T1&quot;, &quot;incongruent_congruent:incorrect_correct:OCD_HC:T2_T1&quot;, 
-  &quot;incongruent_congruent:verum_sham:OCD_HC:T2_T1&quot;, &quot;incorrect_correct:verum_sham:OCD_HC:T2_T1&quot;, &quot;incongruent_congruent:incorrect_correct:verum_sham:prev_trial_incorrect_correct&quot;, 
-  &quot;incongruent_congruent:incorrect_correct:OCD_HC:prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:verum_sham:OCD_HC:prev_trial_incorrect_correct&quot;, 
-  &quot;incorrect_correct:verum_sham:OCD_HC:prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:incorrect_correct:T2_T1:prev_trial_incorrect_correct&quot;, 
-  &quot;incongruent_congruent:verum_sham:T2_T1:prev_trial_incorrect_correct&quot;, &quot;incorrect_correct:verum_sham:T2_T1:prev_trial_incorrect_correct&quot;, 
-  &quot;incongruent_congruent:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, &quot;incorrect_correct:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, &quot;verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, 
-  &quot;incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:T2_T1&quot;, &quot;incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:prev_trial_incorrect_correct&quot;, 
-  &quot;incongruent_congruent:incorrect_correct:verum_sham:T2_T1:prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:incorrect_correct:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, 
-  &quot;incongruent_congruent:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, &quot;incorrect_correct:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;, &quot;incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct&quot;)
+names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 31):ncol(single_trial_data_clean)] &lt;- c(&quot;Grand Mean&quot;,&quot;incongruent_congruent&quot;,&quot;incorrect_correct&quot;,&quot;verum_sham&quot;,&quot;OCD_HC&quot;,&quot;T2_T1&quot;,&quot;incongruent_congruent:incorrect_correct&quot; ,&quot;incongruent_congruent:verum_sham&quot;,&quot;incorrect_correct:verum_sham&quot; ,&quot;incongruent_congruent:OCD_HC&quot;,&quot;incorrect_correct:OCD_HC&quot;,&quot;verum_sham:OCD_HC&quot;,&quot;incongruent_congruent:T2_T1&quot;, &quot;incorrect_correct:T2_T1&quot;,&quot;verum_sham:T2_T1&quot;,&quot;OCD_HC:T2_T1&quot;,&quot;incongruent_congruent:incorrect_correct:verum_sham&quot;,&quot;incongruent_congruent:incorrect_correct:OCD_HC&quot;,&quot;incongruent_congruent:verum_sham:OCD_HC&quot;,&quot;incorrect_correct:verum_sham:OCD_HC&quot; ,&quot;incongruent_congruent:incorrect_correct:T2_T1&quot;,&quot;incongruent_congruent:verum_sham:T2_T1&quot; ,&quot;incorrect_correct:verum_sham:T2_T1&quot;,&quot;incongruent_congruent:OCD_HC:T2_T1&quot;,&quot;incorrect_correct:OCD_HC:T2_T1&quot;,&quot;verum_sham:OCD_HC:T2_T1&quot;    ,&quot;incongruent_congruent:incorrect_correct:verum_sham:OCD_HC&quot;,&quot;incongruent_congruent:incorrect_correct:verum_sham:T2_T1&quot;,&quot;incongruent_congruent:incorrect_correct:OCD_HC:T2_T1&quot;,&quot;incongruent_congruent:verum_sham:OCD_HC:T2_T1&quot;,&quot;incorrect_correct:verum_sham:OCD_HC:T2_T1&quot; ,&quot;incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:T2_T1&quot;)
+
+
+
 
 
 # *Note: For the random effects, we needed to enter the separate random effect terms in the models to enable
 # double-bar notation (||). This allows fitting a model that sets correlations of the random terms to zero.</code></pre>
 <p><br></p>
-<pre class="r"><code>#### 1) Run model with maximal random-effects structure
-LMM_rt_max &lt;- lmer(rt_log ~ stimulation * (response_type + group + session + accuracy_prev_trial + stimulus_type + response_type:group + stimulus_type:group + accuracy_prev_trial:response_type) +
-  (1 + verum_sham + incorrect_correct + OCD_HC + T2_T1 + prev_trial_incorrect_correct+ incongruent_congruent || participant_id),
-data = single_trial_data_clean,
-REML = FALSE,
+<div id="lmm-rt" class="section level3">
+<h3>LMM RT</h3>
+<p>I decided to favor a model that only predicts all main effects and interactions only with the factor stimulation (rt ~ stimulation * (group + response type + stimulus type). This is the most sparse model for testing the effect of stimulation on RT (the random effects are specified according to the fixed effects). Other models could also be specified, additionally testing interactions with the factor group (rt ~ stimulation * group * (response type + stimulus type) or testing all interactions (rt ~ stimulation * group * response type * stimulus type). Specifically, these models additionally test the following effects: group:response_type, group:stimulus_type, group:response_type:stimulation, and group:stimulus_type:stimulation (this list refers to when congruent errors are excluded). Of these, group:stimulus_type was significant with p = .05 in the first preliminary analysis. But to me, these effects are of no prior interest, and/or difficult to interpret. Thus, I chose the simple model that only tests interactions with the factor stimulation.</p>
+<p>I thought about including session as fixed effect. But first, this was not stated in preregistration, and second, there is only a main effect, no interaction with stimulation (there is a trend though, but I do not find this effect to be meaningfully interpretable).</p>
+<p>Furthermore, I decided to test the stimulation effect on PES and PEA/PCA in sperate models. Including the factor correctness of previous trial would have led to overly complex models. Additionally, all trials would have been included then, preventing to use the robust (and preregistered) PES quantification by Dutilh et al., (2012).</p>
+<pre class="r"><code># Run model with maximal random-effects structure (I skipped model allowing correlations between radom effects here; check its convergence later)
+LMM_rt &lt;- lmer(rt_log ~ stimulation * (group + response_type + stimulus_type) +
+  (1 + incongruent_congruent + incorrect_correct + verum_sham + verum_sham:incongruent_congruent + verum_sham:incorrect_correct || participant_id),
+data = single_trial_data_clean[is.na(single_trial_data_clean$congruent_error),],
+REML = TRUE,
 control = lmerControl(optimizer = &quot;bobyqa&quot;)
 )
 
 
 # Check model output
-summary(LMM_rt_max) # Singular fit</code></pre>
-<pre><code>Linear mixed model fit by maximum likelihood . t-tests use Satterthwaite&#39;s
-  method [lmerModLmerTest]
-Formula: 
-rt_log ~ stimulation * (response_type + group + session + accuracy_prev_trial +  
-    stimulus_type + response_type:group + stimulus_type:group +  
-    accuracy_prev_trial:response_type) + (1 + verum_sham + incorrect_correct +  
-    OCD_HC + T2_T1 + prev_trial_incorrect_correct + incongruent_congruent ||  
-    participant_id)
-   Data: single_trial_data_clean
-Control: lmerControl(optimizer = &quot;bobyqa&quot;)
+# summary(LMM_rt) # Model does converge
 
-     AIC      BIC   logLik deviance df.resid 
--52800.7 -52568.9  26426.4 -52852.7    54972 
 
-Scaled residuals: 
-    Min      1Q  Median      3Q     Max 
--7.7207 -0.5937 -0.0525  0.5408  6.0428 
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_rt)) # All terms explain variance
 
-Random effects:
- Groups           Name                         Variance    Std.Dev.
- participant_id   (Intercept)                  0.000002642 0.001626
- participant_id.1 verum_sham                   0.000422997 0.020567
- participant_id.2 incorrect_correct            0.004834075 0.069528
- participant_id.3 OCD_HC                       0.022634923 0.150449
- participant_id.4 T2_T1                        0.001660791 0.040753
- participant_id.5 prev_trial_incorrect_correct 0.000969087 0.031130
- participant_id.6 incongruent_congruent        0.001034510 0.032164
- Residual                                      0.022049411 0.148490
-Number of obs: 54998, groups:  participant_id, 58
 
-Fixed effects:
-                                                            Estimate
-(Intercept)                                                5.8875769
-stimulation2-1                                            -0.0112153
-response_type2-1                                          -0.2427272
-group2-1                                                   0.0316542
-session2-1                                                -0.0353659
-accuracy_prev_trial2-1                                     0.0153673
-stimulus_type2-1                                           0.1407228
-response_type2-1:group2-1                                  0.0005323
-group2-1:stimulus_type2-1                                 -0.0181220
-response_type2-1:accuracy_prev_trial2-1                   -0.0324023
-stimulation2-1:response_type2-1                           -0.0149283
-stimulation2-1:group2-1                                    0.0056502
-stimulation2-1:session2-1                                 -0.0783456
-stimulation2-1:accuracy_prev_trial2-1                     -0.0165866
-stimulation2-1:stimulus_type2-1                            0.0070036
-stimulation2-1:response_type2-1:group2-1                   0.0313995
-stimulation2-1:group2-1:stimulus_type2-1                  -0.0118074
-stimulation2-1:response_type2-1:accuracy_prev_trial2-1    -0.0371071
-                                                          Std. Error
-(Intercept)                                                0.0104081
-stimulation2-1                                             0.0087013
-response_type2-1                                           0.0111867
-group2-1                                                   0.0200903
-session2-1                                                 0.0061304
-accuracy_prev_trial2-1                                     0.0076029
-stimulus_type2-1                                           0.0044171
-response_type2-1:group2-1                                  0.0191566
-group2-1:stimulus_type2-1                                  0.0088342
-response_type2-1:accuracy_prev_trial2-1                    0.0126393
-stimulation2-1:response_type2-1                            0.0125889
-stimulation2-1:group2-1                                    0.0132049
-stimulation2-1:session2-1                                  0.0401495
-stimulation2-1:accuracy_prev_trial2-1                      0.0125180
-stimulation2-1:stimulus_type2-1                            0.0025861
-stimulation2-1:response_type2-1:group2-1                   0.0111049
-stimulation2-1:group2-1:stimulus_type2-1                   0.0051721
-stimulation2-1:response_type2-1:accuracy_prev_trial2-1     0.0249821
-                                                                  df t value
-(Intercept)                                               67.3030710 565.673
-stimulation2-1                                           235.4843598  -1.289
-response_type2-1                                         105.9653734 -21.698
-group2-1                                                  58.2698881   1.576
-session2-1                                                57.9861953  -5.769
-accuracy_prev_trial2-1                                   312.3918510   2.021
-stimulus_type2-1                                          57.9985310  31.859
-response_type2-1:group2-1                                 57.1137980   0.028
-group2-1:stimulus_type2-1                                 57.9988719  -2.051
-response_type2-1:accuracy_prev_trial2-1                52883.2015195  -2.564
-stimulation2-1:response_type2-1                        54521.8449462  -1.186
-stimulation2-1:group2-1                                   78.0037527   0.428
-stimulation2-1:session2-1                                 58.0899663  -1.951
-stimulation2-1:accuracy_prev_trial2-1                  54023.6779805  -1.325
-stimulation2-1:stimulus_type2-1                        54747.8912369   2.708
-stimulation2-1:response_type2-1:group2-1               54786.5676588   2.828
-stimulation2-1:group2-1:stimulus_type2-1               54747.1453827  -2.283
-stimulation2-1:response_type2-1:accuracy_prev_trial2-1 54502.3794979  -1.485
-                                                                   Pr(&gt;|t|)    
-(Intercept)                                            &lt; 0.0000000000000002 ***
-stimulation2-1                                                      0.19869    
-response_type2-1                                       &lt; 0.0000000000000002 ***
-group2-1                                                            0.12053    
-session2-1                                                      0.000000327 ***
-accuracy_prev_trial2-1                                              0.04411 *  
-stimulus_type2-1                                       &lt; 0.0000000000000002 ***
-response_type2-1:group2-1                                           0.97793    
-group2-1:stimulus_type2-1                                           0.04476 *  
-response_type2-1:accuracy_prev_trial2-1                             0.01036 *  
-stimulation2-1:response_type2-1                                     0.23569    
-stimulation2-1:group2-1                                             0.66991    
-stimulation2-1:session2-1                                           0.05584 .  
-stimulation2-1:accuracy_prev_trial2-1                               0.18517    
-stimulation2-1:stimulus_type2-1                                     0.00677 ** 
-stimulation2-1:response_type2-1:group2-1                            0.00469 ** 
-stimulation2-1:group2-1:stimulus_type2-1                            0.02244 *  
-stimulation2-1:response_type2-1:accuracy_prev_trial2-1              0.13746    
----
-Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1</code></pre>
+# Display results (fixed effects)
+tab_model(LMM_rt,
+  dv.labels = &quot;log(RT)&quot;, show.stat = TRUE, show.icc = FALSE, show.r2 = FALSE, 
+  show.re.var = FALSE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;
+)</code></pre>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+log(RT)
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+t value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+5.87
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+5.85 – 5.89
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+571.36
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+stimulation2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.53
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.595
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+group2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02 – 0.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.20
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.236
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+response_type2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.25
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.27 – -0.23
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-24.90
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+stimulus_type2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.14
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.13 – 0.15
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+31.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+stimulation2-1:group2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – 0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.15
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.884
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+stimulation2-1:response_type2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02 – 0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.09
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.925
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+stimulation2-1:stimulus_type2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.59
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.117
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+54626
+</td>
+</tr>
+</table>
+<p><br> Responses are faster in the congruent than in the incongruent condition. Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation. <br><br></p>
+</div>
+<div id="glmm-accuracy" class="section level3">
+<h3>GLMM Accuracy</h3>
+<pre class="r"><code># Run model with maximal random-effects structure (I skipped model allowing correlations between radom effects here; check its convergence later)
+GLMM_accuracy &lt;- glmer(accuracy_numeric ~ stimulation * (group + stimulus_type) +
+  (1 + incongruent_congruent + verum_sham + verum_sham:incongruent_congruent || participant_id),
+data = single_trial_data_clean,
+family = binomial,
+control = glmerControl(optimizer = &quot;bobyqa&quot;)
+)
+
+
+# Check model output
+# summary(GLMM_accuracy) # Model does converge
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(GLMM_accuracy)) # All terms explain variance
+
+
+# Display results (fixed effects)
+tab_model(GLMM_accuracy,
+  dv.labels = &quot;Accuracy&quot;, show.stat = TRUE, show.icc = FALSE, show.r2 = FALSE, 
+  show.re.var = FALSE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;z value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;
+)</code></pre>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+Accuracy
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+z value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+28.31
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+25.11 – 31.92
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+54.62
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+stimulation2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.96
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.85 – 1.09
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.65
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.515
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+group2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.82 – 1.31
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.30
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.763
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+stimulus_type2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.10
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.08 – 0.13
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-20.80
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+stimulation2-1:group2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.88
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.72 – 1.07
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.28
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.202
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+stimulation2-1:stimulus_type2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.79 – 1.30
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.12
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.908
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+54998
+</td>
+</tr>
+</table>
+<p><br> Accuracy is lower in the incongruent condition than in the congruent condition. There is no evidence for an effect of group or stimulation. (When removing congruent errors from this analysis, there is also an effect of group, with patients being more accurate than control participants.) <br><br></p>
+</div>
+<div id="lmm-pes" class="section level3">
+<h3>LMM PES</h3>
+<pre class="r"><code># Run model with maximal random-effects structure (I skipped model allowing correlations between radom effects here; check its convergence later)
+LMM_pes &lt;- lmer(pes ~ stimulation * group +
+  (1 + verum_sham || participant_id),
+data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+REML = TRUE,
+control = lmerControl(optimizer = &quot;bobyqa&quot;)
+)
+
+
+# Check model output
+# summary(LMM_pes) # Model does converge
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_pes)) # All terms explain variance
+
+
+# Display results (fixed effects)
+tab_model(LMM_pes,
+  dv.labels = &quot;PES&quot;, show.stat = TRUE, show.icc = FALSE, show.r2 = FALSE, 
+  show.re.var = FALSE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;
+)</code></pre>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+PES
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+t value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+35.87
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+29.77 – 41.97
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+11.53
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+stimulation2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.36
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-9.86 – 9.14
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.07
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.941
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+group2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+9.56
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.64 – 21.76
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.54
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.130
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+stimulation2-1:group2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.45
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-21.44 – 16.54
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.25
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.801
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+2724
+</td>
+</tr>
+</table>
+<p><br> There is PES, but no evidence for an effect of group or stimulation. When excluding congruent errors, there is a trend for more PES in OCD compared to HC.</p>
+<p>include factor congruence here to avoid confound with congruency? also adjust in plots when excluding congruent errors! <br><br></p>
+</div>
 </div>
 
 
