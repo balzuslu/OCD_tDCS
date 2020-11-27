@@ -418,7 +418,6 @@ div.tocify {
 
 
 <!-- Set general settings -->
-<p><br><br></p>
 <div id="data-cleaning" class="section level2">
 <h2>Data Cleaning</h2>
 <hr />
@@ -449,14 +448,11 @@ single_trial_data_clean &lt;- single_trial_data %&gt;%
   ) # (54998 of 55680 trials left)
 
 
-# Exclude congruent errors
-single_trial_data_clean$congruent_error &lt;- NA
-single_trial_data_clean[(single_trial_data_clean$response_type == &quot;incorrect&quot; &amp;
-                           single_trial_data_clean$stimulus_type == &quot;congruent&quot;),]$congruent_error &lt;- TRUE
-# single_trial_data_clean &lt;- single_trial_data_clean %&gt;%
-#   dplyr::filter(is.na(congruent_error))
-  
-
+# Create specific condition column (to exclude congruent errors if necessary)
+single_trial_data_clean &lt;- single_trial_data_clean %&gt;%
+  dplyr::mutate(
+    condition = as.factor(paste0(stimulus_type, &quot;_&quot;, response_type))
+  ) 
 
 
 # Create column with single-trial PES (RTpost-error − RTpre-error for all CCEC sequences)
@@ -475,15 +471,15 @@ for (i in 3:(nrow(single_trial_data_clean)-1)) {
 
 
 # Make categorical variables factors
-single_trial_data_clean$participant_id     &lt;- as.factor(single_trial_data_clean$participant_id) 
-single_trial_data_clean$group              &lt;- as.factor(single_trial_data_clean$group)
-single_trial_data_clean$session            &lt;- as.factor(single_trial_data_clean$session)
-single_trial_data_clean$stimulation        &lt;- as.factor(single_trial_data_clean$stimulation)
-single_trial_data_clean$stimulus_type      &lt;- as.factor(single_trial_data_clean$stimulus_type)
-single_trial_data_clean$response_type      &lt;- as.factor(single_trial_data_clean$response_type)
-single_trial_data_clean$response_type_2nd  &lt;- as.factor(single_trial_data_clean$response_type_2nd)
-single_trial_data_clean$accuracy_prev_trial  &lt;- as.factor(single_trial_data_clean$accuracy_prev_trial)</code></pre>
-<p>Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch. We discarded incorrect responses to congruent stimuli from the RT analysis as these were very rare (0.67% of all trials; N = 372 trials). - Does this make sense?? For accuracy and</p>
+single_trial_data_clean$participant_id      &lt;- as.factor(single_trial_data_clean$participant_id) 
+single_trial_data_clean$group               &lt;- as.factor(single_trial_data_clean$group)
+single_trial_data_clean$session             &lt;- as.factor(single_trial_data_clean$session)
+single_trial_data_clean$stimulation         &lt;- as.factor(single_trial_data_clean$stimulation)
+single_trial_data_clean$stimulus_type       &lt;- as.factor(single_trial_data_clean$stimulus_type)
+single_trial_data_clean$response_type       &lt;- as.factor(single_trial_data_clean$response_type)
+single_trial_data_clean$response_type_2nd   &lt;- as.factor(single_trial_data_clean$response_type_2nd)
+single_trial_data_clean$accuracy_prev_trial &lt;- as.factor(single_trial_data_clean$accuracy_prev_trial)</code></pre>
+<p>Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch.</p>
 <pre class="r"><code># Calculate percentage of excluded trials
 excluded_trials &lt;- single_trial_data %&gt;%
   group_by(group, participant_id, session) %&gt;%
@@ -660,20 +656,9 @@ OCD
 </table>
 <p><br><br></p>
 </div>
-<div id="data-inspection" class="section level2">
+<div id="data-inspection" class="section level2 tabset">
 <h2>Data Inspection</h2>
 <hr />
-<div id="rt-per-participant" class="section level3">
-<h3>RT per participant</h3>
-<pre class="r"><code>rt_per_participant &lt;- ggplot(single_trial_data_clean, aes(x = response_type, y = rt)) + 
-  geom_point(position = &quot;jitter&quot;, aes(color = stimulus_type)) + 
-  ggtitle(&quot;RT per participant&quot;) + 
-  my_figure_theme + 
-  facet_wrap(~ participant_id + session, ncol = 10) +
-  scale_color_manual(values = my_figure_colors) 
-rt_per_participant</code></pre>
-<p><img src="1_Behavioral_Performance_files/figure-html/plot-RT-per-subject-and-response-type-1.png" width="1152" /> <br></p>
-</div>
 <div id="distribution" class="section level3">
 <h3>Distribution</h3>
 <pre class="r"><code># Plot distribution RT
@@ -796,6 +781,17 @@ ggdraw() +
   draw_plot(qqplot_pca,     x =  .5,  y = 0,   width = .5,  height = .16) </code></pre>
 <p><img src="1_Behavioral_Performance_files/figure-html/inspect-distribution-1.png" width="768" /> <br><br></p>
 </div>
+<div id="rt-per-participant" class="section level3">
+<h3>RT per participant</h3>
+<pre class="r"><code>rt_per_participant &lt;- ggplot(single_trial_data_clean, aes(x = response_type, y = rt)) + 
+  geom_point(position = &quot;jitter&quot;, aes(color = stimulus_type)) + 
+  ggtitle(&quot;RT per participant&quot;) + 
+  my_figure_theme + 
+  facet_wrap(~ participant_id + session, ncol = 10) +
+  scale_color_manual(values = my_figure_colors) 
+rt_per_participant</code></pre>
+<p><img src="1_Behavioral_Performance_files/figure-html/plot-RT-per-subject-and-response-type-1.png" width="1152" /> <br><br></p>
+</div>
 <div id="check-rt-normality" class="section level3">
 <h3>Check RT Normality</h3>
 <p>For the single-trial data, Shapiro-Wilk is not suitable, as it always returns a significant result for such large samples (additionally, it can handle only samples up to 5000). Hence, we have to rely on visual inspection (see above) and values of skewness and kurtosis. Values for skewness and kurtosis between -2 and +2 are considered acceptable in order to prove normal univariate distribution (George &amp; Mallery, 2010).</p>
@@ -849,7 +845,7 @@ PES
 </tr>
 </tbody>
 </table>
-<p><br></p>
+<p><br><br></p>
 </div>
 <div id="determine-rt-transformation" class="section level3">
 <h3>Determine RT transformation</h3>
@@ -871,7 +867,7 @@ par(mfrow = c(1, 1)) </code></pre>
 <p>For RT (left plot), the optimal lambda is -0.42, suggesting that log transformation (for lambda = 0) is appropriate. Actually, for lambda = -0.5, the most appropriate transformation would be Y^-0.5 = 1/(√(Y)), but this does not seem very common to me. As our lambda is not far from 0, I chose log transformation, which is more commonly used. For PES (right plot), the optimal lambda is 0.79, suggesting that no transformation (for lambda = 1) is needed. <br><br></p>
 </div>
 </div>
-<div id="descriptive-statistics" class="section level2">
+<div id="descriptive-statistics" class="section level2 tabset">
 <h2>Descriptive Statistics</h2>
 <hr />
 <div id="means-and-cis" class="section level3">
@@ -1054,7 +1050,60 @@ my_table_template(descriptive_statistics_pca_display[,c(2,3,5,10,13,18)],
   col_names = c(&quot;Stimulation&quot;, &quot;Session&quot;, &quot;M&quot;, &quot;95% CI&quot;, &quot;M&quot;, &quot;95% CI&quot;),
   header_above_config = c(&quot; &quot; = 2, &quot;HC&quot; = 2, &quot;OCD&quot; = 2),
   footnote_config = c(general = &quot;Confidence intervals are adjusted for within-participant designs as described by Morey (2008).&quot;)
-)</code></pre>
+)
+
+
+# Calcuate means and CIs adjusted for within-participant factors (without session) - for plots
+descriptive_statistics_rt_no_session &lt;- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = &quot;rt&quot;,
+  withinvars    = c(&quot;response_type&quot;, &quot;stimulus_type&quot;, &quot;stimulation&quot;),
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+)
+
+descriptive_statistics_accuracy_no_session &lt;- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = &quot;accuracy_numeric&quot;,
+  withinvars    = c(&quot;stimulus_type&quot;, &quot;stimulation&quot;),
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+) %&gt;%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100))
+
+descriptive_statistics_pes_no_session &lt;- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+  measurevar    = &quot;pes&quot;,
+  withinvars    = &quot;stimulation&quot;,
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+)
+
+descriptive_statistics_pea_no_session &lt;- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pea),],
+  measurevar    = &quot;pea&quot;,
+  withinvars    = &quot;stimulation&quot;,
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+) %&gt;%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100))
+
+descriptive_statistics_pca_no_session &lt;- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pca),],
+  measurevar    = &quot;pca&quot;,
+  withinvars    = &quot;stimulation&quot;,
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+) %&gt;%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100))</code></pre>
 <table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; border-bottom: 0;">
 <caption style="font-size: initial !important;">
 Behavioral Performance: RT (in ms)
@@ -2179,130 +2228,105 @@ T2
 </tr>
 </tfoot>
 </table>
-<p><br> To quantify PES robust, we used the method proposed by Dutilh et al. (2012). “A single-trial value of PES was computed by performing a pairwise comparison of correct trials around each error (RTpost-error − RTpre-error). The mean PES was computed by averaging these differences. This method ensures that post-error and post-correct trials originate from the same time periods in the data set and thus controls for global fluctuations in motivation and attention (Dutilh et al., 2012).” To avoid the effects of consecutive errors on RTs, we considered only error trials that were preceded by at least two correct responses and followed by at least one correct response (i.e., sequences of CCEC trials, where ‘C’ represents correct trials and ‘E’ represents error trials). We further quantified accuracy following incorrect and correct responses (post-error accuracy and post-correct accuracy). <br><br></p>
+<p><br><br></p>
 </div>
-<div id="plots" class="section level3">
-<h3>Plots</h3>
-<pre class="r"><code># Calcuate means and CIs adjusted for within-participant factors (without session)
-descriptive_statistics_rt_no_session &lt;- summarySEwithinO(
-  data          = single_trial_data_clean,
-  measurevar    = &quot;rt&quot;,
-  withinvars    = c(&quot;response_type&quot;, &quot;stimulus_type&quot;, &quot;stimulation&quot;),
-  betweenvars   = &quot;group&quot;,
-  idvar         = &quot;participant_id&quot;, 
-  conf.interval = .95
-)
+<div id="plot-without-session" class="section level3 active">
+<h3>Plot without session</h3>
+<pre class="r"><code># Calculate aggregated data per subject for boxplots
+df_aggregated_per_subject_rt &lt;- ddply(single_trial_data_clean, 
+                                   .(participant_id, group, response_type, stimulus_type, stimulation, session), 
+                                   summarise,
+                                   rt = mean(rt, na.rm = TRUE))
 
-descriptive_statistics_accuracy_no_session &lt;- summarySEwithinO(
-  data          = single_trial_data_clean,
-  measurevar    = &quot;accuracy_numeric&quot;,
-  withinvars    = c(&quot;stimulus_type&quot;, &quot;stimulation&quot;),
-  betweenvars   = &quot;group&quot;,
-  idvar         = &quot;participant_id&quot;, 
-  conf.interval = .95
-) %&gt;%
-  # Multiply numeric values by 100 to obtain values in percent
-  dplyr::mutate_if(is.numeric, list(~ . * 100))
+df_aggregated_per_subject_accuracy &lt;- ddply(single_trial_data_clean, 
+                                   .(participant_id, group, stimulus_type, stimulation, session), 
+                                   summarise,
+                                   accuracy_numeric = mean(accuracy_numeric, na.rm = TRUE)*100)
+
+df_aggregated_per_subject_pes_pea_pca &lt;- ddply(single_trial_data_clean, 
+                                   .(participant_id, group, stimulation, session), 
+                                   summarise,
+                                   pes = mean(pes, na.rm = TRUE),
+                                   pea = mean(pea, na.rm = TRUE)*100,
+                                   pca = mean(pca, na.rm = TRUE)*100)
 
 
-descriptive_statistics_pes_no_session &lt;- summarySEwithinO(
-  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
-  measurevar    = &quot;pes&quot;,
-  withinvars    = &quot;stimulation&quot;,
-  betweenvars   = &quot;group&quot;,
-  idvar         = &quot;participant_id&quot;, 
-  conf.interval = .95
-)
-
-descriptive_statistics_pea_no_session &lt;- summarySEwithinO(
-  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pea),],
-  measurevar    = &quot;pea&quot;,
-  withinvars    = &quot;stimulation&quot;,
-  betweenvars   = &quot;group&quot;,
-  idvar         = &quot;participant_id&quot;, 
-  conf.interval = .95
-) %&gt;%
-  # Multiply numeric values by 100 to obtain values in percent
-  dplyr::mutate_if(is.numeric, list(~ . * 100))
-
-descriptive_statistics_pca_no_session &lt;- summarySEwithinO(
-  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pca),],
-  measurevar    = &quot;pca&quot;,
-  withinvars    = &quot;stimulation&quot;,
-  betweenvars   = &quot;group&quot;,
-  idvar         = &quot;participant_id&quot;, 
-  conf.interval = .95
-) %&gt;%
-  # Multiply numeric values by 100 to obtain values in percent
-  dplyr::mutate_if(is.numeric, list(~ . * 100))
+# Create plot RT 
+plot_rt &lt;- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_rt, aes(x = stimulation, y = rt, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_rt_no_session, aes(x = stimulation, y = rt, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_rt_no_session, aes(x = stimulation, ymax = rt + ci, ymin = rt - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_rt_no_session, aes(x = stimulation, y = rt, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c(&quot;#b23f00&quot;, &quot;#ff9b64&quot;), name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  facet_wrap(~response_type + stimulus_type, nrow = 1) +
+  my_figure_theme + 
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;RT (ms)&quot;)
 
 
-# Create plot RT  
-plot_rt &lt;- ggplot(descriptive_statistics_rt_no_session, 
-                  aes(x = stimulation, y = rt, fill = group)) +
-  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
-  geom_errorbar(aes(ymax = rt + ci, ymin = rt - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = &quot;\nStimulation condition&quot;, y = &quot;RT (ms)&quot;) +
-  coord_cartesian(ylim = c(200, 500)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;)  +
-  facet_wrap(.~ response_type + stimulus_type, nrow = 1) +
-  guides(fill = guide_legend(nrow = 1, title.position = &quot;left&quot;)) 
-
-  
-# Create plot accuracy
-plot_accuracy &lt;- ggplot(descriptive_statistics_accuracy_no_session, 
-                        aes(x = stimulation, y = accuracy_numeric, fill = group)) +
-  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
-  geom_errorbar(aes(ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci),
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Accuracy (%)&quot;) +
-  coord_cartesian(ylim = c(80, 100)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = &quot;Group&quot;) +
-  facet_wrap(.~ stimulus_type, nrow = 1)
+# Create plot accuracy 
+plot_accuracy &lt;- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_accuracy, aes(x = stimulation, y = accuracy_numeric, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_accuracy_no_session, aes(x = stimulation, y = accuracy_numeric, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_accuracy_no_session, aes(x = stimulation, ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_accuracy_no_session, aes(x = stimulation, y = accuracy_numeric, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c(&quot;#b23f00&quot;, &quot;#ff9b64&quot;), name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  facet_wrap(~stimulus_type, nrow = 1) +
+  my_figure_theme + 
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Accuracy (%)&quot;)
 
 
-# Create plot PES  
-plot_pes &lt;- ggplot(descriptive_statistics_pes_no_session, 
-                  aes(x = stimulation, y = pes, fill = group)) +
-  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
-  geom_errorbar(aes(ymax = pes + ci, ymin = pes - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-error slowing (ms)&quot;) +
-  coord_cartesian(ylim = c(0, 70)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) 
+# Create plot PES
+plot_pes &lt;- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pes, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_pes_no_session, aes(x = stimulation, y = pes, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_pes_no_session, aes(x = stimulation, ymax = pes + ci, ymin = pes - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_pes_no_session, aes(x = stimulation, y = pes, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c(&quot;#b23f00&quot;, &quot;#ff9b64&quot;), name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  my_figure_theme + 
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-error slowing (ms)&quot;)
 
 
 # Create plot PEA
-plot_pea &lt;- ggplot(descriptive_statistics_pea_no_session, 
-                  aes(x = stimulation, y = pea, fill = group)) +
-  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
-  geom_errorbar(aes(ymax = pea + ci, ymin = pea - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-error accuracy (%)&quot;) +
-  coord_cartesian(ylim = c(80, 100)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;)  
+plot_pea &lt;- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pea, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_pea_no_session, aes(x = stimulation, y = pea, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_pea_no_session, aes(x = stimulation, ymax = pea + ci, ymin = pea - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_pea_no_session, aes(x = stimulation, y = pea, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c(&quot;#b23f00&quot;, &quot;#ff9b64&quot;), name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  my_figure_theme + 
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-error accuracy (ms)&quot;)
 
 
 # Create plot PCA
-plot_pca &lt;- ggplot(descriptive_statistics_pca_no_session, 
-                  aes(x = stimulation, y = pca, fill = group)) +
-  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
-  geom_errorbar(aes(ymax = pca + ci, ymin = pca - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-correct accuracy (%)&quot;) +
-  coord_cartesian(ylim = c(80, 100)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;)  
+plot_pca &lt;- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pca, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_pca_no_session, aes(x = stimulation, y = pca, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_pca_no_session, aes(x = stimulation, ymax = pca + ci, ymin = pca - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_pca_no_session, aes(x = stimulation, y = pca, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c(&quot;#b23f00&quot;, &quot;#ff9b64&quot;), name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  my_figure_theme + 
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-correct accuracy (ms)&quot;)
+
 
 
 # Create common legend for plots (function from http://www.sthda.com/english/wiki/wiki.php?id_contents=7930#add-a-common-legend-for-multiple-ggplot2-graphs)
@@ -2341,84 +2365,93 @@ ggsave(&quot;figure_behav.tiff&quot;, width = 16, height = 15, units = &quot;cm&
 # Display plot
 figure_behav</code></pre>
 <div class="figure">
-<img src="1_Behavioral_Performance_files/figure-html/descriptive-statistics-plot-rt-acc-1.png" alt="Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulus type, response type, stimulation condition, and group. Error bars represent 95% confidence intervals adjusted for within-participant designs as described by Morey (2008)." width="768" />
+<img src="1_Behavioral_Performance_files/figure-html/descriptive-statistics-plot-rt-acc-1.png" alt="Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulus type, response type, stimulation condition, and group. Means and 95% confidence intervals (shown in orange/red; confidence intervals are adjusted for within-participant designs as described by Morey (2008)) were calculated based on single-trial data. Boxplots are boased on data aggregated by subject." width="768" />
 <p class="caption">
-Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulus type, response type, stimulation condition, and group. Error bars represent 95% confidence intervals adjusted for within-participant designs as described by Morey (2008).
+Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulus type, response type, stimulation condition, and group. Means and 95% confidence intervals (shown in orange/red; confidence intervals are adjusted for within-participant designs as described by Morey (2008)) were calculated based on single-trial data. Boxplots are boased on data aggregated by subject.
 </p>
 </div>
-<p><br></p>
+<p>To quantify PES robust, we used the method proposed by Dutilh et al. (2012). See section LMM PES for details. We further quantified accuracy following incorrect and correct responses (post-error accuracy and post-correct accuracy). <br><br></p>
 </div>
-<div id="plots-including-session" class="section level3">
-<h3>Plots including session</h3>
-<pre class="r"><code># Create plot RT
-plot_rt_session &lt;- ggplot(descriptive_statistics_rt, 
-                  aes(x = stimulation, y = rt, fill = group)) +
-  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
-  geom_errorbar(aes(ymax = rt + ci, ymin = rt - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = &quot;\nStimulation condition&quot;, y = &quot;RT (ms)&quot;) +
-  coord_cartesian(ylim = c(200, 500)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;)  +
-  facet_wrap(.~ response_type + stimulus_type + session, nrow = 1) +
-  guides(fill = guide_legend(nrow = 1, title.position = &quot;left&quot;)) 
-
-  
-# Create plot accuracy
-plot_accuracy_session &lt;- ggplot(descriptive_statistics_accuracy, 
-                        aes(x = stimulation, y = accuracy_numeric, fill = group)) +
-  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
-  geom_errorbar(aes(ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci),
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Accuracy (%)&quot;) +
-  coord_cartesian(ylim = c(80, 100)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = &quot;Group&quot;) +
-  facet_wrap(.~ stimulus_type + session, nrow = 1)
+<div id="plot-with-session" class="section level3">
+<h3>Plot with session</h3>
+<pre class="r"><code># Create plot RT 
+plot_rt_session &lt;- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_rt, aes(x = stimulation, y = rt, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_rt, aes(x = stimulation, y = rt, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_rt, aes(x = stimulation, ymax = rt + ci, ymin = rt - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_rt, aes(x = stimulation, y = rt, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c(&quot;#b23f00&quot;, &quot;#ff9b64&quot;), name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  facet_wrap(~response_type + stimulus_type + session, nrow = 1) +
+  my_figure_theme + 
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;RT (ms)&quot;)
 
 
-# Create plot PES  
-plot_pes_session &lt;- ggplot(descriptive_statistics_pes, 
-                  aes(x = stimulation, y = pes, fill = group)) +
-  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
-  geom_errorbar(aes(ymax = pes + ci, ymin = pes - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-error slowing (ms)&quot;) +
-  coord_cartesian(ylim = c(0, 70)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +  
-  facet_wrap(.~ session, nrow = 1)
+# Create plot accuracy 
+plot_accuracy_session &lt;- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_accuracy, aes(x = stimulation, y = accuracy_numeric, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_accuracy, aes(x = stimulation, y = accuracy_numeric, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_accuracy, aes(x = stimulation, ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_accuracy, aes(x = stimulation, y = accuracy_numeric, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c(&quot;#b23f00&quot;, &quot;#ff9b64&quot;), name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  facet_wrap(~stimulus_type + session, nrow = 1) +
+  my_figure_theme + 
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Accuracy (%)&quot;)
+
+
+# Create plot PES
+plot_pes_session &lt;- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pes, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_pes, aes(x = stimulation, y = pes, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_pes, aes(x = stimulation, ymax = pes + ci, ymin = pes - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_pes, aes(x = stimulation, y = pes, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c(&quot;#b23f00&quot;, &quot;#ff9b64&quot;), name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  facet_wrap(~session, nrow = 1) +
+  my_figure_theme + 
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-error slowing (ms)&quot;)
 
 
 # Create plot PEA
-plot_pea_session &lt;- ggplot(descriptive_statistics_pea, 
-                  aes(x = stimulation, y = pea, fill = group)) +
-  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
-  geom_errorbar(aes(ymax = pea + ci, ymin = pea - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-error accuracy (%)&quot;) +
-  coord_cartesian(ylim = c(80, 100)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;)  +  
-  facet_wrap(.~ session, nrow = 1)
+plot_pea_session &lt;- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pea, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_pea_no_session, aes(x = stimulation, y = pea, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_pea_no_session, aes(x = stimulation, ymax = pea + ci, ymin = pea - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_pea_no_session, aes(x = stimulation, y = pea, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c(&quot;#b23f00&quot;, &quot;#ff9b64&quot;), name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  facet_wrap(~session, nrow = 1) +
+  my_figure_theme + 
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-error accuracy (ms)&quot;)
 
 
 # Create plot PCA
-plot_pca_session &lt;- ggplot(descriptive_statistics_pca, 
-                  aes(x = stimulation, y = pca, fill = group)) +
-  geom_bar(stat = &quot;identity&quot;, position = position_dodge(), colour = &quot;black&quot;, size = 0.25) +
-  geom_errorbar(aes(ymax = pca + ci, ymin = pca - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-correct accuracy (%)&quot;) +
-  coord_cartesian(ylim = c(80, 100)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;)  +  
-  facet_wrap(.~ session, nrow = 1) 
+plot_pca_session &lt;- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pca, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_pca, aes(x = stimulation, y = pca, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_pca, aes(x = stimulation, ymax = pca + ci, ymin = pca - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_pca, aes(x = stimulation, y = pca, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c(&quot;#b23f00&quot;, &quot;#ff9b64&quot;), name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  facet_wrap(~session, nrow = 1) +
+  my_figure_theme + 
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;Post-correct accuracy (ms)&quot;)
 
 
 # Create common legend for plots (function from http://www.sthda.com/english/wiki/wiki.php?id_contents=7930#add-a-common-legend-for-multiple-ggplot2-graphs)
@@ -2449,7 +2482,6 @@ figure_behav_session &lt;- ggdraw() +
   draw_plot(plot_pca_session,      x = .66,  y = .0,   width = .33, height = .33) +
   draw_plot_label(c(&quot;A&quot;, &quot;B&quot;, &quot;C&quot;,&quot;D&quot;,&quot;E&quot;), c(0, 0, 0, 0.33, 0.66), c(1, .66, .33, .33, .33), size = 15)
 
-#plot_grid(plot_rt_session, plot_accuracy_session, plot_grid(plot_pes_session, plot_pea_session, plot_pca_session), labels = &quot;AUTO&quot;, rows = 2)
 
 # Save plot
  ggsave(&quot;figure_behav_session.tiff&quot;, width = 20, height = 25, units = &quot;cm&quot;, dpi=600, compression = &quot;lzw&quot;)
@@ -2458,9 +2490,9 @@ figure_behav_session &lt;- ggdraw() +
 # Display plot
 figure_behav_session</code></pre>
 <div class="figure">
-<img src="1_Behavioral_Performance_files/figure-html/descriptive-statistics-plot-including-session-1.png" alt="Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulation condition, group, and session. Error bars represent 95% confidence intervals adjusted for within-participant designs as described by Morey (2008)." width="960" />
+<img src="1_Behavioral_Performance_files/figure-html/descriptive-statistics-plot-including-session-1.png" alt="Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulation condition, group, and session. Means and 95% confidence intervals (shown in orange/red; confidence intervals are adjusted for within-participant designs as described by Morey (2008)) were calculated based on single-trial data. Boxplots are boased on data aggregated by subject." width="960" />
 <p class="caption">
-Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulation condition, group, and session. Error bars represent 95% confidence intervals adjusted for within-participant designs as described by Morey (2008).
+Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulation condition, group, and session. Means and 95% confidence intervals (shown in orange/red; confidence intervals are adjusted for within-participant designs as described by Morey (2008)) were calculated based on single-trial data. Boxplots are boased on data aggregated by subject.
 </p>
 </div>
 <p><br><br></p>
@@ -2469,43 +2501,52 @@ Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, 
 <div id="glmm-analyses" class="section level2">
 <h2>(G)LMM Analyses</h2>
 <hr />
-<p>RT and accuracy were modeled using a linear mixed-effects model (LMM) and a binomial generalized linear mixed-effects model (GLMM), respectively. In both models, <strong>stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), and, where applicable (= for RT), response type (correct, incorrect)</strong> were specified as fixed factors and participants as random factors. <br><br> Fixed effects were coded using effect coding (this equals sliding difference contrasts for two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants, as well as random slopes for all main effects and interactions specified as fixed effects. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).</p>
+<p>RT, PES, and accuracy were modeled using two linear mixed-effects models (LMM) and a binomial generalized linear mixed-effects model (GLMM), respectively. <br><br></p>
+<p><strong>Fixed effects</strong></p>
+<p><em>Stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), and, where applicable (= for RT), response type (correct, incorrect)</em> were specified as fixed factors.Fixed effects were coded using effect coding (this equals sliding difference contrasts for two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. Fixed effects were not eliminated using model comparison techniques because they correspond to the original experimental design and a priori hypotheses. <br><br></p>
+<p>I decided to specify models that only predict all main effects and interactions only with the factor stimulation. This is the most sparse model for testing the effect of stimulation. Other models could also be specified, additionally testing interactions with the factor group or testing all possible interactions. For example, these models additionally test the following effects: group:response_type, group:stimulus_type, group:response_type:stimulation, and group:stimulus_type:stimulation. But to me, these effects are of no prior interest, and/or difficult to interpret. Thus, I chose the simple models that only tests interactions with the factor stimulation. <br><br></p>
+<p>I thought about including session as fixed effect. But this was not stated in preregistration and is of no real interest. I checked the effect of session once. For RT, there is a main effect, but no interaction with stimulation (there is a trend though, but I do not find this effect to be meaningfully interpretable). <br><br></p>
+<p><strong>Random effects</strong></p>
+<p>Participants were specified as random factors. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants, as well as random slopes for all main effects and interactions specified as fixed effects. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).</p>
 <pre class="r"><code># Define contrasts (sliding difference contrasts)
-contrasts(single_trial_data_clean$stimulus_type)          &lt;- contr.sdif(2)
-contrasts(single_trial_data_clean$response_type)          &lt;- contr.sdif(2)
-contrasts(single_trial_data_clean$stimulation)            &lt;- contr.sdif(2)
-contrasts(single_trial_data_clean$group)                  &lt;- contr.sdif(2)
-contrasts(single_trial_data_clean$session)                &lt;- contr.sdif(2)
-contrasts(single_trial_data_clean$accuracy_prev_trial)    &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$stimulation)         &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$group)               &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$response_type)       &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$stimulus_type)       &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$accuracy_prev_trial) &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$session)             &lt;- contr.sdif(2)
 
 
-# Add contrasts as numerical covariates via model matrix*
-model_matrix &lt;- model.matrix(~ stimulus_type * response_type * stimulation * group * session, single_trial_data_clean)
+# Add contrasts as numerical covariates via model matrix* (specify all possible contasts for now)
+model_matrix &lt;- model.matrix(~ stimulation * (group + response_type + stimulus_type + accuracy_prev_trial), single_trial_data_clean)
 
 
-# Attach the model matrix (32 columns) to the dataframe
-single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 32)] &lt;- model_matrix
+# Attach the model matrix (10 columns) to the dataframe
+single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 10)] &lt;- model_matrix
 
 
 # Assign descriptive names to the contrasts
-names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 31):ncol(single_trial_data_clean)] &lt;- c(&quot;Grand Mean&quot;,&quot;incongruent_congruent&quot;,&quot;incorrect_correct&quot;,&quot;verum_sham&quot;,&quot;OCD_HC&quot;,&quot;T2_T1&quot;,&quot;incongruent_congruent:incorrect_correct&quot; ,&quot;incongruent_congruent:verum_sham&quot;,&quot;incorrect_correct:verum_sham&quot; ,&quot;incongruent_congruent:OCD_HC&quot;,&quot;incorrect_correct:OCD_HC&quot;,&quot;verum_sham:OCD_HC&quot;,&quot;incongruent_congruent:T2_T1&quot;, &quot;incorrect_correct:T2_T1&quot;,&quot;verum_sham:T2_T1&quot;,&quot;OCD_HC:T2_T1&quot;,&quot;incongruent_congruent:incorrect_correct:verum_sham&quot;,&quot;incongruent_congruent:incorrect_correct:OCD_HC&quot;,&quot;incongruent_congruent:verum_sham:OCD_HC&quot;,&quot;incorrect_correct:verum_sham:OCD_HC&quot; ,&quot;incongruent_congruent:incorrect_correct:T2_T1&quot;,&quot;incongruent_congruent:verum_sham:T2_T1&quot; ,&quot;incorrect_correct:verum_sham:T2_T1&quot;,&quot;incongruent_congruent:OCD_HC:T2_T1&quot;,&quot;incorrect_correct:OCD_HC:T2_T1&quot;,&quot;verum_sham:OCD_HC:T2_T1&quot;    ,&quot;incongruent_congruent:incorrect_correct:verum_sham:OCD_HC&quot;,&quot;incongruent_congruent:incorrect_correct:verum_sham:T2_T1&quot;,&quot;incongruent_congruent:incorrect_correct:OCD_HC:T2_T1&quot;,&quot;incongruent_congruent:verum_sham:OCD_HC:T2_T1&quot;,&quot;incorrect_correct:verum_sham:OCD_HC:T2_T1&quot; ,&quot;incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:T2_T1&quot;)
-
-
-
+names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 9):ncol(single_trial_data_clean)] &lt;- c(&quot;Grand Mean&quot;, &quot;verum_sham&quot;, &quot;OCD_HC&quot;, &quot;incorrect_correct&quot;, &quot;incongruent_congruent&quot;, &quot;prev_trial_incorrect_correct&quot;, &quot;verum_sham:OCD_HC&quot;, &quot;verum_sham:incorrect_correct&quot;, &quot;verum_sham:incongruent_congruent&quot;, &quot;verum_sham:prev_trial_incorrect_correct&quot;)
 
 
 # *Note: For the random effects, we needed to enter the separate random effect terms in the models to enable
 # double-bar notation (||). This allows fitting a model that sets correlations of the random terms to zero.</code></pre>
-<p><br></p>
-<div id="lmm-rt" class="section level3">
-<h3>LMM RT</h3>
-<p>I decided to favor a model that only predicts all main effects and interactions only with the factor stimulation (rt ~ stimulation * (group + response type + stimulus type). This is the most sparse model for testing the effect of stimulation on RT (the random effects are specified according to the fixed effects). Other models could also be specified, additionally testing interactions with the factor group (rt ~ stimulation * group * (response type + stimulus type) or testing all interactions (rt ~ stimulation * group * response type * stimulus type). Specifically, these models additionally test the following effects: group:response_type, group:stimulus_type, group:response_type:stimulation, and group:stimulus_type:stimulation (this list refers to when congruent errors are excluded). Of these, group:stimulus_type was significant with p = .05 in the first preliminary analysis. But to me, these effects are of no prior interest, and/or difficult to interpret. Thus, I chose the simple model that only tests interactions with the factor stimulation.</p>
-<p>I thought about including session as fixed effect. But first, this was not stated in preregistration, and second, there is only a main effect, no interaction with stimulation (there is a trend though, but I do not find this effect to be meaningfully interpretable).</p>
-<p>Furthermore, I decided to test the stimulation effect on PES and PEA/PCA in sperate models. Including the factor correctness of previous trial would have led to overly complex models. Additionally, all trials would have been included then, preventing to use the robust (and preregistered) PES quantification by Dutilh et al., (2012).</p>
-<pre class="r"><code># Run model with maximal random-effects structure (I skipped model allowing correlations between radom effects here; check its convergence later)
-LMM_rt &lt;- lmer(rt_log ~ stimulation * (group + response_type + stimulus_type) +
-  (1 + incongruent_congruent + incorrect_correct + verum_sham + verum_sham:incongruent_congruent + verum_sham:incorrect_correct || participant_id),
-data = single_trial_data_clean[is.na(single_trial_data_clean$congruent_error),],
+<p><br><br></p>
+<div id="rt" class="section level3 tabset">
+<h3>RT</h3>
+<div id="lmm" class="section level4">
+<h4>LMM</h4>
+<p>I thought about whether I should exclude congruent errors from this RT analysis (see Evernote note 2020_11_25), as there these were very rare (0.67% of all trials; N = 372 trials). I do not want to exclude congruent errors from analyses in general (e.g. EEG, accuracy), which is ok as I will not add stimulus type as factor there. For the following reasons I decided to not exclude congruent errors from LMM RT analysis for now:</p>
+<ul>
+<li><p>LMMs take into account this imbalance due to different number of observations per cell and thus different uncertainty. So, it might be not problematic that congruent errors are rare?</p></li>
+<li><p>Additionally, maybe it is ok that one cell only has few observation, as I do not put interaction response type * stimulus type in model but only main effects?</p></li>
+<li><p>I thought about whether the effect of stimulus type could confound effect of response type, as errors are mostly incongruent whereas correct responses are half/half? But actually, when factors are included, I control for the effect of stimulus type for the effect of response type, don’t I?!</p></li>
+</ul>
+<p>For aggregation-based ANOVAs, I will excluded congruent errors.</p>
+<pre class="r"><code># Run model with maximal random-effects structure
+LMM_rt &lt;- lmer(rt_log ~ verum_sham * (OCD_HC + incorrect_correct + incongruent_congruent) +
+  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+data = single_trial_data_clean,
 REML = TRUE,
 control = lmerControl(optimizer = &quot;bobyqa&quot;)
 )
@@ -2513,6 +2554,7 @@ control = lmerControl(optimizer = &quot;bobyqa&quot;)
 
 # Check model output
 # summary(LMM_rt) # Model does converge
+# isSingular(LMM_rt) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
 
 
 # Check PCA of random-effects variance-covariance estimates
@@ -2521,9 +2563,9 @@ control = lmerControl(optimizer = &quot;bobyqa&quot;)
 
 # Display results (fixed effects)
 tab_model(LMM_rt,
-  dv.labels = &quot;log(RT)&quot;, show.stat = TRUE, show.icc = FALSE, show.r2 = FALSE, 
-  show.re.var = FALSE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
-  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;
+  dv.labels = &quot;log(RT)&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
 )</code></pre>
 <table style="border-collapse:collapse; border:none;">
 <tr>
@@ -2556,13 +2598,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.87
+5.88
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.85 – 5.89
+5.86 – 5.90
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-571.36
+566.41
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -2570,50 +2612,50 @@ p value
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-stimulation2-1
+verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.00
+-0.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 -0.02 – 0.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.53
+-0.65
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.595
+0.519
 </td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-group2-1
+OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.02
+0.03
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.02 – 0.06
+-0.01 – 0.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.20
+1.35
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.236
+0.183
 </td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-response_type2-1
+incorrect_correct
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.25
+-0.23
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.27 – -0.23
+-0.25 – -0.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--24.90
+-23.26
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -2621,7 +2663,7 @@ response_type2-1
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-stimulus_type2-1
+incongruent_congruent
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 0.14
@@ -2630,7 +2672,7 @@ stimulus_type2-1
 0.13 – 0.15
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-31.06
+30.32
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -2638,219 +2680,154 @@ stimulus_type2-1
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-stimulation2-1:group2-1
+verum_sham * OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.04 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.89
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.380
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * incorrect_correct
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 -0.00
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.03 – 0.03
+-0.02 – 0.02
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 -0.15
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.884
+0.879
 </td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-stimulation2-1:response_type2-1
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.00
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.02 – 0.02
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.09
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.925
-</td>
-</tr>
-<tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-stimulation2-1:stimulus_type2-1
+verum_sham * incongruent_congruent
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 0.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.00 – 0.01
+-0.00 – 0.02
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.59
+1.69
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.117
+0.096
 </td>
 </tr>
 <tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
-Observations
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-54626
-</td>
-</tr>
-</table>
-<p><br> Responses are faster in the congruent than in the incongruent condition. Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation. <br><br></p>
-</div>
-<div id="glmm-accuracy" class="section level3">
-<h3>GLMM Accuracy</h3>
-<pre class="r"><code># Run model with maximal random-effects structure (I skipped model allowing correlations between radom effects here; check its convergence later)
-GLMM_accuracy &lt;- glmer(accuracy_numeric ~ stimulation * (group + stimulus_type) +
-  (1 + incongruent_congruent + verum_sham + verum_sham:incongruent_congruent || participant_id),
-data = single_trial_data_clean,
-family = binomial,
-control = glmerControl(optimizer = &quot;bobyqa&quot;)
-)
-
-
-# Check model output
-# summary(GLMM_accuracy) # Model does converge
-
-
-# Check PCA of random-effects variance-covariance estimates
-# summary(rePCA(GLMM_accuracy)) # All terms explain variance
-
-
-# Display results (fixed effects)
-tab_model(GLMM_accuracy,
-  dv.labels = &quot;Accuracy&quot;, show.stat = TRUE, show.icc = FALSE, show.r2 = FALSE, 
-  show.re.var = FALSE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;z value&quot;, 
-  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;
-)</code></pre>
-<table style="border-collapse:collapse; border:none;">
-<tr>
-<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
- 
-</th>
-<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
-Accuracy
-</th>
-</tr>
-<tr>
-<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
-Predictors
-</td>
-<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
-b
-</td>
-<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
-95 % CI
-</td>
-<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
-z value
-</td>
-<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
-p value
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
 </td>
 </tr>
 <tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-(Intercept)
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-28.31
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.022
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-25.11 – 31.92
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-54.62
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>&lt;0.001
-</td>
-</tr>
 <tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-stimulation2-1
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.96
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.006
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.85 – 1.09
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.65
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.515
-</td>
-</tr>
 <tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-group2-1
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.04
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.004
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.82 – 1.31
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.30
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.763
-</td>
-</tr>
 <tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-stimulus_type2-1
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.incorrect_correct</sub>
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.10
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.005
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.08 – 0.13
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--20.80
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>&lt;0.001
-</td>
-</tr>
 <tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-stimulation2-1:group2-1
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.incongruent_congruent</sub>
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.88
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.001
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.72 – 1.07
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.28
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.202
-</td>
-</tr>
 <tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-stimulation2-1:stimulus_type2-1
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham:incorrect_correct</sub>
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.01
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.004
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.79 – 1.30
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham:incongruent_congruent</sub>
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.12
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.001
 </td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.908
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ρ<sub>01</sub>
 </td>
-</tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.028
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.108
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+-0.183
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+-0.138
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.190
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.268
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+N <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+58
+</td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
@@ -2859,14 +2836,88 @@ Observations
 54998
 </td>
 </tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.181 / 0.400
+</td>
+</tr>
 </table>
-<p><br> Accuracy is lower in the incongruent condition than in the congruent condition. There is no evidence for an effect of group or stimulation. (When removing congruent errors from this analysis, there is also an effect of group, with patients being more accurate than control participants.) <br><br></p>
+<p><br><br> Responses are faster in the congruent than in the incongruent condition. Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation and no interaction of any factor with stimulation. <br><br></p>
 </div>
-<div id="lmm-pes" class="section level3">
-<h3>LMM PES</h3>
-<pre class="r"><code># Run model with maximal random-effects structure (I skipped model allowing correlations between radom effects here; check its convergence later)
-LMM_pes &lt;- lmer(pes ~ stimulation * group +
-  (1 + verum_sham || participant_id),
+<div id="assumption-checks" class="section level4">
+<h4>Assumption checks</h4>
+<pre class="r"><code># Check model assumptions
+performance::check_model(LMM_rt, panel = TRUE)</code></pre>
+<p><img src="1_Behavioral_Performance_files/figure-html/LMM-RT-assumptions-1.png" width="1920" /></p>
+<pre class="r"><code># In addition to plots, print verbal output for some assumption tests to facilitate conclusion
+print(&quot;# Check for heteroscedasticity&quot;)
+performance::check_heteroscedasticity(LMM_rt)
+
+print(&quot;# Check for influential observations (Cook&#39;s distance)&quot;)
+performance::check_outliers(LMM_rt, effects = &quot;random&quot;)
+
+print(&quot;# Check for normal distributed random effects&quot;)
+performance::check_normality(LMM_rt, effects = &quot;random&quot;)</code></pre>
+<pre><code>[1] &quot;# Check for heteroscedasticity&quot;
+Warning: Heteroscedasticity (non-constant error variance) detected (p = 0.000).
+[1] &quot;# Check for influential observations (Cook&#39;s distance)&quot;
+OK: No outliers detected.
+[1] &quot;# Check for normal distributed random effects&quot;
+Group: participant_id
+                     (Intercept) OK: random effects appear as normally distributed (p = 0.068).
+                      verum_sham OK: random effects appear as normally distributed (p = 0.096).
+               incorrect_correct OK: random effects appear as normally distributed (p = 0.282).
+           incongruent_congruent OK: random effects appear as normally distributed (p = 0.540).
+    verum_sham:incorrect_correct OK: random effects appear as normally distributed (p = 0.473).
+verum_sham:incongruent_congruent Warning: Non-normality of random effects detected (p &lt; .001).</code></pre>
+<ul>
+<li><strong>Assumption 1: Independence of Data Points / Absence of collinearity -&gt; Is OK</strong>
+<ul>
+<li>Are predictors not highly correlated?</li>
+<li>Multicollinearity plot shows only low correlations</li>
+</ul></li>
+<li><strong>Assumption 2: Normality of Residuals -&gt; Is OK???</strong>
+<ul>
+<li>Are residuals approximately normally distributed?</li>
+<li>Q-Q plot and density plot look fine? Q-Q plot quite a bit off at the extremes</li>
+<li>It is debated whether this is problematic at all; and violation does not seem so bad, so maybe not worry about it?</li>
+</ul></li>
+<li><strong>Assumption 3: Linearity -&gt; Is OK</strong>
+<ul>
+<li>Is the dependent variable linearly related to the fixed factors, random factors, and covariates?</li>
+<li>Plot of the residuals against the fitted values shows a random scatter pattern, no nonlinear or curvy pattern</li>
+</ul></li>
+<li><strong>Assumption 4: Homogeneity of Residual Variance (Heteroscedasticity) -&gt; Is OK???</strong>
+<ul>
+<li>Have residuals constant variance across the range of the predicted values?</li>
+<li>Plot of the residuals against the fitted values shows an even spread around the centered line; but written output says this is not ok</li>
+</ul></li>
+<li><strong>Assumption 5: Absence of Influential Data Points -&gt; Is OK</strong>
+<ul>
+<li>Are there are no influential values?</li>
+<li>Cook’s distance plot looks fine (for large N, Cook’s distances should be below 1) and written output says there are no outliers</li>
+</ul></li>
+<li><strong>Assumption 6: Normality of Random Effects -&gt; Is OK</strong>
+<ul>
+<li>Are random effects approximately normally distributed?</li>
+<li>Plots look fine; written output says this is (mostly) ok <br><br></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="pes" class="section level3 tabset">
+<h3>PES</h3>
+<div id="lmm-1" class="section level4">
+<h4>LMM</h4>
+<p>To quantify PES robust, we used the method proposed by Dutilh et al. (2012). “A single-trial value of PES was computed by performing a pairwise comparison of correct trials around each error (RTpost-error − RTpre-error). This method ensures that post-error and post-correct trials originate from the same time periods in the data set and thus controls for global fluctuations in motivation and attention.” To avoid the effects of consecutive errors on RTs, we considered only error trials that were preceded by at least two correct responses and followed by at least one correct response (i.e., sequences of CCEC trials, where ‘C’ represents correct trials and ‘E’ represents error trials).</p>
+<p>I decided to test the stimulation effect on PES in a separate model instead of including the factor correctness of previous trial in the RT model. Otherwise, this would have led to an overly complex LMM on RTs. Additionally, all trials would have been included then, preventing to use the robust (and preregistered) PES quantification by Dutilh et al. (2012).</p>
+<p>I included stimulus type as covariate (hance, only as fixed, not as random effect) to avoid confounding the PES effect with stimulus congruency, as stimulus congruency of the respective trial might potentially interfere with PES.</p>
+<pre class="r"><code># Run model with maximal random-effects structure (to avoid singularity / non-convergence and rePCA value of 0, correlations betw. random terms and radom slope of stimulus_type had to be removed)
+LMM_pes &lt;- lmer(pes ~ verum_sham * OCD_HC + incongruent_congruent +
+  (1 + verum_sham  || participant_id),
 data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
 REML = TRUE,
 control = lmerControl(optimizer = &quot;bobyqa&quot;)
@@ -2875,6 +2926,7 @@ control = lmerControl(optimizer = &quot;bobyqa&quot;)
 
 # Check model output
 # summary(LMM_pes) # Model does converge
+# isSingular(LMM_pes) # is also ok
 
 
 # Check PCA of random-effects variance-covariance estimates
@@ -2883,9 +2935,9 @@ control = lmerControl(optimizer = &quot;bobyqa&quot;)
 
 # Display results (fixed effects)
 tab_model(LMM_pes,
-  dv.labels = &quot;PES&quot;, show.stat = TRUE, show.icc = FALSE, show.r2 = FALSE, 
-  show.re.var = FALSE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
-  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;
+  dv.labels = &quot;PES&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
 )</code></pre>
 <table style="border-collapse:collapse; border:none;">
 <tr>
@@ -2918,13 +2970,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-35.87
+38.85
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-29.77 – 41.97
+31.14 – 46.56
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-11.53
+9.87
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -2932,55 +2984,105 @@ p value
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-stimulation2-1
+verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.36
+-0.42
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--9.86 – 9.14
+-9.85 – 9.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.07
+-0.09
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.941
+0.931
 </td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-group2-1
+OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.56
+9.25
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.64 – 21.76
+-2.93 – 21.42
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.54
+1.49
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.130
+0.142
 </td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-stimulation2-1:group2-1
+incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-7.64
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-19.76 – 4.47
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.24
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.216
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 -2.45
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--21.44 – 16.54
+-21.31 – 16.41
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.25
+-0.26
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.801
+0.800
 </td>
 </tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+9251.286
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+344.098
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id.1</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+501.985
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.036
+</td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
@@ -2989,10 +3091,1349 @@ Observations
 2724
 </td>
 </tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.003 / 0.039
+</td>
+</tr>
 </table>
-<p><br> There is PES, but no evidence for an effect of group or stimulation. When excluding congruent errors, there is a trend for more PES in OCD compared to HC.</p>
-<p>include factor congruence here to avoid confound with congruency? also adjust in plots when excluding congruent errors! <br><br></p>
+<p><br><br> There is PES. There is no effect of congruency in the respective on PES. There is no evidence for an effect of group or stimulation. <br><br></p>
 </div>
+<div id="assumption-checks-1" class="section level4">
+<h4>Assumption checks</h4>
+<pre class="r"><code># Check model assumptions
+performance::check_model(LMM_pes, panel = TRUE)</code></pre>
+<p><img src="1_Behavioral_Performance_files/figure-html/LMM-PES-assumptions-1.png" width="1920" /></p>
+<pre class="r"><code># In addition to plots, print verbal output for some assumption tests to facilitate conclusion
+print(&quot;# Check for heteroscedasticity&quot;)
+performance::check_heteroscedasticity(LMM_pes)
+
+print(&quot;# Check for influential observations (Cook&#39;s distance)&quot;)
+performance::check_outliers(LMM_pes, effects = &quot;random&quot;)
+
+print(&quot;# Check for normal distributed random effects&quot;)
+performance::check_normality(LMM_pes, effects = &quot;random&quot;)</code></pre>
+<pre><code>Could not compute standard errors from random effects for diagnostic plot.
+[1] &quot;# Check for heteroscedasticity&quot;
+Warning: Heteroscedasticity (non-constant error variance) detected (p = 0.000).
+[1] &quot;# Check for influential observations (Cook&#39;s distance)&quot;
+OK: No outliers detected.
+[1] &quot;# Check for normal distributed random effects&quot;
+Group: participant_id
+(Intercept) OK: random effects appear as normally distributed (p = 0.244).
+ verum_sham OK: random effects appear as normally distributed (p = 0.569).
+
+Could not compute standard errors from random effects for diagnostic plot.</code></pre>
+<ul>
+<li><strong>Assumption 1: Independence of Data Points / Absence of collinearity -&gt; Is OK</strong>
+<ul>
+<li>Are predictors not highly correlated?</li>
+<li>Multicollinearity plot shows only low correlations</li>
+</ul></li>
+<li><strong>Assumption 2: Normality of Residuals -&gt; Is OK???</strong>
+<ul>
+<li>Are residuals approximately normally distributed?</li>
+<li>Q-Q plot and density plot look fine? <strong>Q-Q plot quite a bit off at the extremes</strong></li>
+<li>It is debated whether this is problematic at all; and violation does not seem so bad, so maybe not worry about it?</li>
+</ul></li>
+<li><strong>Assumption 3: Linearity -&gt; Is OK</strong>
+<ul>
+<li>Is the dependent variable linearly related to the fixed factors, random factors, and covariates?</li>
+<li>Plot of the residuals against the fitted values shows a random scatter pattern, no nonlinear or curvy pattern</li>
+</ul></li>
+<li><strong>Assumption 4: Homogeneity of Residual Variance (Heteroscedasticity) -&gt; Is OK???</strong>
+<ul>
+<li>Have residuals constant variance across the range of the predicted values?</li>
+<li>Plot of the residuals against the fitted values shows an even spread around the centered line; but <strong>written output says this is not ok</strong></li>
+</ul></li>
+<li><strong>Assumption 5: Absence of Influential Data Points -&gt; Is OK</strong>
+<ul>
+<li>Are there are no influential values?</li>
+<li>Cook’s distance plot looks fine (for large N, Cook’s distances should be below 1) and written output says there are no outliers</li>
+</ul></li>
+<li><strong>Assumption 6: Normality of Random Effects -&gt; Is OK???</strong>
+<ul>
+<li>Are random effects approximately normally distributed?</li>
+<li>Written output says this is ok (but: standard errors and hence also plot not available due to || syntax) <br><br></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="accuracy" class="section level3 tabset">
+<h3>Accuracy</h3>
+<div id="glmm" class="section level4">
+<h4>GLMM</h4>
+<p>I included the factor <em>accuracy of previous trial</em> in the model, to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered. (If preferred, I could also first run the preregistered model with only stimulation, group and stimulus type as fixed factors and then a second model, including additionally the factor <em>accuracy of previous trial</em>)</p>
+<pre class="r"><code># Run model with maximal random-effects structure (model with correlations failed to converge)
+GLMM_accuracy &lt;- glmer(accuracy_numeric ~ verum_sham * (OCD_HC + incongruent_congruent + prev_trial_incorrect_correct) +
+  (1 + incongruent_congruent + verum_sham + prev_trial_incorrect_correct + verum_sham:incongruent_congruent + verum_sham:prev_trial_incorrect_correct  || participant_id),
+data = single_trial_data_clean,
+family = binomial,
+control = glmerControl(optimizer = &quot;bobyqa&quot;)
+)
+
+
+# Check model output
+# summary(GLMM_accuracy) # Model does converge
+# isSingular(GLMM_accuracy) # is also ok
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(GLMM_accuracy)) # All terms explain variance
+
+
+# Display results (fixed effects)
+tab_model(GLMM_accuracy,
+  dv.labels = &quot;Accuracy&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;z value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;, wrap.labels = 80, digits.re = 3
+)</code></pre>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+Accuracy
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+z value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+33.29
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+28.85 – 38.41
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+48.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.89 – 1.28
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.66
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.506
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.81 – 1.31
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.28
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.779
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.10
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.08 – 0.13
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-20.78
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+prev_trial_incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.43
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.20 – 1.71
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+4.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.91
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.74 – 1.11
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.95
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.342
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.79 – 1.30
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.11
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.915
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * prev_trial_incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.26
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.90 – 1.76
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.33
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.182
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+3.290
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.162
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id.1</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.474
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id.2</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.013
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id.3</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.053
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id.4</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.202
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id.5</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.175
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.047
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+54998
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.274 / 0.308
+</td>
+</tr>
+</table>
+<p><br><br> Accuracy is lower in the incongruent condition than in the congruent condition. Furthermore, accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy). There is no interaction involving congruency on trial n and response type on trial n − 1. There is no evidence for an effect of group or stimulation. <br><br></p>
+</div>
+<div id="assumption-checks-2" class="section level4">
+<h4>Assumption checks</h4>
+<pre class="r"><code># Check for normal distributed random effects
+print(&quot;Check for normal distributed random effects&quot;)
+performance::check_normality(GLMM_accuracy, effects = &quot;random&quot;)
+
+
+# Check for overdispersion
+print(&quot;Check for overdispersion&quot;)
+overdisp_fun &lt;- function(model) {
+  rdf &lt;- df.residual(model)
+  rp &lt;- residuals(model,type=&quot;pearson&quot;)
+  Pearson.chisq &lt;- sum(rp^2)
+  prat &lt;- Pearson.chisq/rdf
+  pval &lt;- pchisq(Pearson.chisq, df=rdf, lower.tail=FALSE)
+  c(chisq=Pearson.chisq,ratio=prat,rdf=rdf,p=pval)
+}
+overdisp_fun(GLMM_accuracy) # If the p-value is &lt; 0.05, the data are overdispersed. Here p &gt; 0.05. Overdispersion is not a problem here. </code></pre>
+<pre><code>[1] &quot;Check for normal distributed random effects&quot;
+Group: participant_id
+                            (Intercept) OK: random effects appear as normally distributed (p = 0.060).
+                  incongruent_congruent OK: random effects appear as normally distributed (p = 0.258).
+                             verum_sham OK: random effects appear as normally distributed (p = 0.253).
+           prev_trial_incorrect_correct OK: random effects appear as normally distributed (p = 0.330).
+       incongruent_congruent:verum_sham OK: random effects appear as normally distributed (p = 0.601).
+verum_sham:prev_trial_incorrect_correct OK: random effects appear as normally distributed (p = 0.221).
+
+Could not compute standard errors from random effects for diagnostic plot.
+[1] &quot;Check for overdispersion&quot;
+        chisq         ratio           rdf             p 
+50631.7820552     0.9208457 54984.0000000     1.0000000 </code></pre>
+<ul>
+<li><p><strong>Assumption 1: Chosen Link Function is Appropriate -&gt; Is OK</strong></p></li>
+<li><p><strong>Assumption 2: Normality of Random Effects -&gt; Is OK???</strong></p>
+<ul>
+<li>Are random effects approximately normally distributed?</li>
+<li>Written output says this is ok (but: standard errors and hence also plot not available due to || syntax)</li>
+</ul></li>
+<li><p><strong>Assumption 3: Appropriate Estimation of Variance (No Overdispersion) -&gt; Is OK</strong></p>
+<ul>
+<li>Overdispersion is not a problem here. The empirical variance in data does not exceed the nominal variance under the presumed model. The chi-square test of the ratio of the empirical variance in data and the nominal variance under the presumed model is not significant. <br><br></li>
+</ul></li>
+</ul>
+</div>
+</div>
+</div>
+<div id="anovas" class="section level2 tabset">
+<h2>ANOVAs</h2>
+<hr />
+<p>To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart &amp; Woodman 2014), RT, PES, and accuracy were additionally analyzed with Greenhouse–Geisser corrected repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), response type (correct, incorrect)/condition (congruent correct, incongruent correct, incongruent incorrect), and accuracy previous trial (correct, incorrect). As can be seen below, the ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all main effects, interaction effects, and all pairwise comparisons.</p>
+<pre class="r"><code># Due to the afex package, contrasts are automatically set to effect-coding (contr.sum). Afex package 
+# also checks sphericity assumptions and automatically corrects for any violations if necessary.
+
+
+# For RT, exclude congruent errors by creating factor with 3 levels (correct congruent, correct incongruent, incorrect incongruent)
+single_trial_data_anova &lt;- single_trial_data_clean %&gt;%
+  dplyr::filter(
+    condition != &quot;congruent_incorrect&quot;
+    ) %&gt;%
+# Adjust number of factor levels
+ dplyr::mutate(
+   condition = as.factor(condition)
+   ) 
+
+
+# Get data in correct format for ANOVAs (aggregate within participants per condition)
+data_anova_rt &lt;- single_trial_data_anova %&gt;%
+  group_by(participant_id, stimulation, group, condition) %&gt;%
+  dplyr::summarize(
+    rt_log = mean(rt_log)
+  )
+
+
+data_anova_pes &lt;- single_trial_data_clean[!is.na(single_trial_data_clean$pes),] %&gt;%
+  group_by(participant_id, stimulation, group) %&gt;%
+  dplyr::summarize(
+    pes = mean(pes)
+  )
+
+
+data_anova_accuracy &lt;- single_trial_data_clean %&gt;%
+  group_by(participant_id, stimulation, group, stimulus_type, accuracy_prev_trial) %&gt;%
+  dplyr::summarize(
+    percentage_correct_responses = sum(accuracy_numeric) / length(participant_id) * 100
+  )
+
+
+# ANOVA RT
+anova_rt &lt;- aov_ez(
+  id     = &quot;participant_id&quot;, 
+  dv     = &quot;rt_log&quot;, 
+  data   = data_anova_rt,
+  within = c(&quot;stimulation&quot;, &quot;condition&quot;),
+  between= c(&quot;group&quot;),
+  observed = c(&quot;group&quot;)
+)
+
+
+# ANOVA PES
+anova_pes &lt;- aov_ez(
+  id     = &quot;participant_id&quot;, 
+  dv     = &quot;pes&quot;, 
+  data   = data_anova_pes,
+  within = c(&quot;stimulation&quot;),
+  between= c(&quot;group&quot;),
+  observed = c(&quot;group&quot;)
+)
+
+
+# ANOVA accuracy
+anova_accuracy &lt;- aov_ez(
+  id     = &quot;participant_id&quot;, 
+  dv     = &quot;percentage_correct_responses&quot;, 
+  data   = data_anova_accuracy,
+  within = c(&quot;stimulation&quot;, &quot;stimulus_type&quot;, &quot;accuracy_prev_trial&quot;),
+  between= c(&quot;group&quot;),
+  observed = c(&quot;group&quot;)
+)
+
+
+# Display ANOVA results
+my_table_template(nice(anova_rt,       MSE = FALSE), caption = &quot;RT&quot;)
+my_table_template(nice(anova_pes,      MSE = FALSE), caption = &quot;PES&quot;)                  
+my_table_template(nice(anova_accuracy, MSE = FALSE), caption = &quot;Accuracy&quot;)</code></pre>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+RT
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Effect
+</th>
+<th style="text-align:left;">
+df
+</th>
+<th style="text-align:left;">
+F
+</th>
+<th style="text-align:left;">
+ges
+</th>
+<th style="text-align:left;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+group
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+1.16
+</td>
+<td style="text-align:left;">
+.014
+</td>
+<td style="text-align:left;">
+.286
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.22
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.642
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.04
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.847
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+condition
+</td>
+<td style="text-align:left;">
+1.31, 73.18
+</td>
+<td style="text-align:left;">
+403.64 ***
+</td>
+<td style="text-align:left;">
+.545
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:condition
+</td>
+<td style="text-align:left;">
+1.31, 73.18
+</td>
+<td style="text-align:left;">
+1.02
+</td>
+<td style="text-align:left;">
+.003
+</td>
+<td style="text-align:left;">
+.337
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulation:condition
+</td>
+<td style="text-align:left;">
+1.26, 70.51
+</td>
+<td style="text-align:left;">
+0.38
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.589
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulation:condition
+</td>
+<td style="text-align:left;">
+1.26, 70.51
+</td>
+<td style="text-align:left;">
+1.84
+</td>
+<td style="text-align:left;">
+.001
+</td>
+<td style="text-align:left;">
+.178
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+PES
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Effect
+</th>
+<th style="text-align:left;">
+df
+</th>
+<th style="text-align:left;">
+F
+</th>
+<th style="text-align:left;">
+ges
+</th>
+<th style="text-align:left;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+group
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+2.79
+</td>
+<td style="text-align:left;">
+.029
+</td>
+<td style="text-align:left;">
+.100
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.09
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.765
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.12
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.731
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Accuracy
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Effect
+</th>
+<th style="text-align:left;">
+df
+</th>
+<th style="text-align:left;">
+F
+</th>
+<th style="text-align:left;">
+ges
+</th>
+<th style="text-align:left;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+group
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+1.72
+</td>
+<td style="text-align:left;">
+.008
+</td>
+<td style="text-align:left;">
+.195
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.21
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.646
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.02
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.875
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulus_type
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+182.84 ***
+</td>
+<td style="text-align:left;">
+.401
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulus_type
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+3.35 +
+</td>
+<td style="text-align:left;">
+.012
+</td>
+<td style="text-align:left;">
+.073
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+accuracy_prev_trial
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+18.52 ***
+</td>
+<td style="text-align:left;">
+.033
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:accuracy_prev_trial
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.36
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.552
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulation:stimulus_type
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.22
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.641
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulation:stimulus_type
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.57
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.454
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulation:accuracy_prev_trial
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+1.22
+</td>
+<td style="text-align:left;">
+.002
+</td>
+<td style="text-align:left;">
+.273
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulation:accuracy_prev_trial
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+1.49
+</td>
+<td style="text-align:left;">
+.002
+</td>
+<td style="text-align:left;">
+.227
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulus_type:accuracy_prev_trial
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+13.48 ***
+</td>
+<td style="text-align:left;">
+.024
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulus_type:accuracy_prev_trial
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.57
+</td>
+<td style="text-align:left;">
+.001
+</td>
+<td style="text-align:left;">
+.453
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulation:stimulus_type:accuracy_prev_trial
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.83
+</td>
+<td style="text-align:left;">
+.001
+</td>
+<td style="text-align:left;">
+.365
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulation:stimulus_type:accuracy_prev_trial
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.00
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.956
+</td>
+</tr>
+</tbody>
+</table>
+<p><br><br></p>
+<div id="pairwise-comparisons" class="section level3">
+<h3>Pairwise comparisons</h3>
+<p>Significant main effects and interactions were followed up with two-tailed paired <em>t</em> tests with Holm–Bonferroni <em>p</em> value adjustments.</p>
+<pre class="r"><code># Use multivariate model for all follow-up tests to adequately control for violations of sphericity
+afex_options(emmeans_model = &quot;multivariate&quot;)
+
+
+# Pairwise t tests
+pairwise_rt  &lt;- summary(pairs(emmeans(anova_rt, ~condition), adjust = &quot;holm&quot;))
+pairwise_acc &lt;- summary(pairs(emmeans(anova_accuracy, &quot;accuracy_prev_trial&quot;, by = &quot;stimulus_type&quot;), adjust = &quot;holm&quot;))
+
+
+
+# Add Cohen&#39;s dz (CIs for d could be added if needed, as it can be returned by the &quot;t_to_d&quot; function)
+pairwise_rt$cohens_dz  &lt;- round(t_to_d(pairwise_rt$t.ratio,  pairwise_rt$df,  paired = TRUE)[1], digits = 2)
+pairwise_acc$cohens_dz &lt;- round(t_to_d(pairwise_acc$t.ratio, pairwise_acc$df, paired = TRUE)[1], digits = 2)
+
+
+# Display results 
+my_table_template(pairwise_rt, 
+                  digits = c(0, 2, 2, 0, 2, 4, 2),
+                  caption = &quot;RT: Main Effect Response Type&quot;,
+                  footnote = &quot;P values are adjusted with Holm–Bonferroni method.&quot;) 
+
+
+my_table_template(pairwise_acc, 
+                  digits = c(0, 0, 2, 2, 0, 2, 3, 2),
+                  caption = &quot;Accuracy: Interaction Effect Stimulus Type x Accuracy Previous Trial&quot;,
+                  footnote = &quot;P values are adjusted with Holm–Bonferroni method.&quot;) </code></pre>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; border-bottom: 0;">
+<caption style="font-size: initial !important;">
+RT: Main Effect Response Type
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+contrast
+</th>
+<th style="text-align:right;">
+estimate
+</th>
+<th style="text-align:right;">
+SE
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+t.ratio
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:left;">
+cohens_dz
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+congruent_correct - incongruent_correct
+</td>
+<td style="text-align:right;">
+-0.14
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+56
+</td>
+<td style="text-align:right;">
+-31.68
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+-4.23
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+congruent_correct - incongruent_incorrect
+</td>
+<td style="text-align:right;">
+0.10
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+56
+</td>
+<td style="text-align:right;">
+10.11
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+1.35
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incongruent_correct - incongruent_incorrect
+</td>
+<td style="text-align:right;">
+0.25
+</td>
+<td style="text-align:right;">
+0.01
+</td>
+<td style="text-align:right;">
+56
+</td>
+<td style="text-align:right;">
+24.13
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:left;">
+3.23
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<span style="font-style: italic;">Note: </span>
+</td>
+</tr>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<sup></sup> P values are adjusted with Holm–Bonferroni method.
+</td>
+</tr>
+</tfoot>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; border-bottom: 0;">
+<caption style="font-size: initial !important;">
+Accuracy: Interaction Effect Stimulus Type x Accuracy Previous Trial
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+contrast
+</th>
+<th style="text-align:left;">
+stimulus_type
+</th>
+<th style="text-align:right;">
+estimate
+</th>
+<th style="text-align:right;">
+SE
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+t.ratio
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:left;">
+cohens_dz
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+correct - incorrect
+</td>
+<td style="text-align:left;">
+congruent
+</td>
+<td style="text-align:right;">
+-0.28
+</td>
+<td style="text-align:right;">
+0.25
+</td>
+<td style="text-align:right;">
+56
+</td>
+<td style="text-align:right;">
+-1.13
+</td>
+<td style="text-align:right;">
+0.264
+</td>
+<td style="text-align:left;">
+-0.15
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+correct - incorrect
+</td>
+<td style="text-align:left;">
+incongruent
+</td>
+<td style="text-align:right;">
+-3.38
+</td>
+<td style="text-align:right;">
+0.81
+</td>
+<td style="text-align:right;">
+56
+</td>
+<td style="text-align:right;">
+-4.17
+</td>
+<td style="text-align:right;">
+0.000
+</td>
+<td style="text-align:left;">
+-0.56
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<span style="font-style: italic;">Note: </span>
+</td>
+</tr>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<sup></sup> P values are adjusted with Holm–Bonferroni method.
+</td>
+</tr>
+</tfoot>
+</table>
+<p><br><br></p>
+</div>
+<div id="assumption-checks-3" class="section level3">
+<h3>Assumption checks</h3>
+<pre class="r"><code># Get residuals
+residuals_anova_rt       &lt;- as.data.frame(anova_rt$lm$residuals)
+residuals_anova_pes      &lt;- as.data.frame(anova_pes$lm$residuals)
+residuals_anova_accuracy &lt;- as.data.frame(anova_accuracy$lm$residuals)
+
+
+# Plot residuals
+ggplot(gather(residuals_anova_rt, cols, value), aes(x = value)) + 
+  geom_histogram(color = my_figure_colors[2], fill = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = &quot;Histogram Residuals RT&quot;) + my_figure_theme</code></pre>
+<p><img src="1_Behavioral_Performance_files/figure-html/ANOVAs-assumptions-1.png" width="672" /></p>
+<pre class="r"><code>ggplot(gather(residuals_anova_rt, cols, value), aes(sample = value)) + 
+  stat_qq(color = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = &quot;QQ-Plot Residuals RT&quot;) + my_figure_theme</code></pre>
+<p><img src="1_Behavioral_Performance_files/figure-html/ANOVAs-assumptions-2.png" width="672" /></p>
+<pre class="r"><code>ggplot(gather(residuals_anova_pes, cols, value), aes(x = value)) + 
+  geom_histogram(color = my_figure_colors[2], fill = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = &quot;Histogram Residuals PES&quot;) + my_figure_theme</code></pre>
+<p><img src="1_Behavioral_Performance_files/figure-html/ANOVAs-assumptions-3.png" width="672" /></p>
+<pre class="r"><code>ggplot(gather(residuals_anova_pes, cols, value), aes(sample = value)) + 
+  stat_qq(color = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = &quot;QQ-Plot Residuals PES&quot;) + my_figure_theme</code></pre>
+<p><img src="1_Behavioral_Performance_files/figure-html/ANOVAs-assumptions-4.png" width="672" /></p>
+<pre class="r"><code>ggplot(gather(residuals_anova_accuracy, cols, value), aes(x = value)) + 
+  geom_histogram(color = my_figure_colors[2], fill = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = &quot;Histogram Residuals Accuracy&quot;) + my_figure_theme</code></pre>
+<p><img src="1_Behavioral_Performance_files/figure-html/ANOVAs-assumptions-5.png" width="672" /></p>
+<pre class="r"><code>ggplot(gather(residuals_anova_accuracy, cols, value), aes(sample = value)) + 
+  stat_qq(color = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = &quot;QQ-Plot Residuals Accuracy&quot;) + my_figure_theme</code></pre>
+<p><img src="1_Behavioral_Performance_files/figure-html/ANOVAs-assumptions-6.png" width="672" /></p>
+<pre class="r"><code># Test normality of residuals
+print(&quot;# ANOVA RT: Normality of Residuals with Shapiro Wilk Test&quot;)
+do.call(rbind, lapply(residuals_anova_rt[,], function(x) shapiro.test(x)[&quot;p.value&quot;]))
+
+print(&quot;# ANOVA PES: Check Normality of Residuals with Shapiro Wilk Test&quot;)
+do.call(rbind, lapply(residuals_anova_pes[,], function(x) shapiro.test(x)[&quot;p.value&quot;]))
+
+print(&quot;# ANOVA Accuracy: Check Normality of Residuals with Shapiro Wilk Test&quot;)
+do.call(rbind, lapply(residuals_anova_accuracy[,], function(x) shapiro.test(x)[&quot;p.value&quot;]))</code></pre>
+<pre><code>[1] &quot;# ANOVA RT: Normality of Residuals with Shapiro Wilk Test&quot;
+                            p.value    
+sham_congruent_correct      0.04009404 
+sham_incongruent_correct    0.06875615 
+sham_incongruent_incorrect  0.01441937 
+verum_congruent_correct     0.02480235 
+verum_incongruent_correct   0.2868825  
+verum_incongruent_incorrect 0.000177579
+[1] &quot;# ANOVA PES: Check Normality of Residuals with Shapiro Wilk Test&quot;
+      p.value   
+sham  0.445014  
+verum 0.02939272
+[1] &quot;# ANOVA Accuracy: Check Normality of Residuals with Shapiro Wilk Test&quot;
+                            p.value              
+sham_congruent_correct      0.000004601339       
+sham_congruent_incorrect    0.0000000000005182287
+sham_incongruent_correct    0.04548416           
+sham_incongruent_incorrect  0.0004111306         
+verum_congruent_correct     0.0000001822369      
+verum_congruent_incorrect   0.00000000001080566  
+verum_incongruent_correct   0.02141916           
+verum_incongruent_incorrect 0.000006096841       </code></pre>
+<ul>
+<li><p><strong>Assumption #1: Dependent variable interval or ratio variable -&gt; Is OK</strong></p></li>
+<li><p><strong>Assumption #2: Balanced design</strong> (each subject has to have a value in each condition) <strong>-&gt; Is OK</strong></p></li>
+<li><p><strong>Assumption #3: No dependency in the scores between participants</strong> (dependency can exist only across scores for individuals) <strong>-&gt; Is OK</strong></p></li>
+<li><p><strong>Assumption #4: Residuals</strong> of the dependent variable in each level of the within-subjects factor are approximately <strong>normally distributed -&gt; NOT OK</strong> (see above; but for RT and PES only small deviation)**</p></li>
+<li><p><strong>Assumption #5: Sphericity</strong> (only relevant for withlin-subject factors with &gt; 2 levels) (Mafex package automatically corrects (Greenhouse Geisser) for any violations if necessary) <strong>-&gt; Is ok</strong></p></li>
+</ul>
+<p><br><br></p>
+</div>
+</div>
+<div id="mfn-plot" class="section level2">
+<h2>MFN plot</h2>
+<hr />
+<pre class="r"><code># raincloud plots
+library(&quot;cowplot&quot;)
+library(&quot;readr&quot;)
+library(&quot;lavaan&quot;)
+source(&quot;C:/Users/Luisa/PhD/1_PhD_Project/7_ModERN_Stimulation_Study/8_Analyses/2_GNG_Analysis_with_EEGLAB/A_Scripts/R_rainclouds.R&quot;)
+
+# single_trial_data_clean &lt;- single_trial_data_clean[single_trial_data_clean$participant_id != &quot;C_28&quot; &amp; single_trial_data_clean$participant_id != &quot;P_28&quot;,]
+
+
+# Calculate aggregated values per subject
+df_aggregated_per_subject_MFN &lt;- ddply(single_trial_data_clean, 
+                                   .(participant_id,response_type,stimulation,session), 
+                                   summarise,
+                                   MFN = mean(MFN_0_100_FCz, na.rm = TRUE))
+df_aggregated_per_subject_MFN &lt;- mutate(df_aggregated_per_subject_MFN,group = as.factor(ifelse(substr(participant_id,1,1) == &quot;C&quot;, &quot;HC&quot;, &quot;OCD&quot;)))
+
+
+# Calcuate means and CIs adjusted for within-participant factors based on single-trial data
+descriptive_statistics_MFN &lt;- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = &quot;MFN_0_100_FCz&quot;,
+  withinvars    = c(&quot;response_type&quot;, &quot;stimulation&quot;),
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+)
+
+
+# define facet labels
+response_type.labs &lt;- c(&quot;CRN&quot;, &quot;ERN&quot;)
+names(response_type.labs) &lt;- c(&quot;correct&quot;, &quot;incorrect&quot;)
+
+
+# From JB: &quot;Raincloud plots (Allen et al., 2019) show means and 95% CIs calculated with the summarySEwithin function (Morey, 2008) on single trial data, and points, and distributions for data aggregated by subject&quot;
+raincloud_MFN &lt;- ggplot() +
+  geom_flat_violin(data = df_aggregated_per_subject_MFN, aes(x = stimulation, y = MFN, fill = group),
+                   position = position_nudge(x = .12, y = 0), adjust = 1.5, trim = FALSE, alpha = .5, colour = NA)+
+  geom_point(data = df_aggregated_per_subject_MFN, aes(x = as.numeric(stimulation)-0, y = MFN, colour = group), 
+             position = position_jitterdodge(dodge.width = 0.25, jitter.width = 0.25), shape = 19, size = 1)+
+  geom_point(data = descriptive_statistics_MFN, aes(x = as.numeric(stimulation)-0.25, y = MFN_0_100_FCz, colour = group), 
+             position = position_dodge(width = 0.2), shape = 15, size = 2) +
+  geom_errorbar(data = descriptive_statistics_MFN, aes(x = as.numeric(stimulation)-0.25, ymax = MFN_0_100_FCz + ci, ymin = MFN_0_100_FCz - ci, colour = group),
+                position = position_dodge(width = 0.2), width = 0) +
+  geom_line(data = descriptive_statistics_MFN, aes(x = as.numeric(stimulation)-0.25, y = MFN_0_100_FCz, colour = group), 
+            position = position_dodge(width = 0.2), linetype = 3, size = 1) +
+  scale_colour_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  facet_wrap(~response_type, labeller = labeller(response_type = response_type.labs)) +
+  ggtitle(&quot;Mean MFN Amplitude (0-100 ms at FCz)&quot;, )  +
+  my_figure_theme 
+
+raincloud_MFN</code></pre>
+<p><img src="1_Behavioral_Performance_files/figure-html/test-plot-1.png" width="960" /></p>
 </div>
 
 

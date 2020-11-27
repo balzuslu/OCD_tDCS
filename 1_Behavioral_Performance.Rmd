@@ -37,7 +37,12 @@ library(MASS)       # for boxcox function and contrast definition
 library(lme4)       # for (G)LMMs
 library(lmerTest)   # for LMM p values (Satterthwaite's method for approximating dfs for the t and F tests)
 library(sjPlot)     # for tab_model function to display (G)LMM results
-
+library(performance)# for check of model various assumptions
+library(influence.ME) # to calculate Cook's distance
+library(emmeans)    # for pairwise comparisons
+library(afex)       # for ANOVAs (convenience functions, e.g. for nice display)
+library(effectsize) # for effect sizes (t_to_d function)
+library(tidyr)      # for reshape function
 
 
 # Load functions
@@ -55,17 +60,12 @@ my_figure_theme <- theme_classic(base_size = 11) +
 # instad of theme_classic: + theme_apa(base_size = 11)
 
 my_figure_colors <- c("#8ea6b4", "#465369")
-
-
-
-# Prepare labels for (G)LMM tables
-
 ```
-<br><br>
 
 ## Data Cleaning
 ***
-```{r load-and-clean-data, cache = TRUE}
+
+```{r load-and-clean-data, cache = knitr_cache_enabled}
 
 # Load data
 load(file = "./data/Single_Trial_Data.rda")
@@ -94,14 +94,11 @@ single_trial_data_clean <- single_trial_data %>%
   ) # (54998 of 55680 trials left)
 
 
-# Exclude congruent errors
-single_trial_data_clean$congruent_error <- NA
-single_trial_data_clean[(single_trial_data_clean$response_type == "incorrect" &
-                           single_trial_data_clean$stimulus_type == "congruent"),]$congruent_error <- TRUE
-# single_trial_data_clean <- single_trial_data_clean %>%
-#   dplyr::filter(is.na(congruent_error))
-  
-
+# Create specific condition column (to exclude congruent errors if necessary)
+single_trial_data_clean <- single_trial_data_clean %>%
+  dplyr::mutate(
+    condition = as.factor(paste0(stimulus_type, "_", response_type))
+  ) 
 
 
 # Create column with single-trial PES (RTpost-error − RTpre-error for all CCEC sequences)
@@ -120,17 +117,17 @@ for (i in 3:(nrow(single_trial_data_clean)-1)) {
 
 
 # Make categorical variables factors
-single_trial_data_clean$participant_id     <- as.factor(single_trial_data_clean$participant_id) 
-single_trial_data_clean$group              <- as.factor(single_trial_data_clean$group)
-single_trial_data_clean$session            <- as.factor(single_trial_data_clean$session)
-single_trial_data_clean$stimulation        <- as.factor(single_trial_data_clean$stimulation)
-single_trial_data_clean$stimulus_type      <- as.factor(single_trial_data_clean$stimulus_type)
-single_trial_data_clean$response_type      <- as.factor(single_trial_data_clean$response_type)
-single_trial_data_clean$response_type_2nd  <- as.factor(single_trial_data_clean$response_type_2nd)
-single_trial_data_clean$accuracy_prev_trial  <- as.factor(single_trial_data_clean$accuracy_prev_trial)
+single_trial_data_clean$participant_id      <- as.factor(single_trial_data_clean$participant_id) 
+single_trial_data_clean$group               <- as.factor(single_trial_data_clean$group)
+single_trial_data_clean$session             <- as.factor(single_trial_data_clean$session)
+single_trial_data_clean$stimulation         <- as.factor(single_trial_data_clean$stimulation)
+single_trial_data_clean$stimulus_type       <- as.factor(single_trial_data_clean$stimulus_type)
+single_trial_data_clean$response_type       <- as.factor(single_trial_data_clean$response_type)
+single_trial_data_clean$response_type_2nd   <- as.factor(single_trial_data_clean$response_type_2nd)
+single_trial_data_clean$accuracy_prev_trial <- as.factor(single_trial_data_clean$accuracy_prev_trial)
 ```
 
-Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch. We discarded incorrect responses to congruent stimuli from the RT analysis as these were very rare (0.67% of all trials; N = 372 trials). - Does this make sense?? 
+Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch. 
 
 ```{r excluded-trials}
 
@@ -160,21 +157,8 @@ my_table_template(table_excluded_trials,
 ```
 <br><br>
 
-## Data Inspection
+## Data Inspection {.tabset}
 ***
-### RT per participant 
-
-```{r plot-RT-per-subject-and-response-type, fig.width = 12, fig.height = 20}
-
-rt_per_participant <- ggplot(single_trial_data_clean, aes(x = response_type, y = rt)) + 
-  geom_point(position = "jitter", aes(color = stimulus_type)) + 
-  ggtitle("RT per participant") + 
-  my_figure_theme + 
-  facet_wrap(~ participant_id + session, ncol = 10) +
-  scale_color_manual(values = my_figure_colors) 
-rt_per_participant
-```
-<br>
 
 ### Distribution
 
@@ -301,6 +285,20 @@ ggdraw() +
 ```
 <br><br>
 
+### RT per participant 
+
+```{r plot-RT-per-subject-and-response-type, fig.width = 12, fig.height = 20, cache = knitr_cache_enabled}
+
+rt_per_participant <- ggplot(single_trial_data_clean, aes(x = response_type, y = rt)) + 
+  geom_point(position = "jitter", aes(color = stimulus_type)) + 
+  ggtitle("RT per participant") + 
+  my_figure_theme + 
+  facet_wrap(~ participant_id + session, ncol = 10) +
+  scale_color_manual(values = my_figure_colors) 
+rt_per_participant
+```
+<br><br>
+
 ### Check RT Normality 
 
 For the single-trial data, Shapiro-Wilk is not suitable, as it always returns a significant result for such large samples (additionally, it can handle only samples up to 5000). Hence, we have to rely on visual inspection (see above) and values of skewness and kurtosis. Values for skewness and kurtosis between -2 and +2 are considered acceptable in order to prove normal univariate distribution (George & Mallery, 2010).
@@ -319,7 +317,7 @@ colnames(normality_rt) <- c("RT","log(RT)", "PES")
 
 my_table_template(normality_rt)
 ```
-<br>
+<br><br>
 
 ### Determine RT transformation
 
@@ -345,8 +343,9 @@ For RT (left plot), the optimal lambda is `r round(optlambda_rt, digits = 2)`, s
 For PES (right plot), the optimal lambda is `r round(optlambda_pes, digits = 2)`, suggesting that no transformation (for lambda = 1) is needed.
 <br><br>
 
-## Descriptive Statistics
+## Descriptive Statistics {.tabset}
 ***
+
 ### Means and CIs
 
 ```{r descriptive-statistics-table}
@@ -530,16 +529,9 @@ my_table_template(descriptive_statistics_pca_display[,c(2,3,5,10,13,18)],
   header_above_config = c(" " = 2, "HC" = 2, "OCD" = 2),
   footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
 )
-```
-<br>
-To quantify PES robust, we used the method proposed by Dutilh et al. (2012). "A single-trial value of PES was computed by performing a pairwise comparison of correct trials around each error (RTpost-error − RTpre-error). The mean PES was computed by averaging these differences. This method ensures that post-error and post-correct trials originate from the same time periods in the data set and thus controls for global fluctuations in motivation and attention (Dutilh et al., 2012)." To avoid the effects of consecutive errors on RTs, we considered only error trials that were preceded by at least two correct responses and followed by at least one correct response (i.e., sequences of CCEC trials, where ‘C’ represents correct trials and ‘E’ represents error trials). We further quantified accuracy following incorrect and correct responses (post-error accuracy and post-correct accuracy).
-<br><br>
 
-### Plots
 
-```{r descriptive-statistics-plot-rt-acc, fig.width = 8, fig.height = 7, fig.cap = "Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulus type, response type, stimulation condition, and group. Error bars represent 95% confidence intervals adjusted for within-participant designs as described by Morey (2008)."}
-
-# Calcuate means and CIs adjusted for within-participant factors (without session)
+# Calcuate means and CIs adjusted for within-participant factors (without session) - for plots
 descriptive_statistics_rt_no_session <- summarySEwithinO(
   data          = single_trial_data_clean,
   measurevar    = "rt",
@@ -559,7 +551,6 @@ descriptive_statistics_accuracy_no_session <- summarySEwithinO(
 ) %>%
   # Multiply numeric values by 100 to obtain values in percent
   dplyr::mutate_if(is.numeric, list(~ . * 100))
-
 
 descriptive_statistics_pes_no_session <- summarySEwithinO(
   data          = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
@@ -591,74 +582,108 @@ descriptive_statistics_pca_no_session <- summarySEwithinO(
 ) %>%
   # Multiply numeric values by 100 to obtain values in percent
   dplyr::mutate_if(is.numeric, list(~ . * 100))
+```
+<br><br>
+
+### Plot without session {.active}
+
+```{r descriptive-statistics-plot-rt-acc, fig.width = 8, fig.height = 7, fig.cap = "Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulus type, response type, stimulation condition, and group. Means and 95% confidence intervals (shown in orange/red; confidence intervals are adjusted for within-participant designs as described by Morey (2008)) were calculated based on single-trial data. Boxplots are boased on data aggregated by subject."}
+
+# Calculate aggregated data per subject for boxplots
+df_aggregated_per_subject_rt <- ddply(single_trial_data_clean, 
+                                   .(participant_id, group, response_type, stimulus_type, stimulation, session), 
+                                   summarise,
+                                   rt = mean(rt, na.rm = TRUE))
+
+df_aggregated_per_subject_accuracy <- ddply(single_trial_data_clean, 
+                                   .(participant_id, group, stimulus_type, stimulation, session), 
+                                   summarise,
+                                   accuracy_numeric = mean(accuracy_numeric, na.rm = TRUE)*100)
+
+df_aggregated_per_subject_pes_pea_pca <- ddply(single_trial_data_clean, 
+                                   .(participant_id, group, stimulation, session), 
+                                   summarise,
+                                   pes = mean(pes, na.rm = TRUE),
+                                   pea = mean(pea, na.rm = TRUE)*100,
+                                   pca = mean(pca, na.rm = TRUE)*100)
 
 
-# Create plot RT  
-plot_rt <- ggplot(descriptive_statistics_rt_no_session, 
-                  aes(x = stimulation, y = rt, fill = group)) +
-  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
-  geom_errorbar(aes(ymax = rt + ci, ymin = rt - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = "\nStimulation condition", y = "RT (ms)") +
-  coord_cartesian(ylim = c(200, 500)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = "Group:")  +
-  facet_wrap(.~ response_type + stimulus_type, nrow = 1) +
-  guides(fill = guide_legend(nrow = 1, title.position = "left")) 
-
-  
-# Create plot accuracy
-plot_accuracy <- ggplot(descriptive_statistics_accuracy_no_session, 
-                        aes(x = stimulation, y = accuracy_numeric, fill = group)) +
-  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
-  geom_errorbar(aes(ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci),
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = "\nStimulation condition", y = "Accuracy (%)") +
-  coord_cartesian(ylim = c(80, 100)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = "Group") +
-  facet_wrap(.~ stimulus_type, nrow = 1)
+# Create plot RT 
+plot_rt <- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_rt, aes(x = stimulation, y = rt, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_rt_no_session, aes(x = stimulation, y = rt, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_rt_no_session, aes(x = stimulation, ymax = rt + ci, ymin = rt - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_rt_no_session, aes(x = stimulation, y = rt, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") +
+  facet_wrap(~response_type + stimulus_type, nrow = 1) +
+  my_figure_theme + 
+  labs(x = "\nStimulation condition", y = "RT (ms)")
 
 
-# Create plot PES  
-plot_pes <- ggplot(descriptive_statistics_pes_no_session, 
-                  aes(x = stimulation, y = pes, fill = group)) +
-  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
-  geom_errorbar(aes(ymax = pes + ci, ymin = pes - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = "\nStimulation condition", y = "Post-error slowing (ms)") +
-  coord_cartesian(ylim = c(0, 70)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = "Group:") 
+# Create plot accuracy 
+plot_accuracy <- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_accuracy, aes(x = stimulation, y = accuracy_numeric, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_accuracy_no_session, aes(x = stimulation, y = accuracy_numeric, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_accuracy_no_session, aes(x = stimulation, ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_accuracy_no_session, aes(x = stimulation, y = accuracy_numeric, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") +
+  facet_wrap(~stimulus_type, nrow = 1) +
+  my_figure_theme + 
+  labs(x = "\nStimulation condition", y = "Accuracy (%)")
+
+
+# Create plot PES
+plot_pes <- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pes, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_pes_no_session, aes(x = stimulation, y = pes, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_pes_no_session, aes(x = stimulation, ymax = pes + ci, ymin = pes - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_pes_no_session, aes(x = stimulation, y = pes, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") +
+  my_figure_theme + 
+  labs(x = "\nStimulation condition", y = "Post-error slowing (ms)")
 
 
 # Create plot PEA
-plot_pea <- ggplot(descriptive_statistics_pea_no_session, 
-                  aes(x = stimulation, y = pea, fill = group)) +
-  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
-  geom_errorbar(aes(ymax = pea + ci, ymin = pea - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = "\nStimulation condition", y = "Post-error accuracy (%)") +
-  coord_cartesian(ylim = c(80, 100)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = "Group:")  
+plot_pea <- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pea, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_pea_no_session, aes(x = stimulation, y = pea, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_pea_no_session, aes(x = stimulation, ymax = pea + ci, ymin = pea - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_pea_no_session, aes(x = stimulation, y = pea, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") +
+  my_figure_theme + 
+  labs(x = "\nStimulation condition", y = "Post-error accuracy (ms)")
 
 
 # Create plot PCA
-plot_pca <- ggplot(descriptive_statistics_pca_no_session, 
-                  aes(x = stimulation, y = pca, fill = group)) +
-  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
-  geom_errorbar(aes(ymax = pca + ci, ymin = pca - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = "\nStimulation condition", y = "Post-correct accuracy (%)") +
-  coord_cartesian(ylim = c(80, 100)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = "Group:")  
+plot_pca <- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pca, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_pca_no_session, aes(x = stimulation, y = pca, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_pca_no_session, aes(x = stimulation, ymax = pca + ci, ymin = pca - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_pca_no_session, aes(x = stimulation, y = pca, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") +
+  my_figure_theme + 
+  labs(x = "\nStimulation condition", y = "Post-correct accuracy (ms)")
+
 
 
 # Create common legend for plots (function from http://www.sthda.com/english/wiki/wiki.php?id_contents=7930#add-a-common-legend-for-multiple-ggplot2-graphs)
@@ -697,81 +722,91 @@ ggsave("figure_behav.tiff", width = 16, height = 15, units = "cm", dpi=600, comp
 # Display plot
 figure_behav
 ``` 
-<br>
+To quantify PES robust, we used the method proposed by Dutilh et al. (2012). See section LMM PES for details. We further quantified accuracy following incorrect and correct responses (post-error accuracy and post-correct accuracy).
+<br><br>
 
-### Plots including session
+### Plot with session
 
-```{r descriptive-statistics-plot-including-session, fig.width = 10, fig.height = 15, fig.cap = "Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulation condition, group, and session. Error bars represent 95% confidence intervals adjusted for within-participant designs as described by Morey (2008)."}
+```{r descriptive-statistics-plot-including-session, fig.width = 10, fig.height = 15, fig.cap = "Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulation condition, group, and session. Means and 95% confidence intervals (shown in orange/red; confidence intervals are adjusted for within-participant designs as described by Morey (2008)) were calculated based on single-trial data. Boxplots are boased on data aggregated by subject."}
 
-# Create plot RT
-plot_rt_session <- ggplot(descriptive_statistics_rt, 
-                  aes(x = stimulation, y = rt, fill = group)) +
-  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
-  geom_errorbar(aes(ymax = rt + ci, ymin = rt - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = "\nStimulation condition", y = "RT (ms)") +
-  coord_cartesian(ylim = c(200, 500)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = "Group:")  +
-  facet_wrap(.~ response_type + stimulus_type + session, nrow = 1) +
-  guides(fill = guide_legend(nrow = 1, title.position = "left")) 
-
-  
-# Create plot accuracy
-plot_accuracy_session <- ggplot(descriptive_statistics_accuracy, 
-                        aes(x = stimulation, y = accuracy_numeric, fill = group)) +
-  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
-  geom_errorbar(aes(ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci),
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = "\nStimulation condition", y = "Accuracy (%)") +
-  coord_cartesian(ylim = c(80, 100)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = "Group") +
-  facet_wrap(.~ stimulus_type + session, nrow = 1)
+# Create plot RT 
+plot_rt_session <- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_rt, aes(x = stimulation, y = rt, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_rt, aes(x = stimulation, y = rt, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_rt, aes(x = stimulation, ymax = rt + ci, ymin = rt - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_rt, aes(x = stimulation, y = rt, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") +
+  facet_wrap(~response_type + stimulus_type + session, nrow = 1) +
+  my_figure_theme + 
+  labs(x = "\nStimulation condition", y = "RT (ms)")
 
 
-# Create plot PES  
-plot_pes_session <- ggplot(descriptive_statistics_pes, 
-                  aes(x = stimulation, y = pes, fill = group)) +
-  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
-  geom_errorbar(aes(ymax = pes + ci, ymin = pes - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = "\nStimulation condition", y = "Post-error slowing (ms)") +
-  coord_cartesian(ylim = c(0, 70)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = "Group:") +  
-  facet_wrap(.~ session, nrow = 1)
+# Create plot accuracy 
+plot_accuracy_session <- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_accuracy, aes(x = stimulation, y = accuracy_numeric, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_accuracy, aes(x = stimulation, y = accuracy_numeric, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_accuracy, aes(x = stimulation, ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_accuracy, aes(x = stimulation, y = accuracy_numeric, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") +
+  facet_wrap(~stimulus_type + session, nrow = 1) +
+  my_figure_theme + 
+  labs(x = "\nStimulation condition", y = "Accuracy (%)")
+
+
+# Create plot PES
+plot_pes_session <- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pes, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_pes, aes(x = stimulation, y = pes, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_pes, aes(x = stimulation, ymax = pes + ci, ymin = pes - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_pes, aes(x = stimulation, y = pes, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") +
+  facet_wrap(~session, nrow = 1) +
+  my_figure_theme + 
+  labs(x = "\nStimulation condition", y = "Post-error slowing (ms)")
 
 
 # Create plot PEA
-plot_pea_session <- ggplot(descriptive_statistics_pea, 
-                  aes(x = stimulation, y = pea, fill = group)) +
-  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
-  geom_errorbar(aes(ymax = pea + ci, ymin = pea - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = "\nStimulation condition", y = "Post-error accuracy (%)") +
-  coord_cartesian(ylim = c(80, 100)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = "Group:")  +  
-  facet_wrap(.~ session, nrow = 1)
+plot_pea_session <- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pea, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_pea_no_session, aes(x = stimulation, y = pea, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_pea_no_session, aes(x = stimulation, ymax = pea + ci, ymin = pea - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_pea_no_session, aes(x = stimulation, y = pea, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") +
+  facet_wrap(~session, nrow = 1) +
+  my_figure_theme + 
+  labs(x = "\nStimulation condition", y = "Post-error accuracy (ms)")
 
 
 # Create plot PCA
-plot_pca_session <- ggplot(descriptive_statistics_pca, 
-                  aes(x = stimulation, y = pca, fill = group)) +
-  geom_bar(stat = "identity", position = position_dodge(), colour = "black", size = 0.25) +
-  geom_errorbar(aes(ymax = pca + ci, ymin = pca - ci), 
-                position = position_dodge(width = 0.9), width = 0.2, size = 0.3) +
-  my_figure_theme +
-  labs(x = "\nStimulation condition", y = "Post-correct accuracy (%)") +
-  coord_cartesian(ylim = c(80, 100)) +
-  scale_y_continuous(expand = c(0, 0)) +
-  scale_fill_manual(values = my_figure_colors, name = "Group:")  +  
-  facet_wrap(.~ session, nrow = 1) 
+plot_pca_session <- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pca, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_pca, aes(x = stimulation, y = pca, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_pca, aes(x = stimulation, ymax = pca + ci, ymin = pca - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_pca, aes(x = stimulation, y = pca, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") +
+  facet_wrap(~session, nrow = 1) +
+  my_figure_theme + 
+  labs(x = "\nStimulation condition", y = "Post-correct accuracy (ms)")
 
 
 # Create common legend for plots (function from http://www.sthda.com/english/wiki/wiki.php?id_contents=7930#add-a-common-legend-for-multiple-ggplot2-graphs)
@@ -802,7 +837,6 @@ figure_behav_session <- ggdraw() +
   draw_plot(plot_pca_session,      x = .66,  y = .0,   width = .33, height = .33) +
   draw_plot_label(c("A", "B", "C","D","E"), c(0, 0, 0, 0.33, 0.66), c(1, .66, .33, .33, .33), size = 15)
 
-#plot_grid(plot_rt_session, plot_accuracy_session, plot_grid(plot_pes_session, plot_pea_session, plot_pca_session), labels = "AUTO", rows = 2)
 
 # Save plot
  ggsave("figure_behav_session.tiff", width = 20, height = 25, units = "cm", dpi=600, compression = "lzw")
@@ -813,64 +847,71 @@ figure_behav_session
 ```  
 <br><br>
 
-
-
 ## (G)LMM Analyses
 ***
 
-RT and accuracy were modeled using a linear mixed-effects model (LMM) and a binomial generalized linear mixed-effects model (GLMM), respectively. In both models, **stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), and, where applicable (= for RT), response type (correct, incorrect)** were specified as fixed factors and participants as random factors. <br><br>
-Fixed effects were coded using effect coding (this equals sliding difference contrasts for two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants, as well as random slopes for all main effects and interactions specified as fixed effects. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).
+RT, PES, and accuracy were modeled using two linear mixed-effects models (LMM) and a binomial generalized linear mixed-effects model (GLMM), respectively. <br><br>
+
+**Fixed effects**
+
+*Stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), and, where applicable (= for RT), response type (correct, incorrect)* were specified as fixed factors.Fixed effects were coded using effect coding (this equals sliding difference contrasts for two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. Fixed effects were not eliminated using model comparison techniques because they correspond to the original experimental design and a priori hypotheses. <br><br>
+
+I decided to specify models that only predict all main effects and interactions only with the factor stimulation. This is the most sparse model for testing the effect of stimulation. Other models could also be specified, additionally testing interactions with the factor group or testing  all possible interactions. For example, these models additionally test the following effects: group:response_type, group:stimulus_type, group:response_type:stimulation, and group:stimulus_type:stimulation. But to me, these effects are of no prior interest, and/or difficult to interpret. Thus, I chose the simple models that only tests interactions with the factor stimulation. <br><br>
+
+I thought about including session as fixed effect. But this was not stated in preregistration and is of no real interest. I checked the effect of session once. For RT, there is a main effect, but no interaction with stimulation (there is a trend though, but I do not find this effect to be meaningfully interpretable). <br><br>
+
+**Random effects**
+
+Participants were specified as random factors. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants, as well as random slopes for all main effects and interactions specified as fixed effects. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).
 
 ```{r RT-accuracy-(G)LMM-contrast-coding}
 
 # Define contrasts (sliding difference contrasts)
-contrasts(single_trial_data_clean$stimulus_type)          <- contr.sdif(2)
-contrasts(single_trial_data_clean$response_type)          <- contr.sdif(2)
-contrasts(single_trial_data_clean$stimulation)            <- contr.sdif(2)
-contrasts(single_trial_data_clean$group)                  <- contr.sdif(2)
-contrasts(single_trial_data_clean$session)                <- contr.sdif(2)
-contrasts(single_trial_data_clean$accuracy_prev_trial)    <- contr.sdif(2)
+contrasts(single_trial_data_clean$stimulation)         <- contr.sdif(2)
+contrasts(single_trial_data_clean$group)               <- contr.sdif(2)
+contrasts(single_trial_data_clean$response_type)       <- contr.sdif(2)
+contrasts(single_trial_data_clean$stimulus_type)       <- contr.sdif(2)
+contrasts(single_trial_data_clean$accuracy_prev_trial) <- contr.sdif(2)
+contrasts(single_trial_data_clean$session)             <- contr.sdif(2)
 
 
 # Add contrasts as numerical covariates via model matrix* (specify all possible contasts for now)
-model_matrix <- model.matrix(~ stimulus_type * response_type * stimulation * group * session * accuracy_prev_trial, single_trial_data_clean)
+model_matrix <- model.matrix(~ stimulation * (group + response_type + stimulus_type + accuracy_prev_trial), single_trial_data_clean)
 
 
-# Attach the model matrix (32 columns) to the dataframe
-single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 64)] <- model_matrix
+# Attach the model matrix (10 columns) to the dataframe
+single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 10)] <- model_matrix
 
 
 # Assign descriptive names to the contrasts
-names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 63):ncol(single_trial_data_clean)] <- c("Grand Mean", "incongruent_congruent", "incorrect_correct", "verum_sham", "OCD_HC", "T2_T1", "prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct", "incongruent_congruent:verum_sham", "incorrect_correct:verum_sham", "incongruent_congruent:OCD_HC", "incorrect_correct:OCD_HC", "verum_sham:OCD_HC",  "incongruent_congruent:T2_T1", "incorrect_correct:T2_T1", "verum_sham:T2_T1", "OCD_HC:T2_T1", "incongruent_congruent:prev_trial_incorrect_correct", 
-  "incorrect_correct:prev_trial_incorrect_correct", "verum_sham:prev_trial_incorrect_correct", "OCD_HC:prev_trial_incorrect_correct", "T2_T1:prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct:verum_sham", "incongruent_congruent:incorrect_correct:OCD_HC", "incongruent_congruent:verum_sham:OCD_HC", "incorrect_correct:verum_sham:OCD_HC", "incongruent_congruent:incorrect_correct:T2_T1", "incongruent_congruent:verum_sham:T2_T1", "incorrect_correct:verum_sham:T2_T1", "incongruent_congruent:OCD_HC:T2_T1", "incorrect_correct:OCD_HC:T2_T1", "verum_sham:OCD_HC:T2_T1", "incongruent_congruent:incorrect_correct:prev_trial_incorrect_correct",  "incongruent_congruent:verum_sham:prev_trial_incorrect_correct", "incorrect_correct:verum_sham:prev_trial_incorrect_correct", "incongruent_congruent:OCD_HC:prev_trial_incorrect_correct",   "incorrect_correct:OCD_HC:prev_trial_incorrect_correct", "verum_sham:OCD_HC:prev_trial_incorrect_correct", "incongruent_congruent:T2_T1:prev_trial_incorrect_correct", "incorrect_correct:T2_T1:prev_trial_incorrect_correct", "verum_sham:T2_T1:prev_trial_incorrect_correct", "OCD_HC:T2_T1:prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct:verum_sham:OCD_HC", "incongruent_congruent:incorrect_correct:verum_sham:T2_T1", "incongruent_congruent:incorrect_correct:OCD_HC:T2_T1", 
-  "incongruent_congruent:verum_sham:OCD_HC:T2_T1", "incorrect_correct:verum_sham:OCD_HC:T2_T1", "incongruent_congruent:incorrect_correct:verum_sham:prev_trial_incorrect_correct", 
-  "incongruent_congruent:incorrect_correct:OCD_HC:prev_trial_incorrect_correct", "incongruent_congruent:verum_sham:OCD_HC:prev_trial_incorrect_correct", 
-  "incorrect_correct:verum_sham:OCD_HC:prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct:T2_T1:prev_trial_incorrect_correct", 
-  "incongruent_congruent:verum_sham:T2_T1:prev_trial_incorrect_correct", "incorrect_correct:verum_sham:T2_T1:prev_trial_incorrect_correct", "incongruent_congruent:OCD_HC:T2_T1:prev_trial_incorrect_correct", "incorrect_correct:OCD_HC:T2_T1:prev_trial_incorrect_correct", "verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct", 
-  "incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:T2_T1", "incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:prev_trial_incorrect_correct", 
-  "incongruent_congruent:incorrect_correct:verum_sham:T2_T1:prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct:OCD_HC:T2_T1:prev_trial_incorrect_correct", 
-  "incongruent_congruent:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct", "incorrect_correct:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct", "incongruent_congruent:incorrect_correct:verum_sham:OCD_HC:T2_T1:prev_trial_incorrect_correct")
+names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 9):ncol(single_trial_data_clean)] <- c("Grand Mean", "verum_sham", "OCD_HC", "incorrect_correct", "incongruent_congruent", "prev_trial_incorrect_correct", "verum_sham:OCD_HC", "verum_sham:incorrect_correct", "verum_sham:incongruent_congruent", "verum_sham:prev_trial_incorrect_correct")
 
 
 # *Note: For the random effects, we needed to enter the separate random effect terms in the models to enable
 # double-bar notation (||). This allows fitting a model that sets correlations of the random terms to zero.
 ```
-<br>
+<br><br>
 
-### LMM RT
+### RT {.tabset}
 
-I decided to favor a model that only predicts all main effects and interactions only with the factor stimulation (rt ~ stimulation * (group + response type + stimulus type). This is the most sparse model for testing the effect of stimulation on RT (the random effects are specified according to the fixed effects). Other models could also be specified, additionally testing interactions with the factor group (rt ~ stimulation * group * (response type + stimulus type) or testing  all interactions (rt ~ stimulation * group * response type * stimulus type). Specifically, these models additionally test the following effects:  group:response_type, group:stimulus_type, group:response_type:stimulation, and group:stimulus_type:stimulation (this list refers to when congruent errors are excluded). Of these, group:stimulus_type was significant with p = .05 in the first preliminary analysis. But to me, these effects are of no prior interest, and/or difficult to interpret. Thus, I chose the simple model that only tests interactions with the factor stimulation.
+#### LMM
 
-I thought about including session as fixed effect. But first, this was not stated in preregistration, and second, there is only a main effect, no interaction with stimulation (there is a trend though, but I do not find this effect to be meaningfully interpretable).
+I thought about whether I should exclude congruent errors from this RT analysis (see Evernote note 2020_11_25), as there these were very rare (0.67% of all trials; N = 372 trials). I do not want to exclude congruent errors from analyses in general (e.g. EEG, accuracy), which is ok as I will not add stimulus type as factor there. For the following reasons I decided to not exclude congruent errors from LMM RT analysis for now:
 
-Furthermore, I decided to test the stimulation effect on PES and PEA/PCA in sperate models. Including the factor correctness of previous trial would have led to overly complex models. Additionally, all trials would have been included then, preventing to use the robust (and preregistered) PES quantification by Dutilh et al., (2012).
+* LMMs take into account this imbalance due to different number of observations per cell and thus different uncertainty. So, it might be not problematic that congruent errors are rare? 
 
-```{r LMM-RT}
+* Additionally, maybe it is ok that one cell only has few observation, as I do not put interaction response type * stimulus type in model but only main effects? 
 
-# Run model with maximal random-effects structure (I skipped model allowing correlations between radom effects here; check its convergence later)
-LMM_rt <- lmer(rt_log ~ stimulation * (group + response_type + stimulus_type) +
-  (1 + incongruent_congruent + incorrect_correct + verum_sham + verum_sham:incongruent_congruent + verum_sham:incorrect_correct || participant_id),
-data = single_trial_data_clean[is.na(single_trial_data_clean$congruent_error),],
+* I thought about whether the effect of stimulus type could confound effect of response type, as errors are mostly incongruent whereas correct responses are half/half? But actually, when factors are included, I control for the effect of stimulus type for the effect of response type, don't I?! 
+
+For aggregation-based ANOVAs, I will excluded congruent errors.
+
+```{r LMM-RT, cache = knitr_cache_enabled}
+
+# Run model with maximal random-effects structure
+LMM_rt <- lmer(rt_log ~ verum_sham * (OCD_HC + incorrect_correct + incongruent_congruent) +
+  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+data = single_trial_data_clean,
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
@@ -878,6 +919,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 # Check model output
 # summary(LMM_rt) # Model does converge
+# isSingular(LMM_rt) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
 
 
 # Check PCA of random-effects variance-covariance estimates
@@ -886,22 +928,73 @@ control = lmerControl(optimizer = "bobyqa")
 
 # Display results (fixed effects)
 tab_model(LMM_rt,
-  dv.labels = "log(RT)", show.stat = TRUE, show.icc = FALSE, show.r2 = FALSE, 
-  show.re.var = FALSE, show.ngroups = FALSE, string.est = "b", string.stat = "t value", 
-  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite"
+  dv.labels = "log(RT)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
 ```
-<br>
-Responses are faster in the congruent than in the incongruent condition. Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation. 
+<br><br>
+Responses are faster in the congruent than in the incongruent condition. Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation and no interaction of any factor with stimulation. 
 <br><br>
 
-### LMM PES
+#### Assumption checks
+
+```{r LMM-RT-assumptions, fig.width = 20, fig.height = 15, cache = knitr_cache_enabled}
+
+# Check model assumptions
+performance::check_model(LMM_rt, panel = TRUE)
+
+# In addition to plots, print verbal output for some assumption tests to facilitate conclusion
+print("# Check for heteroscedasticity")
+performance::check_heteroscedasticity(LMM_rt)
+
+print("# Check for influential observations (Cook's distance)")
+performance::check_outliers(LMM_rt, effects = "random")
+
+print("# Check for normal distributed random effects")
+performance::check_normality(LMM_rt, effects = "random")
+```
+
+* **Assumption 1: Independence of Data Points / Absence of collinearity -> Is OK**
+    + Are predictors not highly correlated?
+    + Multicollinearity plot shows only low correlations 
+
+* **Assumption 2: Normality of Residuals -> Is OK???** 
+    + Are residuals approximately normally distributed?
+    + Q-Q plot and density plot look fine? Q-Q plot quite a bit off at the extremes 
+    + It is debated whether this is problematic at all; and violation does not seem so bad, so maybe not worry about it? 
+
+* **Assumption 3: Linearity -> Is OK** 
+    + Is the dependent variable linearly related to the fixed factors, random factors, and covariates?
+    + Plot of the residuals against the fitted values shows a random scatter pattern, no nonlinear or curvy pattern 
+
+* **Assumption 4: Homogeneity of Residual Variance (Heteroscedasticity) -> Is OK???**
+    + Have residuals constant variance across the range of the predicted values?
+    + Plot of the residuals against the fitted values shows an even spread around the centered line; but written output says this is not ok
+
+* **Assumption 5: Absence of Influential Data Points -> Is OK** 
+    + Are there are no influential values? 
+    + Cook's distance plot looks fine (for large N, Cook's distances should be below 1) and written output says there are no outliers 
+
+* **Assumption 6: Normality of Random Effects -> Is OK**
+    + Are random effects approximately normally distributed?
+    + Plots look fine; written output says this is (mostly) ok 
+<br><br>
+
+### PES {.tabset}
+
+#### LMM
+
+To quantify PES robust, we used the method proposed by Dutilh et al. (2012). "A single-trial value of PES was computed by performing a pairwise comparison of correct trials around each error (RTpost-error − RTpre-error). This method ensures that post-error and post-correct trials originate from the same time periods in the data set and thus controls for global fluctuations in motivation and attention." To avoid the effects of consecutive errors on RTs, we considered only error trials that were preceded by at least two correct responses and followed by at least one correct response (i.e., sequences of CCEC trials, where ‘C’ represents correct trials and ‘E’ represents error trials). 
+
+I decided to test the stimulation effect on PES in a separate model instead of including the factor correctness of previous trial in the RT model. Otherwise, this would have led to an overly complex LMM on RTs. Additionally, all trials would have been included then, preventing to use the robust (and preregistered) PES quantification by Dutilh et al. (2012).
+
+I included stimulus type as covariate (hance, only as fixed, not as random effect) to avoid confounding the PES effect with stimulus congruency, as stimulus congruency of the respective trial might potentially interfere with PES. 
 
 ```{r LMM-PES}
-
-# Run model with maximal random-effects structure (I skipped model allowing correlations between radom effects here; check its convergence later)
-LMM_pes <- lmer(pes ~ stimulation * group + stimulus_type +
-  (1 + verum_sham + stimulus_type || participant_id),
+# Run model with maximal random-effects structure (to avoid singularity / non-convergence and rePCA value of 0, correlations betw. random terms and radom slope of stimulus_type had to be removed)
+LMM_pes <- lmer(pes ~ verum_sham * OCD_HC + incongruent_congruent +
+  (1 + verum_sham  || participant_id),
 data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -910,6 +1003,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 # Check model output
 # summary(LMM_pes) # Model does converge
+# isSingular(LMM_pes) # is also ok
 
 
 # Check PCA of random-effects variance-covariance estimates
@@ -918,27 +1012,69 @@ control = lmerControl(optimizer = "bobyqa")
 
 # Display results (fixed effects)
 tab_model(LMM_pes,
-  dv.labels = "PES", show.stat = TRUE, show.icc = FALSE, show.r2 = FALSE, 
-  show.re.var = FALSE, show.ngroups = FALSE, string.est = "b", string.stat = "t value", 
-  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite"
+  dv.labels = "PES", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
 ```
-<br>
-There is PES. "One potential interfering factor in PES can be the flanker congruency of the respective trial." There was no effect of congruency on trial n on PES. There is no evidence for an effect of group or stimulation. When excluding congruent errors, there is a trend for more PES in OCD compared to HC. 
+<br><br>
+There is PES. There is no effect of congruency in the respective on PES. There is no evidence for an effect of group or stimulation. 
 <br><br>
 
-### GLMM Accuracy
+#### Assumption checks
 
-I included the factor accuracy of previous trial in the model, to directly test post-error/post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it in the same model. This was not preregistered.
+```{r LMM-PES-assumptions, fig.width = 20, fig.height = 15}
 
-OR 
+# Check model assumptions
+performance::check_model(LMM_pes, panel = TRUE)
 
-Accuracy was first analyzed with only stimulation, group and stimulus type as fixed factors. Second, we included the factor previous accuracy to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered.
+# In addition to plots, print verbal output for some assumption tests to facilitate conclusion
+print("# Check for heteroscedasticity")
+performance::check_heteroscedasticity(LMM_pes)
 
-```{r GLMM-accuracy}
+print("# Check for influential observations (Cook's distance)")
+performance::check_outliers(LMM_pes, effects = "random")
 
-# Run model with maximal random-effects structure (I skipped model allowing correlations between radom effects here; check its convergence later)
-GLMM_accuracy <- glmer(accuracy_numeric ~ stimulation * (group + stimulus_type + accuracy_prev_trial) +
+print("# Check for normal distributed random effects")
+performance::check_normality(LMM_pes, effects = "random")
+```
+
+* **Assumption 1: Independence of Data Points / Absence of collinearity -> Is OK**
+    + Are predictors not highly correlated?
+    + Multicollinearity plot shows only low correlations 
+
+* **Assumption 2: Normality of Residuals -> Is OK???** 
+    + Are residuals approximately normally distributed?
+    + Q-Q plot and density plot look fine? **Q-Q plot quite a bit off at the extremes** 
+    + It is debated whether this is problematic at all; and violation does not seem so bad, so maybe not worry about it?  
+
+* **Assumption 3: Linearity -> Is OK** 
+    + Is the dependent variable linearly related to the fixed factors, random factors, and covariates?
+    + Plot of the residuals against the fitted values shows a random scatter pattern, no nonlinear or curvy pattern 
+
+* **Assumption 4: Homogeneity of Residual Variance (Heteroscedasticity)  -> Is OK???**
+    + Have residuals constant variance across the range of the predicted values?
+    + Plot of the residuals against the fitted values shows an even spread around the centered line; but **written output says this is not ok** 
+
+* **Assumption 5: Absence of Influential Data Points  -> Is OK** 
+    + Are there are no influential values? 
+    + Cook's distance plot looks fine (for large N, Cook's distances should be below 1) and written output says there are no outliers 
+
+* **Assumption 6: Normality of Random Effects  -> Is OK???**
+    + Are random effects approximately normally distributed?
+    + Written output says this is ok (but: standard errors and hence also plot not available due to || syntax) 
+<br><br>
+
+
+### Accuracy {.tabset}
+
+#### GLMM
+
+I included the factor *accuracy of previous trial* in the model, to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered. (If preferred, I could also first run the preregistered model with only stimulation, group and stimulus type as fixed factors and then a second model, including additionally the factor *accuracy of previous trial*)
+
+```{r GLMM-accuracy, cache = knitr_cache_enabled}
+# Run model with maximal random-effects structure (model with correlations failed to converge)
+GLMM_accuracy <- glmer(accuracy_numeric ~ verum_sham * (OCD_HC + incongruent_congruent + prev_trial_incorrect_correct) +
   (1 + incongruent_congruent + verum_sham + prev_trial_incorrect_correct + verum_sham:incongruent_congruent + verum_sham:prev_trial_incorrect_correct  || participant_id),
 data = single_trial_data_clean,
 family = binomial,
@@ -948,6 +1084,7 @@ control = glmerControl(optimizer = "bobyqa")
 
 # Check model output
 # summary(GLMM_accuracy) # Model does converge
+# isSingular(GLMM_accuracy) # is also ok
 
 
 # Check PCA of random-effects variance-covariance estimates
@@ -956,20 +1093,280 @@ control = glmerControl(optimizer = "bobyqa")
 
 # Display results (fixed effects)
 tab_model(GLMM_accuracy,
-  dv.labels = "Accuracy", show.stat = TRUE, show.icc = FALSE, show.r2 = FALSE, 
-  show.re.var = FALSE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
-  string.ci = "95 % CI", string.p = "p value"
+  dv.labels = "Accuracy", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
+  string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
 )
 ```
-<br>
-Accuracy is lower in the incongruent condition than in the congruent condition. Furthermore, accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy). There was no interaction involving congruency on trial n and response type on trial n − 1. There is no evidence for an effect of group or stimulation. (When removing congruent errors from this analysis, there is also an effect of group, with patients being more accurate than control participants.)
+<br><br>
+Accuracy is lower in the incongruent condition than in the congruent condition. Furthermore, accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy). There is no interaction involving congruency on trial n and response type on trial n − 1. There is no evidence for an effect of group or stimulation. 
+<br><br>
+
+#### Assumption checks
+
+```{r GLMM-accuracy-assumptions}
+
+# Check for normal distributed random effects
+print("Check for normal distributed random effects")
+performance::check_normality(GLMM_accuracy, effects = "random")
+
+
+# Check for overdispersion
+print("Check for overdispersion")
+overdisp_fun <- function(model) {
+  rdf <- df.residual(model)
+  rp <- residuals(model,type="pearson")
+  Pearson.chisq <- sum(rp^2)
+  prat <- Pearson.chisq/rdf
+  pval <- pchisq(Pearson.chisq, df=rdf, lower.tail=FALSE)
+  c(chisq=Pearson.chisq,ratio=prat,rdf=rdf,p=pval)
+}
+overdisp_fun(GLMM_accuracy) # If the p-value is < 0.05, the data are overdispersed. Here p > 0.05. Overdispersion is not a problem here. 
+```
+
+* **Assumption 1: Chosen Link Function is Appropriate  -> Is OK** 
+  
+* **Assumption 2: Normality of Random Effects -> Is OK???**
+    + Are random effects approximately normally distributed?
+    + Written output says this is ok (but: standard errors and hence also plot not available due to || syntax) 
+
+* **Assumption 3: Appropriate Estimation of Variance (No Overdispersion)  -> Is OK**
+    + Overdispersion is not a problem here. The empirical variance in data does not exceed the nominal variance under the presumed model. The chi-square test of the ratio of the empirical variance in data and the nominal variance under the presumed model is not significant.
 <br><br>
 
 
-# Further thoughts 
+## ANOVAs {.tabset}
+***
+To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), RT, PES, and accuracy were additionally analyzed with Greenhouse–Geisser corrected repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), response type (correct, incorrect)/condition (congruent correct, incongruent correct, incongruent incorrect), and accuracy previous trial (correct, incorrect). As can be seen below, the ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all main effects, interaction effects, and all pairwise comparisons. 
 
-Include factor congruence for PES to avoid confound with congruency?
+```{r ANOVAs}
 
-See Riesel:  Post-error slowing was analyzed by comparing the difference between reaction times following correct incongruent trials with reaction times following errors in incongruent trials. Only incongruent trials were included in this analysis in order to avoid a confound with the congruency effect, and because errors occurred mainly in incongruent trials
+# Due to the afex package, contrasts are automatically set to effect-coding (contr.sum). Afex package 
+# also checks sphericity assumptions and automatically corrects for any violations if necessary.
 
-also adjust in plots when excluding congruent errors!
+
+# For RT, exclude congruent errors by creating factor with 3 levels (correct congruent, correct incongruent, incorrect incongruent)
+single_trial_data_anova <- single_trial_data_clean %>%
+  dplyr::filter(
+    condition != "congruent_incorrect"
+    ) %>%
+# Adjust number of factor levels
+ dplyr::mutate(
+   condition = as.factor(condition)
+   ) 
+
+
+# Get data in correct format for ANOVAs (aggregate within participants per condition)
+data_anova_rt <- single_trial_data_anova %>%
+  group_by(participant_id, stimulation, group, condition) %>%
+  dplyr::summarize(
+    rt_log = mean(rt_log)
+  )
+
+
+data_anova_pes <- single_trial_data_clean[!is.na(single_trial_data_clean$pes),] %>%
+  group_by(participant_id, stimulation, group) %>%
+  dplyr::summarize(
+    pes = mean(pes)
+  )
+
+
+data_anova_accuracy <- single_trial_data_clean %>%
+  group_by(participant_id, stimulation, group, stimulus_type, accuracy_prev_trial) %>%
+  dplyr::summarize(
+    percentage_correct_responses = sum(accuracy_numeric) / length(participant_id) * 100
+  )
+
+
+# ANOVA RT
+anova_rt <- aov_ez(
+  id     = "participant_id", 
+  dv     = "rt_log", 
+  data   = data_anova_rt,
+  within = c("stimulation", "condition"),
+  between= c("group"),
+  observed = c("group")
+)
+
+
+# ANOVA PES
+anova_pes <- aov_ez(
+  id     = "participant_id", 
+  dv     = "pes", 
+  data   = data_anova_pes,
+  within = c("stimulation"),
+  between= c("group"),
+  observed = c("group")
+)
+
+
+# ANOVA accuracy
+anova_accuracy <- aov_ez(
+  id     = "participant_id", 
+  dv     = "percentage_correct_responses", 
+  data   = data_anova_accuracy,
+  within = c("stimulation", "stimulus_type", "accuracy_prev_trial"),
+  between= c("group"),
+  observed = c("group")
+)
+
+
+# Display ANOVA results
+my_table_template(nice(anova_rt,       MSE = FALSE), caption = "RT")
+my_table_template(nice(anova_pes,      MSE = FALSE), caption = "PES")                  
+my_table_template(nice(anova_accuracy, MSE = FALSE), caption = "Accuracy")
+```
+<br><br>
+
+### Pairwise comparisons
+
+Significant main effects and interactions were followed up with two-tailed paired *t* tests with Holm–Bonferroni *p* value adjustments.
+
+```{r ANOVAs-pairwise-tests}
+
+# Use multivariate model for all follow-up tests to adequately control for violations of sphericity
+afex_options(emmeans_model = "multivariate")
+
+
+# Pairwise t tests
+pairwise_rt  <- summary(pairs(emmeans(anova_rt, ~condition), adjust = "holm"))
+pairwise_acc <- summary(pairs(emmeans(anova_accuracy, "accuracy_prev_trial", by = "stimulus_type"), adjust = "holm"))
+
+
+
+# Add Cohen's dz (CIs for d could be added if needed, as it can be returned by the "t_to_d" function)
+pairwise_rt$cohens_dz  <- round(t_to_d(pairwise_rt$t.ratio,  pairwise_rt$df,  paired = TRUE)[1], digits = 2)
+pairwise_acc$cohens_dz <- round(t_to_d(pairwise_acc$t.ratio, pairwise_acc$df, paired = TRUE)[1], digits = 2)
+
+
+# Display results 
+my_table_template(pairwise_rt, 
+                  digits = c(0, 2, 2, 0, 2, 4, 2),
+                  caption = "RT: Main Effect Response Type",
+                  footnote = "P values are adjusted with Holm–Bonferroni method.") 
+
+
+my_table_template(pairwise_acc, 
+                  digits = c(0, 0, 2, 2, 0, 2, 3, 2),
+                  caption = "Accuracy: Interaction Effect Stimulus Type x Accuracy Previous Trial",
+                  footnote = "P values are adjusted with Holm–Bonferroni method.") 
+```
+<br><br>
+
+### Assumption checks
+
+```{r ANOVAs-assumptions}
+
+# Get residuals
+residuals_anova_rt       <- as.data.frame(anova_rt$lm$residuals)
+residuals_anova_pes      <- as.data.frame(anova_pes$lm$residuals)
+residuals_anova_accuracy <- as.data.frame(anova_accuracy$lm$residuals)
+
+
+# Plot residuals
+ggplot(gather(residuals_anova_rt, cols, value), aes(x = value)) + 
+  geom_histogram(color = my_figure_colors[2], fill = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = "Histogram Residuals RT") + my_figure_theme
+
+ggplot(gather(residuals_anova_rt, cols, value), aes(sample = value)) + 
+  stat_qq(color = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = "QQ-Plot Residuals RT") + my_figure_theme
+
+ggplot(gather(residuals_anova_pes, cols, value), aes(x = value)) + 
+  geom_histogram(color = my_figure_colors[2], fill = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = "Histogram Residuals PES") + my_figure_theme
+
+ggplot(gather(residuals_anova_pes, cols, value), aes(sample = value)) + 
+  stat_qq(color = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = "QQ-Plot Residuals PES") + my_figure_theme
+
+ggplot(gather(residuals_anova_accuracy, cols, value), aes(x = value)) + 
+  geom_histogram(color = my_figure_colors[2], fill = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = "Histogram Residuals Accuracy") + my_figure_theme
+
+ggplot(gather(residuals_anova_accuracy, cols, value), aes(sample = value)) + 
+  stat_qq(color = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = "QQ-Plot Residuals Accuracy") + my_figure_theme
+
+
+# Test normality of residuals
+print("# ANOVA RT: Normality of Residuals with Shapiro Wilk Test")
+do.call(rbind, lapply(residuals_anova_rt[,], function(x) shapiro.test(x)["p.value"]))
+
+print("# ANOVA PES: Check Normality of Residuals with Shapiro Wilk Test")
+do.call(rbind, lapply(residuals_anova_pes[,], function(x) shapiro.test(x)["p.value"]))
+
+print("# ANOVA Accuracy: Check Normality of Residuals with Shapiro Wilk Test")
+do.call(rbind, lapply(residuals_anova_accuracy[,], function(x) shapiro.test(x)["p.value"]))
+```
+
+* **Assumption #1: Dependent variable interval or ratio variable -> Is OK**
+
+* **Assumption #2: Balanced design** (each subject has to have a value in each condition) **-> Is OK**
+
+* **Assumption #3: No dependency in the scores between participants** (dependency can exist only across scores for individuals) **-> Is OK**
+
+* **Assumption #4: Residuals** of the dependent variable in each level of the within-subjects factor are approximately **normally distributed -> NOT OK** (see above; but for RT and PES only small deviation)**
+
+* **Assumption #5: Sphericity** (only relevant for withlin-subject factors with > 2 levels) (Mafex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is ok**
+
+<br><br>
+
+## MFN plot
+***
+```{r test-plot, fig.width = 10, fig.height = 6}
+
+# raincloud plots
+library("cowplot")
+library("readr")
+library("lavaan")
+source("C:/Users/Luisa/PhD/1_PhD_Project/7_ModERN_Stimulation_Study/8_Analyses/2_GNG_Analysis_with_EEGLAB/A_Scripts/R_rainclouds.R")
+
+# single_trial_data_clean <- single_trial_data_clean[single_trial_data_clean$participant_id != "C_28" & single_trial_data_clean$participant_id != "P_28",]
+
+
+# Calculate aggregated values per subject
+df_aggregated_per_subject_MFN <- ddply(single_trial_data_clean, 
+                                   .(participant_id,response_type,stimulation,session), 
+                                   summarise,
+                                   MFN = mean(MFN_0_100_FCz, na.rm = TRUE))
+df_aggregated_per_subject_MFN <- mutate(df_aggregated_per_subject_MFN,group = as.factor(ifelse(substr(participant_id,1,1) == "C", "HC", "OCD")))
+
+
+# Calcuate means and CIs adjusted for within-participant factors based on single-trial data
+descriptive_statistics_MFN <- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = "MFN_0_100_FCz",
+  withinvars    = c("response_type", "stimulation"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+)
+
+
+# define facet labels
+response_type.labs <- c("CRN", "ERN")
+names(response_type.labs) <- c("correct", "incorrect")
+
+
+# From JB: "Raincloud plots (Allen et al., 2019) show means and 95% CIs calculated with the summarySEwithin function (Morey, 2008) on single trial data, and points, and distributions for data aggregated by subject"
+raincloud_MFN <- ggplot() +
+  geom_flat_violin(data = df_aggregated_per_subject_MFN, aes(x = stimulation, y = MFN, fill = group),
+                   position = position_nudge(x = .12, y = 0), adjust = 1.5, trim = FALSE, alpha = .5, colour = NA)+
+  geom_point(data = df_aggregated_per_subject_MFN, aes(x = as.numeric(stimulation)-0, y = MFN, colour = group), 
+             position = position_jitterdodge(dodge.width = 0.25, jitter.width = 0.25), shape = 19, size = 1)+
+  geom_point(data = descriptive_statistics_MFN, aes(x = as.numeric(stimulation)-0.25, y = MFN_0_100_FCz, colour = group), 
+             position = position_dodge(width = 0.2), shape = 15, size = 2) +
+  geom_errorbar(data = descriptive_statistics_MFN, aes(x = as.numeric(stimulation)-0.25, ymax = MFN_0_100_FCz + ci, ymin = MFN_0_100_FCz - ci, colour = group),
+                position = position_dodge(width = 0.2), width = 0) +
+  geom_line(data = descriptive_statistics_MFN, aes(x = as.numeric(stimulation)-0.25, y = MFN_0_100_FCz, colour = group), 
+            position = position_dodge(width = 0.2), linetype = 3, size = 1) +
+  scale_colour_manual(values = my_figure_colors, name = "Group:") +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") +
+  facet_wrap(~response_type, labeller = labeller(response_type = response_type.labs)) +
+  ggtitle("Mean MFN Amplitude (0-100 ms at FCz)", )  +
+  my_figure_theme 
+
+raincloud_MFN
+```
+
