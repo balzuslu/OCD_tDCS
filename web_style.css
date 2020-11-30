@@ -1,0 +1,42 @@
+/* NAVIGATION BAR */
+/* -------------- */
+
+.navbar {
+  background-color:#465369;
+  border-color:#465369;
+}
+
+.navbar-default .navbar-nav > li > a:hover, 
+.navbar-default .navbar-nav > li > a:focus {
+    background-color:#8ea6b4;
+	color: white;
+}
+  
+  
+.navbar-default .navbar-nav > .active > a,
+.navbar-default .navbar-nav > .active > a:hover,
+.navbar-default .navbar-nav > .active > a:focus {
+  background-color: #8ea6b4;
+  color: white;
+}
+
+
+/* TABLE OF CONTENT */
+/* ---------------- */
+
+.list-group-item.active, .list-group-item.active:focus, .list-group-item.active:hover {
+  background-color: #8ea6b4;
+  color: white;
+}
+
+
+
+/* CODE SCROLL BAR */
+/* --------------- */
+
+pre code, pre, code {
+  white-space: pre !important;
+  overflow-x: scroll !important;
+  word-break: keep-all !important;
+  word-wrap: initial !important;
+}

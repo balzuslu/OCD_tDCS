@@ -1,0 +1,39 @@
+---
+title: "Task & Data Description"
+output: 
+  html_document
+---
+
+<!-- Set general settings -->
+
+```{r setup, message = FALSE, warning = FALSE, echo = FALSE}
+
+# Set general settings for markdown file
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE
+)
+
+
+# Clear environment
+rm(list = ls())
+```
+
+<!-- Load Task_and_Data_Description.md file containing task and data description -->
+
+```{r data-description} 
+
+# Load markdown file that contains the task and data description
+filename         <- "Task_and_Data_Description.md"
+data_description <- readChar(filename, file.info(filename)$size, )
+```
+
+`r data_description`
+<br><br>
+
+## Session Info
+
+```{r session-info, results = TRUE}
+
+sessionInfo()
+```
