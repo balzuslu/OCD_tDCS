@@ -315,7 +315,7 @@ normality_rt <- round(data.frame(matrix(c(skewness(single_trial_data_clean$rt),
 rownames(normality_rt) <- c("Skewness","Kurtosis")
 colnames(normality_rt) <- c("RT","log(RT)", "PES")
 
-my_table_template(normality_rt)
+my_table_template(normality_rt, row_names = TRUE)
 ```
 <br><br>
 
@@ -360,13 +360,12 @@ descriptive_statistics_rt <- summarySEwithinO(
   idvar         = "participant_id", 
   conf.interval = .95
 ) %>%
-  # Round numeric values to two decimals
-  dplyr::mutate_if(is.numeric, round, digits = 2
-  ) %>%
   # Format confidence interval column
   dplyr::mutate(
-    ci_rt       = paste0("[", rt - ci, ", ", rt + ci, "]")
-  ) %>%
+    ci_rt = paste0("[", round(rt - ci, digits = 0), 
+                  ", ", round(rt + ci, digits = 0), "]")) %>%
+  # Round RT means to zero decimals
+  dplyr::mutate_at("rt", round, digits = 0) %>%    
   # Select columns to be displayed
   dplyr::select(c("group", "response_type", "stimulus_type", "stimulation", "session", "rt", "ci_rt", "ci"))
 
@@ -399,13 +398,12 @@ descriptive_statistics_accuracy <- summarySEwithinO(
   # Multiply numeric values by 100 to obtain values in percent
   dplyr::mutate_if(is.numeric, list(~ . * 100)
   )  %>%  
-  # Round numeric values to two decimals
-  dplyr::mutate_if(is.numeric, round, digits = 2
-  ) %>%
   # Format confidence interval column
   dplyr::mutate(
-    ci_accuracy = paste0("[", accuracy_numeric - ci, ", ", accuracy_numeric + ci, "]")
-  ) %>%
+    ci_accuracy = paste0("[", round(accuracy_numeric - ci, digits = 2), 
+                        ", ", round(accuracy_numeric + ci, digits = 2), "]")) %>%
+  # Round accuracy means to two decimals
+  dplyr::mutate_at("accuracy_numeric", round, digits = 2) %>% 
   # Select columns to be displayed
   dplyr::select(c("group", "stimulus_type", "stimulation", "session", "accuracy_numeric", "ci_accuracy", "ci"))
 
@@ -435,13 +433,12 @@ descriptive_statistics_pes <- summarySEwithinO(
   idvar         = "participant_id", 
   conf.interval = .95
 ) %>%
-  # Round numeric values to two decimals
-  dplyr::mutate_if(is.numeric, round, digits = 2
-  ) %>%
   # Format confidence interval column
   dplyr::mutate(
-    ci_pca = paste0("[", pes - ci, ", ", pes + ci, "]")
-  )
+    ci_pes = paste0("[", round(pes - ci, digits = 0), 
+                   ", ", round(pes + ci, digits = 0), "]")) %>%
+  # Round PES means to zero decimals
+  dplyr::mutate_at("pes", round, digits = 0) 
 
 
 # Split and re-merge PEA table to display both groups next to each other
@@ -472,13 +469,12 @@ descriptive_statistics_pea <- summarySEwithinO(
   # Multiply numeric values by 100 to obtain values in percent
   dplyr::mutate_if(is.numeric, list(~ . * 100)
   )  %>%  
-  # Round numeric values to two decimals
-  dplyr::mutate_if(is.numeric, round, digits = 2
-  ) %>%
   # Format confidence interval column
   dplyr::mutate(
-    ci_pea = paste0("[", pea - ci, ", ", pea + ci, "]")
-  )
+    ci_pea = paste0("[", round(pea - ci, digits = 2), 
+                   ", ", round(pea + ci, digits = 2), "]")) %>%
+  # Round PEA means to two decimals
+  dplyr::mutate_at("pea", round, digits = 2) 
 
 # Split and re-merge PEA table to display both groups next to each other
 descriptive_statistics_pea_display <-  split(descriptive_statistics_pea, descriptive_statistics_pea$group)
@@ -508,13 +504,12 @@ descriptive_statistics_pca <- summarySEwithinO(
   # Multiply numeric values by 100 to obtain values in percent
   dplyr::mutate_if(is.numeric, list(~ . * 100)
   )  %>%  
-  # Round numeric values to two decimals
-  dplyr::mutate_if(is.numeric, round, digits = 2
-  ) %>%
   # Format confidence interval column
   dplyr::mutate(
-    ci_pca = paste0("[", pca - ci, ", ", pca + ci, "]")
-  )
+    ci_pca = paste0("[", round(pca - ci, digits = 2), 
+                   ", ", round(pca + ci, digits = 2), "]")) %>%
+  # Round PCA means to two decimals
+  dplyr::mutate_at("pca", round, digits = 2) 
 
 
 # Split and re-merge PCA table to display both groups next to each other
@@ -1308,65 +1303,4 @@ do.call(rbind, lapply(residuals_anova_accuracy[,], function(x) shapiro.test(x)["
 
 * **Assumption #4: Residuals** of the dependent variable in each level of the within-subjects factor are approximately **normally distributed -> NOT OK** (see above; but for RT and PES only small deviation)**
 
-* **Assumption #5: Sphericity** (only relevant for withlin-subject factors with > 2 levels) (Mafex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is ok**
-
-<br><br>
-
-## MFN plot
-***
-```{r test-plot, fig.width = 10, fig.height = 6}
-
-# raincloud plots
-library("cowplot")
-library("readr")
-library("lavaan")
-source("C:/Users/Luisa/PhD/1_PhD_Project/7_ModERN_Stimulation_Study/8_Analyses/2_GNG_Analysis_with_EEGLAB/A_Scripts/R_rainclouds.R")
-
-# single_trial_data_clean <- single_trial_data_clean[single_trial_data_clean$participant_id != "C_28" & single_trial_data_clean$participant_id != "P_28",]
-
-
-# Calculate aggregated values per subject
-df_aggregated_per_subject_MFN <- ddply(single_trial_data_clean, 
-                                   .(participant_id,response_type,stimulation,session), 
-                                   summarise,
-                                   MFN = mean(MFN_0_100_FCz, na.rm = TRUE))
-df_aggregated_per_subject_MFN <- mutate(df_aggregated_per_subject_MFN,group = as.factor(ifelse(substr(participant_id,1,1) == "C", "HC", "OCD")))
-
-
-# Calcuate means and CIs adjusted for within-participant factors based on single-trial data
-descriptive_statistics_MFN <- summarySEwithinO(
-  data          = single_trial_data_clean,
-  measurevar    = "MFN_0_100_FCz",
-  withinvars    = c("response_type", "stimulation"),
-  betweenvars   = "group",
-  idvar         = "participant_id", 
-  conf.interval = .95
-)
-
-
-# define facet labels
-response_type.labs <- c("CRN", "ERN")
-names(response_type.labs) <- c("correct", "incorrect")
-
-
-# From JB: "Raincloud plots (Allen et al., 2019) show means and 95% CIs calculated with the summarySEwithin function (Morey, 2008) on single trial data, and points, and distributions for data aggregated by subject"
-raincloud_MFN <- ggplot() +
-  geom_flat_violin(data = df_aggregated_per_subject_MFN, aes(x = stimulation, y = MFN, fill = group),
-                   position = position_nudge(x = .12, y = 0), adjust = 1.5, trim = FALSE, alpha = .5, colour = NA)+
-  geom_point(data = df_aggregated_per_subject_MFN, aes(x = as.numeric(stimulation)-0, y = MFN, colour = group), 
-             position = position_jitterdodge(dodge.width = 0.25, jitter.width = 0.25), shape = 19, size = 1)+
-  geom_point(data = descriptive_statistics_MFN, aes(x = as.numeric(stimulation)-0.25, y = MFN_0_100_FCz, colour = group), 
-             position = position_dodge(width = 0.2), shape = 15, size = 2) +
-  geom_errorbar(data = descriptive_statistics_MFN, aes(x = as.numeric(stimulation)-0.25, ymax = MFN_0_100_FCz + ci, ymin = MFN_0_100_FCz - ci, colour = group),
-                position = position_dodge(width = 0.2), width = 0) +
-  geom_line(data = descriptive_statistics_MFN, aes(x = as.numeric(stimulation)-0.25, y = MFN_0_100_FCz, colour = group), 
-            position = position_dodge(width = 0.2), linetype = 3, size = 1) +
-  scale_colour_manual(values = my_figure_colors, name = "Group:") +
-  scale_fill_manual(values = my_figure_colors, name = "Group:") +
-  facet_wrap(~response_type, labeller = labeller(response_type = response_type.labs)) +
-  ggtitle("Mean MFN Amplitude (0-100 ms at FCz)", )  +
-  my_figure_theme 
-
-raincloud_MFN
-```
-
+* **Assumption #5: Sphericity** (only relevant for withlin-subject factors with > 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is ok**

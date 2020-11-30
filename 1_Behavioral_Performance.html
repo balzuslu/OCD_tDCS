@@ -387,6 +387,13 @@ div.tocify {
     Behavioral Performance
   </a>
 </li>
+<li>
+  <a href="2_ERPs.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-flash"></span>
+     
+    ERPs
+  </a>
+</li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
         <li>
@@ -805,10 +812,12 @@ rt_per_participant</code></pre>
 rownames(normality_rt) &lt;- c(&quot;Skewness&quot;,&quot;Kurtosis&quot;)
 colnames(normality_rt) &lt;- c(&quot;RT&quot;,&quot;log(RT)&quot;, &quot;PES&quot;)
 
-my_table_template(normality_rt)</code></pre>
+my_table_template(normality_rt, row_names = TRUE)</code></pre>
 <table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
 <thead>
 <tr>
+<th style="text-align:left;">
+</th>
 <th style="text-align:right;">
 RT
 </th>
@@ -822,6 +831,9 @@ PES
 </thead>
 <tbody>
 <tr>
+<td style="text-align:left;">
+Skewness
+</td>
 <td style="text-align:right;">
 0.9
 </td>
@@ -833,6 +845,9 @@ PES
 </td>
 </tr>
 <tr>
+<td style="text-align:left;">
+Kurtosis
+</td>
 <td style="text-align:right;">
 1.4
 </td>
@@ -882,13 +897,12 @@ descriptive_statistics_rt &lt;- summarySEwithinO(
   idvar         = &quot;participant_id&quot;, 
   conf.interval = .95
 ) %&gt;%
-  # Round numeric values to two decimals
-  dplyr::mutate_if(is.numeric, round, digits = 2
-  ) %&gt;%
   # Format confidence interval column
   dplyr::mutate(
-    ci_rt       = paste0(&quot;[&quot;, rt - ci, &quot;, &quot;, rt + ci, &quot;]&quot;)
-  ) %&gt;%
+    ci_rt = paste0(&quot;[&quot;, round(rt - ci, digits = 0), 
+                  &quot;, &quot;, round(rt + ci, digits = 0), &quot;]&quot;)) %&gt;%
+  # Round RT means to zero decimals
+  dplyr::mutate_at(&quot;rt&quot;, round, digits = 0) %&gt;%    
   # Select columns to be displayed
   dplyr::select(c(&quot;group&quot;, &quot;response_type&quot;, &quot;stimulus_type&quot;, &quot;stimulation&quot;, &quot;session&quot;, &quot;rt&quot;, &quot;ci_rt&quot;, &quot;ci&quot;))
 
@@ -921,13 +935,12 @@ descriptive_statistics_accuracy &lt;- summarySEwithinO(
   # Multiply numeric values by 100 to obtain values in percent
   dplyr::mutate_if(is.numeric, list(~ . * 100)
   )  %&gt;%  
-  # Round numeric values to two decimals
-  dplyr::mutate_if(is.numeric, round, digits = 2
-  ) %&gt;%
   # Format confidence interval column
   dplyr::mutate(
-    ci_accuracy = paste0(&quot;[&quot;, accuracy_numeric - ci, &quot;, &quot;, accuracy_numeric + ci, &quot;]&quot;)
-  ) %&gt;%
+    ci_accuracy = paste0(&quot;[&quot;, round(accuracy_numeric - ci, digits = 2), 
+                        &quot;, &quot;, round(accuracy_numeric + ci, digits = 2), &quot;]&quot;)) %&gt;%
+  # Round accuracy means to two decimals
+  dplyr::mutate_at(&quot;accuracy_numeric&quot;, round, digits = 2) %&gt;% 
   # Select columns to be displayed
   dplyr::select(c(&quot;group&quot;, &quot;stimulus_type&quot;, &quot;stimulation&quot;, &quot;session&quot;, &quot;accuracy_numeric&quot;, &quot;ci_accuracy&quot;, &quot;ci&quot;))
 
@@ -957,13 +970,12 @@ descriptive_statistics_pes &lt;- summarySEwithinO(
   idvar         = &quot;participant_id&quot;, 
   conf.interval = .95
 ) %&gt;%
-  # Round numeric values to two decimals
-  dplyr::mutate_if(is.numeric, round, digits = 2
-  ) %&gt;%
   # Format confidence interval column
   dplyr::mutate(
-    ci_pca = paste0(&quot;[&quot;, pes - ci, &quot;, &quot;, pes + ci, &quot;]&quot;)
-  )
+    ci_pes = paste0(&quot;[&quot;, round(pes - ci, digits = 0), 
+                   &quot;, &quot;, round(pes + ci, digits = 0), &quot;]&quot;)) %&gt;%
+  # Round PES means to zero decimals
+  dplyr::mutate_at(&quot;pes&quot;, round, digits = 0) 
 
 
 # Split and re-merge PEA table to display both groups next to each other
@@ -994,13 +1006,12 @@ descriptive_statistics_pea &lt;- summarySEwithinO(
   # Multiply numeric values by 100 to obtain values in percent
   dplyr::mutate_if(is.numeric, list(~ . * 100)
   )  %&gt;%  
-  # Round numeric values to two decimals
-  dplyr::mutate_if(is.numeric, round, digits = 2
-  ) %&gt;%
   # Format confidence interval column
   dplyr::mutate(
-    ci_pea = paste0(&quot;[&quot;, pea - ci, &quot;, &quot;, pea + ci, &quot;]&quot;)
-  )
+    ci_pea = paste0(&quot;[&quot;, round(pea - ci, digits = 2), 
+                   &quot;, &quot;, round(pea + ci, digits = 2), &quot;]&quot;)) %&gt;%
+  # Round PEA means to two decimals
+  dplyr::mutate_at(&quot;pea&quot;, round, digits = 2) 
 
 # Split and re-merge PEA table to display both groups next to each other
 descriptive_statistics_pea_display &lt;-  split(descriptive_statistics_pea, descriptive_statistics_pea$group)
@@ -1030,13 +1041,12 @@ descriptive_statistics_pca &lt;- summarySEwithinO(
   # Multiply numeric values by 100 to obtain values in percent
   dplyr::mutate_if(is.numeric, list(~ . * 100)
   )  %&gt;%  
-  # Round numeric values to two decimals
-  dplyr::mutate_if(is.numeric, round, digits = 2
-  ) %&gt;%
   # Format confidence interval column
   dplyr::mutate(
-    ci_pca = paste0(&quot;[&quot;, pca - ci, &quot;, &quot;, pca + ci, &quot;]&quot;)
-  )
+    ci_pca = paste0(&quot;[&quot;, round(pca - ci, digits = 2), 
+                   &quot;, &quot;, round(pca + ci, digits = 2), &quot;]&quot;)) %&gt;%
+  # Round PCA means to two decimals
+  dplyr::mutate_at(&quot;pca&quot;, round, digits = 2) 
 
 
 # Split and re-merge PCA table to display both groups next to each other
@@ -1165,16 +1175,16 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-370.19
+370
 </td>
 <td style="text-align:left;">
-[368.1, 372.28]
+[368, 372]
 </td>
 <td style="text-align:right;">
-395.53
+396
 </td>
 <td style="text-align:left;">
-[393.1, 397.96]
+[393, 398]
 </td>
 </tr>
 <tr>
@@ -1191,16 +1201,16 @@ sham
 T2
 </td>
 <td style="text-align:right;">
-376.26
+376
 </td>
 <td style="text-align:left;">
-[374.15, 378.37]
+[374, 378]
 </td>
 <td style="text-align:right;">
-381.49
+381
 </td>
 <td style="text-align:left;">
-[379.22, 383.76]
+[379, 384]
 </td>
 </tr>
 <tr>
@@ -1217,16 +1227,16 @@ verum
 T1
 </td>
 <td style="text-align:right;">
-384.65
+385
 </td>
 <td style="text-align:left;">
-[382.43, 386.87]
+[382, 387]
 </td>
 <td style="text-align:right;">
-398.52
+399
 </td>
 <td style="text-align:left;">
-[395.89, 401.15]
+[396, 401]
 </td>
 </tr>
 <tr>
@@ -1243,16 +1253,16 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-357.55
+358
 </td>
 <td style="text-align:left;">
-[355.58, 359.52]
+[356, 360]
 </td>
 <td style="text-align:right;">
-370.95
+371
 </td>
 <td style="text-align:left;">
-[369.08, 372.82]
+[369, 373]
 </td>
 </tr>
 <tr>
@@ -1269,16 +1279,16 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-432.26
+432
 </td>
 <td style="text-align:left;">
-[429.95, 434.57]
+[430, 435]
 </td>
 <td style="text-align:right;">
-451.13
+451
 </td>
 <td style="text-align:left;">
-[448.64, 453.62]
+[449, 454]
 </td>
 </tr>
 <tr>
@@ -1295,16 +1305,16 @@ sham
 T2
 </td>
 <td style="text-align:right;">
-431.80
+432
 </td>
 <td style="text-align:left;">
-[429.58, 434.02]
+[430, 434]
 </td>
 <td style="text-align:right;">
-435.59
+436
 </td>
 <td style="text-align:left;">
-[433.16, 438.02]
+[433, 438]
 </td>
 </tr>
 <tr>
@@ -1321,16 +1331,16 @@ verum
 T1
 </td>
 <td style="text-align:right;">
-447.19
+447
 </td>
 <td style="text-align:left;">
-[444.87, 449.51]
+[445, 450]
 </td>
 <td style="text-align:right;">
-452.79
+453
 </td>
 <td style="text-align:left;">
-[450.08, 455.5]
+[450, 456]
 </td>
 </tr>
 <tr>
@@ -1347,16 +1357,16 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-423.06
+423
 </td>
 <td style="text-align:left;">
-[420.8, 425.32]
+[421, 425]
 </td>
 <td style="text-align:right;">
-426.78
+427
 </td>
 <td style="text-align:left;">
-[424.63, 428.93]
+[425, 429]
 </td>
 </tr>
 <tr>
@@ -1373,16 +1383,16 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-344.44
+344
 </td>
 <td style="text-align:left;">
-[317.52, 371.36]
+[318, 371]
 </td>
 <td style="text-align:right;">
-338.38
+338
 </td>
 <td style="text-align:left;">
-[315.66, 361.1]
+[316, 361]
 </td>
 </tr>
 <tr>
@@ -1399,16 +1409,16 @@ sham
 T2
 </td>
 <td style="text-align:right;">
-359.15
+359
 </td>
 <td style="text-align:left;">
-[320.23, 398.07]
+[320, 398]
 </td>
 <td style="text-align:right;">
-385.73
+386
 </td>
 <td style="text-align:left;">
-[357.39, 414.07]
+[357, 414]
 </td>
 </tr>
 <tr>
@@ -1425,16 +1435,16 @@ verum
 T1
 </td>
 <td style="text-align:right;">
-334.06
+334
 </td>
 <td style="text-align:left;">
-[309.35, 358.77]
+[309, 359]
 </td>
 <td style="text-align:right;">
-354.80
+355
 </td>
 <td style="text-align:left;">
-[329.89, 379.71]
+[330, 380]
 </td>
 </tr>
 <tr>
@@ -1451,16 +1461,16 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-322.58
+323
 </td>
 <td style="text-align:left;">
-[289.72, 355.44]
+[290, 355]
 </td>
 <td style="text-align:right;">
-355.52
+356
 </td>
 <td style="text-align:left;">
-[325.22, 385.82]
+[325, 386]
 </td>
 </tr>
 <tr>
@@ -1477,16 +1487,16 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-326.34
+326
 </td>
 <td style="text-align:left;">
-[321.36, 331.32]
+[321, 331]
 </td>
 <td style="text-align:right;">
-341.48
+341
 </td>
 <td style="text-align:left;">
-[335.43, 347.53]
+[335, 348]
 </td>
 </tr>
 <tr>
@@ -1503,16 +1513,16 @@ sham
 T2
 </td>
 <td style="text-align:right;">
-352.19
+352
 </td>
 <td style="text-align:left;">
-[344.64, 359.74]
+[345, 360]
 </td>
 <td style="text-align:right;">
-345.75
+346
 </td>
 <td style="text-align:left;">
-[338.49, 353.01]
+[338, 353]
 </td>
 </tr>
 <tr>
@@ -1529,16 +1539,16 @@ verum
 T1
 </td>
 <td style="text-align:right;">
-343.78
+344
 </td>
 <td style="text-align:left;">
-[335.75, 351.81]
+[336, 352]
 </td>
 <td style="text-align:right;">
-346.77
+347
 </td>
 <td style="text-align:left;">
-[339.4, 354.14]
+[339, 354]
 </td>
 </tr>
 <tr>
@@ -1555,16 +1565,16 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-326.69
+327
 </td>
 <td style="text-align:left;">
-[321.93, 331.45]
+[322, 331]
 </td>
 <td style="text-align:right;">
-340.29
+340
 </td>
 <td style="text-align:left;">
-[335.02, 345.56]
+[335, 346]
 </td>
 </tr>
 </tbody>
@@ -1645,7 +1655,7 @@ T1
 98.46
 </td>
 <td style="text-align:left;">
-[98.03, 98.89]
+[98.02, 98.89]
 </td>
 </tr>
 <tr>
@@ -1662,7 +1672,7 @@ T2
 98.85
 </td>
 <td style="text-align:left;">
-[98.47, 99.23]
+[98.46, 99.23]
 </td>
 <td style="text-align:right;">
 98.68
@@ -1691,7 +1701,7 @@ T1
 98.18
 </td>
 <td style="text-align:left;">
-[97.69, 98.67]
+[97.69, 98.68]
 </td>
 </tr>
 <tr>
@@ -1754,7 +1764,7 @@ T2
 88.74
 </td>
 <td style="text-align:left;">
-[87.64, 89.84]
+[87.63, 89.84]
 </td>
 <td style="text-align:right;">
 90.41
@@ -1777,7 +1787,7 @@ T1
 90.10
 </td>
 <td style="text-align:left;">
-[89.06, 91.14]
+[89.06, 91.15]
 </td>
 <td style="text-align:right;">
 90.89
@@ -1800,13 +1810,13 @@ T2
 86.32
 </td>
 <td style="text-align:left;">
-[85.08, 87.56]
+[85.08, 87.55]
 </td>
 <td style="text-align:right;">
 89.31
 </td>
 <td style="text-align:left;">
-[88.22, 90.4]
+[88.23, 90.4]
 </td>
 </tr>
 </tbody>
@@ -1872,16 +1882,16 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-38.22
+38
 </td>
 <td style="text-align:left;">
-[28.25, 48.19]
+[28, 48]
 </td>
 <td style="text-align:right;">
-47.11
+47
 </td>
 <td style="text-align:left;">
-[34.27, 59.95]
+[34, 60]
 </td>
 </tr>
 <tr>
@@ -1892,16 +1902,16 @@ sham
 T2
 </td>
 <td style="text-align:right;">
-21.16
+21
 </td>
 <td style="text-align:left;">
-[9.63, 32.69]
+[10, 33]
 </td>
 <td style="text-align:right;">
-32.99
+33
 </td>
 <td style="text-align:left;">
-[20.57, 45.41]
+[21, 45]
 </td>
 </tr>
 <tr>
@@ -1912,16 +1922,16 @@ verum
 T1
 </td>
 <td style="text-align:right;">
-42.98
+43
 </td>
 <td style="text-align:left;">
-[29.2, 56.76]
+[29, 57]
 </td>
 <td style="text-align:right;">
-53.52
+54
 </td>
 <td style="text-align:left;">
-[39.96, 67.08]
+[40, 67]
 </td>
 </tr>
 <tr>
@@ -1932,16 +1942,16 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-21.29
+21
 </td>
 <td style="text-align:left;">
-[11.19, 31.39]
+[11, 31]
 </td>
 <td style="text-align:right;">
-27.49
+27
 </td>
 <td style="text-align:left;">
-[16.66, 38.32]
+[17, 38]
 </td>
 </tr>
 </tbody>
@@ -2010,7 +2020,7 @@ T1
 95.38
 </td>
 <td style="text-align:left;">
-[93.31, 97.45]
+[93.31, 97.46]
 </td>
 <td style="text-align:right;">
 95.20
@@ -2030,7 +2040,7 @@ T2
 93.54
 </td>
 <td style="text-align:left;">
-[91.05, 96.03]
+[91.05, 96.02]
 </td>
 <td style="text-align:right;">
 93.67
@@ -2050,13 +2060,13 @@ T1
 95.02
 </td>
 <td style="text-align:left;">
-[92.71, 97.33]
+[92.72, 97.33]
 </td>
 <td style="text-align:right;">
 96.14
 </td>
 <td style="text-align:left;">
-[94.01, 98.27]
+[94.01, 98.28]
 </td>
 </tr>
 <tr>
@@ -2145,13 +2155,13 @@ T1
 92.70
 </td>
 <td style="text-align:left;">
-[91.95, 93.45]
+[91.95, 93.44]
 </td>
 <td style="text-align:right;">
 94.95
 </td>
 <td style="text-align:left;">
-[94.35, 95.55]
+[94.35, 95.56]
 </td>
 </tr>
 <tr>
@@ -2171,7 +2181,7 @@ T2
 94.60
 </td>
 <td style="text-align:left;">
-[93.96, 95.24]
+[93.95, 95.24]
 </td>
 </tr>
 <tr>
@@ -2191,7 +2201,7 @@ T1
 94.44
 </td>
 <td style="text-align:left;">
-[93.78, 95.1]
+[93.78, 95.09]
 </td>
 </tr>
 <tr>
@@ -2205,13 +2215,13 @@ T2
 92.50
 </td>
 <td style="text-align:left;">
-[91.75, 93.25]
+[91.75, 93.26]
 </td>
 <td style="text-align:right;">
 93.85
 </td>
 <td style="text-align:left;">
-[93.18, 94.52]
+[93.19, 94.52]
 </td>
 </tr>
 </tbody>
@@ -4373,67 +4383,9 @@ verum_incongruent_incorrect 0.000006096841       </code></pre>
 <li><p><strong>Assumption #2: Balanced design</strong> (each subject has to have a value in each condition) <strong>-&gt; Is OK</strong></p></li>
 <li><p><strong>Assumption #3: No dependency in the scores between participants</strong> (dependency can exist only across scores for individuals) <strong>-&gt; Is OK</strong></p></li>
 <li><p><strong>Assumption #4: Residuals</strong> of the dependent variable in each level of the within-subjects factor are approximately <strong>normally distributed -&gt; NOT OK</strong> (see above; but for RT and PES only small deviation)**</p></li>
-<li><p><strong>Assumption #5: Sphericity</strong> (only relevant for withlin-subject factors with &gt; 2 levels) (Mafex package automatically corrects (Greenhouse Geisser) for any violations if necessary) <strong>-&gt; Is ok</strong></p></li>
+<li><p><strong>Assumption #5: Sphericity</strong> (only relevant for withlin-subject factors with &gt; 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) <strong>-&gt; Is ok</strong></p></li>
 </ul>
-<p><br><br></p>
 </div>
-</div>
-<div id="mfn-plot" class="section level2">
-<h2>MFN plot</h2>
-<hr />
-<pre class="r"><code># raincloud plots
-library(&quot;cowplot&quot;)
-library(&quot;readr&quot;)
-library(&quot;lavaan&quot;)
-source(&quot;C:/Users/Luisa/PhD/1_PhD_Project/7_ModERN_Stimulation_Study/8_Analyses/2_GNG_Analysis_with_EEGLAB/A_Scripts/R_rainclouds.R&quot;)
-
-# single_trial_data_clean &lt;- single_trial_data_clean[single_trial_data_clean$participant_id != &quot;C_28&quot; &amp; single_trial_data_clean$participant_id != &quot;P_28&quot;,]
-
-
-# Calculate aggregated values per subject
-df_aggregated_per_subject_MFN &lt;- ddply(single_trial_data_clean, 
-                                   .(participant_id,response_type,stimulation,session), 
-                                   summarise,
-                                   MFN = mean(MFN_0_100_FCz, na.rm = TRUE))
-df_aggregated_per_subject_MFN &lt;- mutate(df_aggregated_per_subject_MFN,group = as.factor(ifelse(substr(participant_id,1,1) == &quot;C&quot;, &quot;HC&quot;, &quot;OCD&quot;)))
-
-
-# Calcuate means and CIs adjusted for within-participant factors based on single-trial data
-descriptive_statistics_MFN &lt;- summarySEwithinO(
-  data          = single_trial_data_clean,
-  measurevar    = &quot;MFN_0_100_FCz&quot;,
-  withinvars    = c(&quot;response_type&quot;, &quot;stimulation&quot;),
-  betweenvars   = &quot;group&quot;,
-  idvar         = &quot;participant_id&quot;, 
-  conf.interval = .95
-)
-
-
-# define facet labels
-response_type.labs &lt;- c(&quot;CRN&quot;, &quot;ERN&quot;)
-names(response_type.labs) &lt;- c(&quot;correct&quot;, &quot;incorrect&quot;)
-
-
-# From JB: &quot;Raincloud plots (Allen et al., 2019) show means and 95% CIs calculated with the summarySEwithin function (Morey, 2008) on single trial data, and points, and distributions for data aggregated by subject&quot;
-raincloud_MFN &lt;- ggplot() +
-  geom_flat_violin(data = df_aggregated_per_subject_MFN, aes(x = stimulation, y = MFN, fill = group),
-                   position = position_nudge(x = .12, y = 0), adjust = 1.5, trim = FALSE, alpha = .5, colour = NA)+
-  geom_point(data = df_aggregated_per_subject_MFN, aes(x = as.numeric(stimulation)-0, y = MFN, colour = group), 
-             position = position_jitterdodge(dodge.width = 0.25, jitter.width = 0.25), shape = 19, size = 1)+
-  geom_point(data = descriptive_statistics_MFN, aes(x = as.numeric(stimulation)-0.25, y = MFN_0_100_FCz, colour = group), 
-             position = position_dodge(width = 0.2), shape = 15, size = 2) +
-  geom_errorbar(data = descriptive_statistics_MFN, aes(x = as.numeric(stimulation)-0.25, ymax = MFN_0_100_FCz + ci, ymin = MFN_0_100_FCz - ci, colour = group),
-                position = position_dodge(width = 0.2), width = 0) +
-  geom_line(data = descriptive_statistics_MFN, aes(x = as.numeric(stimulation)-0.25, y = MFN_0_100_FCz, colour = group), 
-            position = position_dodge(width = 0.2), linetype = 3, size = 1) +
-  scale_colour_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
-  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
-  facet_wrap(~response_type, labeller = labeller(response_type = response_type.labs)) +
-  ggtitle(&quot;Mean MFN Amplitude (0-100 ms at FCz)&quot;, )  +
-  my_figure_theme 
-
-raincloud_MFN</code></pre>
-<p><img src="1_Behavioral_Performance_files/figure-html/test-plot-1.png" width="960" /></p>
 </div>
 
 
