@@ -1,0 +1,3273 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>ERPs</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/united.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="web_style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+.tocify-subheader {
+  display: inline;
+}
+.tocify-subheader .tocify-item {
+  font-size: 0.95em;
+}
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Efficacy of tDCS in modulating neurocognitive markers of OCD</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">
+    <span class="glyphicon glyphicon-info-sign"></span>
+     
+    Task &amp; Data
+  </a>
+</li>
+<li>
+  <a href="1_Behavioral_Performance.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-hand-up"></span>
+     
+    Behavioral Performance
+  </a>
+</li>
+<li>
+  <a href="2_ERPs.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-flash"></span>
+     
+    ERPs
+  </a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="mailto:luisa.balzus@hu-berlin.de">
+    <span class="fa fa-envelope fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">ERPs</h1>
+
+</div>
+
+
+<!-- Set general settings -->
+<div id="data-cleaning" class="section level2">
+<h2>Data Cleaning</h2>
+<hr />
+<pre class="r"><code># Load data
+load(file = &quot;./data/Single_Trial_Data.rda&quot;)
+
+
+# Exclude missing responses, RT outliers and trials with ERP artifacts
+single_trial_data_clean &lt;- single_trial_data %&gt;%
+  dplyr::filter(
+      response_type != &quot;miss&quot; &amp;
+      rt_invalid  == FALSE &amp;
+      !is.nan(MFN_0_100_FCz)
+  ) # (54998 of 55680 trials left)
+
+
+# Make categorical variables factors
+single_trial_data_clean$participant_id      &lt;- as.factor(single_trial_data_clean$participant_id) 
+single_trial_data_clean$group               &lt;- as.factor(single_trial_data_clean$group)
+single_trial_data_clean$session             &lt;- as.factor(single_trial_data_clean$session)
+single_trial_data_clean$stimulation         &lt;- as.factor(single_trial_data_clean$stimulation)
+single_trial_data_clean$stimulus_type       &lt;- as.factor(single_trial_data_clean$stimulus_type)
+single_trial_data_clean$response_type       &lt;- as.factor(single_trial_data_clean$response_type)
+
+
+# Calculate aggregated data per subject for boxplots, ANOVAs, t tests
+df_aggregated_per_subject_MFN &lt;- ddply(single_trial_data_clean, 
+                                   .(participant_id, group, response_type, stimulation, session), 
+                                   summarise,
+                                   MFN = mean(MFN_0_100_FCz, na.rm = TRUE))</code></pre>
+<p>Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch.</p>
+<pre class="r"><code># Calculate percentage of excluded trials
+excluded_trials &lt;- single_trial_data %&gt;%
+  group_by(group, participant_id, session) %&gt;%
+  dplyr::summarize(
+    invalid_rt   = sum(!is.na(rt_invalid) &amp; rt_invalid != FALSE) / length(participant_id) * 100,
+    misses       = sum(response_type == &quot;miss&quot;) / length(participant_id) * 100,
+    EEG_artifact = sum(is.nan(MFN_0_100_FCz)) / length(participant_id) * 100,
+   ) %&gt;%
+  group_by(group) %&gt;%
+  # Calculate M and SD of the variables
+  dplyr::summarise_each(list(mean,sd,min,max), -c(participant_id, session))
+
+
+# Create dataframe and change order of rows for display
+table_excluded_trials &lt;- as.data.frame(excluded_trials[,c(1,2,5,8,11,3,6,9,12,4,7,10,13)])
+
+
+# Display percentage of excluded trials
+my_table_template(table_excluded_trials,
+  caption = &quot;Excluded Trials (in %)&quot;, 
+  col_names = c(&quot;Group&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;min&quot;, &quot;max&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;min&quot;, &quot;max&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;min&quot;, &quot;max&quot;),
+  header_above_config = c(&quot; &quot; = 1, &quot;RT &lt; 100 / &gt; 800 ms&quot; = 4, &quot;Misses&quot; = 4, &quot;EEG artifact&quot; = 4)
+)</code></pre>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Excluded Trials (in %)
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+RT &lt; 100 / &gt; 800 ms
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+Misses
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+EEG artifact
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+Group
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:right;">
+SD
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:right;">
+SD
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:right;">
+SD
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+HC
+</td>
+<td style="text-align:right;">
+0.03
+</td>
+<td style="text-align:right;">
+0.10
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.42
+</td>
+<td style="text-align:right;">
+0.66
+</td>
+<td style="text-align:right;">
+1.07
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+5.00
+</td>
+<td style="text-align:right;">
+0.29
+</td>
+<td style="text-align:right;">
+0.50
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+2.08
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+OCD
+</td>
+<td style="text-align:right;">
+0.04
+</td>
+<td style="text-align:right;">
+0.11
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+0.62
+</td>
+<td style="text-align:right;">
+0.60
+</td>
+<td style="text-align:right;">
+0.75
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+2.71
+</td>
+<td style="text-align:right;">
+0.84
+</td>
+<td style="text-align:right;">
+1.18
+</td>
+<td style="text-align:right;">
+0
+</td>
+<td style="text-align:right;">
+5.42
+</td>
+</tr>
+</tbody>
+</table>
+<p><br><br></p>
+</div>
+<div id="data-inspection" class="section level2 tabset">
+<h2>Data Inspection</h2>
+<hr />
+<div id="distribution" class="section level3">
+<h3>Distribution</h3>
+<pre class="r"><code># Plot distribution MFN
+hist_MFN &lt;- ggplot(single_trial_data_clean, aes(x = MFN_0_100_FCz)) +
+  geom_histogram(aes(y = ..density..), color=&quot;gray33&quot;, fill = &quot;#8ea6b4&quot;, size = 1) +
+  stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$MFN_0_100_FCz, na.rm = TRUE), 
+                                     sd = sd(single_trial_data_clean$MFN_0_100_FCz, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
+  geom_vline(aes(xintercept = mean(MFN_0_100_FCz, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  labs (title = &quot;Histogram MFN&quot;, x = &quot;MFN&quot;, y = &quot;Density&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+qqplot_MFN &lt;- ggplot(single_trial_data_clean, aes(sample = MFN_0_100_FCz)) +
+  stat_qq(color = &quot;#8ea6b4&quot;) +
+  stat_qq_line() +
+  labs (title = &quot;Q-Q-Plot MFN&quot;, x = &quot;Theoretical Quantiles&quot;, y = &quot;Sample Quantiles&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Plot distribution ERN
+hist_ERN &lt;- ggplot(single_trial_data_clean[single_trial_data_clean$response_type == &quot;incorrect&quot;,], aes(x = MFN_0_100_FCz)) +
+  geom_histogram(aes(y = ..density..), color=&quot;gray33&quot;, fill = &quot;#8ea6b4&quot;, size = 1) +
+  stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean[single_trial_data_clean$response_type == &quot;incorrect&quot;,]$MFN_0_100_FCz, na.rm = TRUE), 
+                                     sd = sd(single_trial_data_clean[single_trial_data_clean$response_type == &quot;incorrect&quot;,]$MFN_0_100_FCz, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
+  geom_vline(aes(xintercept = mean(MFN_0_100_FCz, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  labs (title = &quot;Histogram ERN&quot;, x = &quot;ERN&quot;, y = &quot;Density&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+qqplot_ERN &lt;- ggplot(single_trial_data_clean[single_trial_data_clean$response_type == &quot;incorrect&quot;,], aes(sample = MFN_0_100_FCz)) +
+  stat_qq(color = &quot;#8ea6b4&quot;) +
+  stat_qq_line() +
+  labs (title = &quot;Q-Q-Plot ERN&quot;, x = &quot;Theoretical Quantiles&quot;, y = &quot;Sample Quantiles&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+
+# Plot distribution CRN
+hist_CRN &lt;- ggplot(single_trial_data_clean[single_trial_data_clean$response_type == &quot;correct&quot;,], aes(x = MFN_0_100_FCz)) +
+  geom_histogram(aes(y = ..density..), color=&quot;gray33&quot;, fill = &quot;#8ea6b4&quot;, size = 1) +
+  stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean[single_trial_data_clean$response_type == &quot;correct&quot;,]$MFN_0_100_FCz, na.rm = TRUE), 
+                                     sd = sd(single_trial_data_clean[single_trial_data_clean$response_type == &quot;correct&quot;,]$MFN_0_100_FCz, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
+  geom_vline(aes(xintercept = mean(MFN_0_100_FCz, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  labs (title = &quot;Histogram CRN&quot;, x = &quot;CRN&quot;, y = &quot;Density&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5)) 
+
+qqplot_CRN &lt;- ggplot(single_trial_data_clean[single_trial_data_clean$response_type == &quot;correct&quot;,], aes(sample = MFN_0_100_FCz)) +
+  stat_qq(color = &quot;#8ea6b4&quot;) +
+  stat_qq_line() +
+  labs (title = &quot;Q-Q-Plot CRN&quot;, x = &quot;Theoretical Quantiles&quot;, y = &quot;Sample Quantiles&quot;) + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+ggdraw() +
+  draw_plot(hist_MFN,       x =  0,   y = .66,   width = .5, height = .33) +
+  draw_plot(qqplot_MFN,     x =  .5,  y = .66,   width = .5, height = .33) +
+  draw_plot(hist_ERN,       x =  0,   y = .33,   width = .5, height = .33) +
+  draw_plot(qqplot_ERN,     x =  .5,  y = .33,   width = .5, height = .33) +
+  draw_plot(hist_CRN,       x =  0,   y = 0,     width = .5, height = .33) +
+  draw_plot(qqplot_CRN,     x =  .5,  y = 0,     width = .5, height = .33) </code></pre>
+<p><img src="2_ERPs_files/figure-html/inspect-distribution-1.png" width="672" /> <br><br></p>
+</div>
+<div id="erncrn-per-participant" class="section level3">
+<h3>ERN/CRN per participant</h3>
+<pre class="r"><code>MFN_per_participant &lt;- ggplot(single_trial_data_clean, aes(x = response_type, y = MFN_0_100_FCz, group = response_type)) + 
+  geom_point(aes(fill = response_type), color = &quot;black&quot;, shape = 21, position = &quot;jitter&quot;) + 
+  ggtitle(&quot;MFN per participant&quot;) + 
+  my_figure_theme + 
+  facet_wrap(~ participant_id + stimulation, ncol = 10) +
+  scale_fill_manual(values = my_figure_colors) 
+MFN_per_participant</code></pre>
+<p><img src="2_ERPs_files/figure-html/plot-RT-per-subject-and-response-type-1.png" width="1152" /> <br><br></p>
+</div>
+<div id="check-normality" class="section level3">
+<h3>Check Normality</h3>
+<p>For the single-trial data, Shapiro-Wilk is not suitable, as it always returns a significant result for such large samples (additionally, it can handle only samples up to 5000). Hence, we have to rely on visual inspection (see above) and values of skewness and kurtosis. Values for skewness and kurtosis between -2 and +2 are considered acceptable in order to prove normal univariate distribution (George &amp; Mallery, 2010).</p>
+<pre class="r"><code>normality_MFN &lt;- round(data.frame(matrix(c(skewness(single_trial_data_clean$MFN_0_100_FCz),
+                                          kurtosis(single_trial_data_clean$MFN_0_100_FCz),
+                                          skewness(single_trial_data_clean[single_trial_data_clean$response_type == &quot;incorrect&quot;,]$MFN_0_100_FCz),
+                                          kurtosis(single_trial_data_clean[single_trial_data_clean$response_type == &quot;incorrect&quot;,]$MFN_0_100_FCz),
+                                          skewness(single_trial_data_clean[single_trial_data_clean$response_type == &quot;correct&quot;,]$MFN_0_100_FCz),
+                                          kurtosis(single_trial_data_clean[single_trial_data_clean$response_type == &quot;correct&quot;,]$MFN_0_100_FCz)),
+                                        nrow=2, ncol = 3)),digits = 1)
+rownames(normality_MFN) &lt;- c(&quot;Skewness&quot;,&quot;Kurtosis&quot;)
+colnames(normality_MFN) &lt;- c(&quot;MFN&quot;, &quot;ERN&quot;, &quot;CRN&quot;)
+
+my_table_template(normality_MFN, row_names = TRUE)</code></pre>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+MFN
+</th>
+<th style="text-align:right;">
+ERN
+</th>
+<th style="text-align:right;">
+CRN
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Skewness
+</td>
+<td style="text-align:right;">
+0.0
+</td>
+<td style="text-align:right;">
+-0.1
+</td>
+<td style="text-align:right;">
+0.1
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Kurtosis
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+<td style="text-align:right;">
+0.6
+</td>
+<td style="text-align:right;">
+0.7
+</td>
+</tr>
+</tbody>
+</table>
+<p><br><br></p>
+</div>
+<div id="determine-transformation" class="section level3">
+<h3>Determine transformation</h3>
+<p>LMM analysis of MFN will be conducted on untransformed values, as it seems that the assumption of normally distributed residuals will be met. The appropriate transformation was determined using the Box–Cox procedure (Box &amp; Cox, 1964).</p>
+<pre class="r"><code># Arrange plots
+par(mfrow = c(1, 3)) 
+
+# Determine transformation of MFN by estimating optimal lambda using Box–Cox procedure
+bc_MFN &lt;- boxcox(MFN_0_100_FCz + 100 ~ 1, data = single_trial_data_clean)
+optlambda_MFN &lt;- bc_MFN$x[which.max(bc_MFN$y)]
+
+# Determine transformation of ERN by estimating optimal lambda using Box–Cox procedure
+bc_ERN &lt;- boxcox(MFN_0_100_FCz + 100 ~ 1, data = single_trial_data_clean[single_trial_data_clean$response_type == &quot;incorrect&quot;,])
+optlambda_ERN &lt;- bc_ERN$x[which.max(bc_ERN$y)]
+
+# Determine transformation of CRN by estimating optimal lambda using Box–Cox procedure
+bc_CRN &lt;- boxcox(MFN_0_100_FCz + 100 ~ 1, data = single_trial_data_clean[single_trial_data_clean$response_type == &quot;correct&quot;,])</code></pre>
+<p><img src="2_ERPs_files/figure-html/MFN-determine-transformation-1.png" width="768" /></p>
+<pre class="r"><code>optlambda_CRN &lt;- bc_CRN$x[which.max(bc_CRN$y)]
+
+# Reset plot layout
+par(mfrow = c(1, 1)) </code></pre>
+<p>For MFN (left plot), the optimal lambda is 1.07, suggesting that no transformation (for lambda = 1) is needed. For ERN (middle plot), the optimal lambda is 1.23, suggesting that no transformation (for lambda = 1) is needed. For CRN (right plot), the optimal lambda is 0.91, suggesting that no transformation (for lambda = 1) is needed. <br><br></p>
+</div>
+</div>
+<div id="descriptive-statistics" class="section level2 tabset">
+<h2>Descriptive Statistics</h2>
+<hr />
+<div id="means-and-cis" class="section level3">
+<h3>Means and CIs</h3>
+<pre class="r"><code># Calculate descriptive statistics for MFN per condition
+descriptive_statistics_MFN &lt;- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = &quot;MFN_0_100_FCz&quot;,
+  withinvars    = c(&quot;response_type&quot;, &quot;stimulation&quot;, &quot;session&quot;),
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95) %&gt;%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_MFN = paste0(&quot;[&quot;, round(MFN_0_100_FCz - ci, digits = 2), 
+                   &quot;, &quot;, round(MFN_0_100_FCz + ci, digits = 2), &quot;]&quot;)) %&gt;%
+  # Round MFN means to two decimals
+  dplyr::mutate_at(&quot;MFN_0_100_FCz&quot;, round, digits = 2) %&gt;%    
+  # Select columns to be displayed
+  dplyr::select(c(&quot;group&quot;, &quot;response_type&quot;, &quot;stimulation&quot;, &quot;session&quot;, &quot;MFN_0_100_FCz&quot;, &quot;ci_MFN&quot;, &quot;ci&quot;))
+
+
+
+# Split and re-merge MFN table to display both groups next to each other
+descriptive_statistics_MFN_display &lt;-  split(descriptive_statistics_MFN, descriptive_statistics_MFN$group)
+descriptive_statistics_MFN_display &lt;-  left_join(descriptive_statistics_MFN_display$HC, descriptive_statistics_MFN_display$OCD, 
+                                                 by = c(&quot;response_type&quot;, &quot;stimulation&quot;, &quot;session&quot;))
+
+
+# Display descriptive statistics for MFN (and select columns)
+my_table_template(descriptive_statistics_MFN_display[,c(2:6,9:10)],
+  caption = &quot;MFN (in mV)&quot;,
+  col_names = c(&quot;Response type&quot;, &quot;Stimulation&quot;, &quot;Session&quot;, &quot;M&quot;, &quot;95% CI&quot;, &quot;M&quot;, &quot;95% CI&quot;),
+  header_above_config = c(&quot; &quot; = 3, &quot;HC&quot; = 2, &quot;OCD&quot; = 2),
+  footnote_config = c(general = &quot;Confidence intervals are adjusted for within-participant designs as described by Morey (2008).&quot;)
+)
+
+
+
+# Calcuate means and CIs adjusted for within-participant factors (without session) - for plots
+descriptive_statistics_MFN_no_session &lt;- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = &quot;MFN_0_100_FCz&quot;,
+  withinvars    = c(&quot;response_type&quot;, &quot;stimulation&quot;),
+  betweenvars   = &quot;group&quot;,
+  idvar         = &quot;participant_id&quot;, 
+  conf.interval = .95
+)</code></pre>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; border-bottom: 0;">
+<caption style="font-size: initial !important;">
+MFN (in mV)
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="3">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+HC
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="2">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+OCD
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+Response type
+</th>
+<th style="text-align:left;">
+Stimulation
+</th>
+<th style="text-align:left;">
+Session
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:left;">
+95% CI
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+correct
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+7.15
+</td>
+<td style="text-align:left;">
+[6.9, 7.4]
+</td>
+<td style="text-align:right;">
+4.30
+</td>
+<td style="text-align:left;">
+[4.07, 4.54]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+correct
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+6.57
+</td>
+<td style="text-align:left;">
+[6.32, 6.82]
+</td>
+<td style="text-align:right;">
+3.98
+</td>
+<td style="text-align:left;">
+[3.72, 4.23]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+correct
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+5.96
+</td>
+<td style="text-align:left;">
+[5.72, 6.21]
+</td>
+<td style="text-align:right;">
+4.36
+</td>
+<td style="text-align:left;">
+[4.09, 4.63]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+correct
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+8.25
+</td>
+<td style="text-align:left;">
+[7.98, 8.52]
+</td>
+<td style="text-align:right;">
+6.22
+</td>
+<td style="text-align:left;">
+[5.99, 6.46]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incorrect
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+-2.05
+</td>
+<td style="text-align:left;">
+[-3.06, -1.05]
+</td>
+<td style="text-align:right;">
+-3.93
+</td>
+<td style="text-align:left;">
+[-4.97, -2.89]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incorrect
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+-0.58
+</td>
+<td style="text-align:left;">
+[-1.74, 0.58]
+</td>
+<td style="text-align:right;">
+-3.96
+</td>
+<td style="text-align:left;">
+[-5.2, -2.71]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incorrect
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T1
+</td>
+<td style="text-align:right;">
+-0.18
+</td>
+<td style="text-align:left;">
+[-1.31, 0.95]
+</td>
+<td style="text-align:right;">
+-4.80
+</td>
+<td style="text-align:left;">
+[-6.09, -3.52]
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+incorrect
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:left;">
+T2
+</td>
+<td style="text-align:right;">
+-0.49
+</td>
+<td style="text-align:left;">
+[-1.57, 0.6]
+</td>
+<td style="text-align:right;">
+-2.96
+</td>
+<td style="text-align:left;">
+[-3.99, -1.93]
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<span style="font-style: italic;">Note: </span>
+</td>
+</tr>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<sup></sup> Confidence intervals are adjusted for within-participant designs as described by Morey (2008).
+</td>
+</tr>
+</tfoot>
+</table>
+<p><br><br></p>
+</div>
+<div id="plot-without-session" class="section level3 active">
+<h3>Plot without session</h3>
+<pre class="r"><code># Create plot MFN 
+plot_MFN &lt;- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_MFN, aes(x = stimulation, y = MFN, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_MFN_no_session, aes(x = stimulation, y = MFN_0_100_FCz, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_MFN_no_session, aes(x = stimulation, ymax = MFN_0_100_FCz + ci, ymin = MFN_0_100_FCz - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_MFN_no_session, aes(x = stimulation, y = MFN_0_100_FCz, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c(&quot;#b23f00&quot;, &quot;#ff9b64&quot;), name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  facet_wrap(~response_type, nrow = 1) +
+  my_figure_theme + 
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;MFN (mV)&quot;)
+
+
+# Save plot
+ggsave(&quot;figure_MFN.tiff&quot;, width = 12, height = 12, units = &quot;cm&quot;, dpi=600, compression = &quot;lzw&quot;)
+
+
+# Display plot
+plot_MFN</code></pre>
+<div class="figure">
+<img src="2_ERPs_files/figure-html/descriptive-statistics-plot-rt-acc-1.png" alt="Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of response type, stimulation condition, and group. Means and 95% confidence intervals (shown in orange/red; confidence intervals are adjusted for within-participant designs as described by Morey (2008)) were calculated based on single-trial data. Boxplots are boased on data aggregated by subject." width="768" />
+<p class="caption">
+Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of response type, stimulation condition, and group. Means and 95% confidence intervals (shown in orange/red; confidence intervals are adjusted for within-participant designs as described by Morey (2008)) were calculated based on single-trial data. Boxplots are boased on data aggregated by subject.
+</p>
+</div>
+<p><br><br></p>
+</div>
+<div id="plot-with-session" class="section level3">
+<h3>Plot with session</h3>
+<pre class="r"><code># Create plot MFN 
+plot_MFN_session &lt;- ggplot() +
+  geom_boxplot(data = df_aggregated_per_subject_MFN, aes(x = stimulation, y = MFN, fill = group), outlier.size =0.3)+
+  geom_point(data = descriptive_statistics_MFN, aes(x = stimulation, y = MFN_0_100_FCz, colour = group), 
+             position = position_dodge(width = 0.7), shape = 15, size = 1) +
+  geom_errorbar(data = descriptive_statistics_MFN, aes(x = stimulation, ymax = MFN_0_100_FCz + ci, ymin = MFN_0_100_FCz - ci, colour = group),
+                position = position_dodge(width = 0.7), width = 0, size = 0.5) +
+  geom_line(data = descriptive_statistics_MFN, aes(x = stimulation, y = MFN_0_100_FCz, group = group, color = group), 
+            position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
+  scale_colour_manual(values = c(&quot;#b23f00&quot;, &quot;#ff9b64&quot;), name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  facet_wrap(~response_type + session, nrow = 1) +
+  my_figure_theme + 
+  labs(x = &quot;\nStimulation condition&quot;, y = &quot;MFN (mV)&quot;)
+
+
+# Save plot
+ ggsave(&quot;figure_MFN_session.tiff&quot;, width = 20, height = 25, units = &quot;cm&quot;, dpi=600, compression = &quot;lzw&quot;)
+
+
+# Display plot
+plot_MFN_session</code></pre>
+<div class="figure">
+<img src="2_ERPs_files/figure-html/descriptive-statistics-plot-including-session-1.png" alt="Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is  shown as a function of stimulation condition, group, and session. Means and 95% confidence intervals (shown in orange/red; confidence intervals are adjusted for within-participant designs as described by Morey (2008)) were calculated based on single-trial data. Boxplots are boased on data aggregated by subject." width="960" />
+<p class="caption">
+Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of stimulation condition, group, and session. Means and 95% confidence intervals (shown in orange/red; confidence intervals are adjusted for within-participant designs as described by Morey (2008)) were calculated based on single-trial data. Boxplots are boased on data aggregated by subject.
+</p>
+</div>
+<p><br><br></p>
+</div>
+<div id="raincloud-plot" class="section level3">
+<h3>Raincloud plot</h3>
+<pre class="r"><code># single_trial_data_clean &lt;- single_trial_data_clean[single_trial_data_clean$participant_id != &quot;C_28&quot; &amp; single_trial_data_clean$participant_id != &quot;P_28&quot;,]
+
+
+# define facet labels
+response_type.labs &lt;- c(&quot;CRN&quot;, &quot;ERN&quot;)
+names(response_type.labs) &lt;- c(&quot;correct&quot;, &quot;incorrect&quot;)
+
+
+# From JB: &quot;Raincloud plots (Allen et al., 2019) show means and 95% CIs calculated with the summarySEwithin function (Morey, 2008) on single trial data, and points, and distributions for data aggregated by subject&quot;
+raincloud_MFN_a &lt;- ggplot() +
+  geom_flat_violin(data = df_aggregated_per_subject_MFN, aes(x = stimulation, y = MFN, fill = group),
+                   position = position_nudge(x = .12, y = 0), adjust = 1.5, trim = FALSE, alpha = .5, colour = NA)+
+  geom_point(data = df_aggregated_per_subject_MFN, aes(x = as.numeric(stimulation)-0, y = MFN, colour = group),
+             position = position_jitterdodge(dodge.width = 0.25, jitter.width = 0.25), shape = 19, size = 1)+
+  geom_point(data = descriptive_statistics_MFN_no_session, aes(x = as.numeric(stimulation)-0.25, y = MFN_0_100_FCz, colour = group),
+             position = position_dodge(width = 0.2), shape = 15, size = 2) +
+  geom_errorbar(data = descriptive_statistics_MFN_no_session, aes(x = as.numeric(stimulation)-0.25, ymax = MFN_0_100_FCz + ci, ymin = MFN_0_100_FCz - ci, colour = group),
+                position = position_dodge(width = 0.2), width = 0) +
+  geom_line(data = descriptive_statistics_MFN_no_session, aes(x = as.numeric(stimulation)-0.25, y = MFN_0_100_FCz, colour = group),
+            position = position_dodge(width = 0.2), linetype = 3, size = 1) +
+  scale_colour_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  facet_wrap(~response_type, labeller = labeller(response_type = response_type.labs)) +
+  ggtitle(&quot;Mean MFN Amplitude (0-100 ms at FCz)&quot;, )  +
+  my_figure_theme
+
+
+
+raincloud_MFN_b &lt;- ggplot() +
+  # Add aggregated distribution, boxplot and data points
+  geom_flat_violin(data = df_aggregated_per_subject_MFN, aes(x = stimulation, y = MFN, fill = group), position = position_nudge(x = .1, y = 0), 
+                   adjust = 1.5, trim = FALSE, alpha = .5, colour = NA)+
+  geom_point(data = df_aggregated_per_subject_MFN, aes(x = as.numeric(stimulation)-.15, y = MFN, colour = group),position = position_jitter(width = .05), size = 1, shape = 20)+
+  geom_boxplot(data = df_aggregated_per_subject_MFN, aes(x = stimulation, y = MFN, fill = group),outlier.shape = NA, alpha = .5, width = .1, colour = &quot;black&quot;)+
+  # Add single-trial mean + CI
+  geom_point(data = descriptive_statistics_MFN_no_session, aes(x = as.numeric(stimulation)+0.1, y = MFN_0_100_FCz, colour = group), 
+             position = position_dodge(), shape = 95, size = 6) +
+  geom_errorbar(data = descriptive_statistics_MFN_no_session, aes(x = as.numeric(stimulation)+0.1, ymax = MFN_0_100_FCz + ci, ymin = MFN_0_100_FCz - ci), colour = &quot;black&quot;,
+                position = position_dodge(), width = 0) +
+  # Add style
+  scale_colour_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  scale_fill_manual(values = my_figure_colors, name = &quot;Group:&quot;) +
+  facet_wrap(~response_type,labeller = labeller(response_type = response_type.labs)) +
+  ggtitle(&quot;Mean MFN Amplitude (0-100 ms at FCz)&quot;)  +
+  my_figure_theme 
+
+raincloud_MFN_a</code></pre>
+<p><img src="2_ERPs_files/figure-html/raincloud-plot-1.png" width="960" /></p>
+<pre class="r"><code>raincloud_MFN_b</code></pre>
+<p><img src="2_ERPs_files/figure-html/raincloud-plot-2.png" width="960" /> <br><br></p>
+</div>
+</div>
+<div id="lmm-analyses" class="section level2 tabset">
+<h2>LMM Analyses</h2>
+<hr />
+<p>MFN/ERN/CRN were modeled using a linear mixed-effects models (LMMs). <br><br></p>
+<p><strong>Fixed effects</strong></p>
+<p><em>Group (HC, OCD), stimulation (verum, sham), and response type (correct, incorrect)</em> were specified as fixed factors. I thought about including also session as fixed effect. But this was not stated in preregistration and is of no real interest. Fixed effects were coded using effect coding (this equals sliding difference contrasts for two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. Fixed effects were not eliminated using model comparison techniques because they correspond to the original experimental design and a priori hypotheses. <br><br></p>
+<p><strong>Random effects</strong></p>
+<p>Participants were specified as random factors. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants, as well as random slopes for all main effects and interactions specified as fixed effects. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).</p>
+<pre class="r"><code># Define contrasts (sliding difference contrasts)
+contrasts(single_trial_data_clean$stimulation)         &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$group)               &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$response_type)       &lt;- contr.sdif(2)
+contrasts(single_trial_data_clean$session)             &lt;- contr.sdif(2)
+
+
+# Add contrasts as numerical covariates via model matrix* (specify all possible contasts for now)
+model_matrix &lt;- model.matrix(~ stimulation * group * response_type * session, single_trial_data_clean)
+
+
+# Attach the model matrix (16 columns) to the dataframe
+single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 16)] &lt;- model_matrix
+
+
+# Assign descriptive names to the contrasts
+names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 15):ncol(single_trial_data_clean)] &lt;- c(&quot;Grand Mean&quot;, &quot;verum_sham&quot;, &quot;OCD_HC&quot;, &quot;incorrect_correct&quot;, &quot;T2_T1&quot;, &quot;verum_sham:OCD_HC&quot;, &quot;verum_sham:incorrect_correct&quot;, &quot;OCD_HC:incorrect_correct&quot;, &quot;verum_sham:T2_T1&quot;, &quot;OCD_HC:T2_T1&quot;, &quot;incorrect_correct:T2_T1&quot;, &quot;verum_sham:OCD_HC:incorrect_correct&quot;, &quot;verum_sham:OCD_HC:T2_T1&quot;, &quot;verum_sham:incorrect_correct:T2_T1&quot;, &quot;OCD_HC:incorrect_correct:T2_T1&quot;, &quot;verum_sham:OCD_HC:incorrect_correct:T2_T1&quot;)
+
+
+# *Note: For the random effects, we needed to enter the separate random effect terms in the models to enable
+# double-bar notation (||). This allows fitting a model that sets correlations of the random terms to zero.</code></pre>
+<p><br><br></p>
+<div id="lmm-for-mfn" class="section level3 tabset">
+<h3>LMM for MFN</h3>
+<div id="model" class="section level4">
+<h4>Model</h4>
+<pre class="r"><code># Run model with maximal random-effects structure
+LMM_MFN &lt;- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * incorrect_correct +
+  (1 + verum_sham + incorrect_correct + verum_sham:incorrect_correct | participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = &quot;bobyqa&quot;)
+)
+
+
+# Check model output
+# summary(LMM_MFN) # Model does converge
+# isSingular(LMM_MFN) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_MFN)) # All terms explain variance (&gt; 0.5%)
+
+
+# Display results (fixed effects)
+tab_model(LMM_MFN,
+  dv.labels = &quot;MFN&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
+)</code></pre>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+MFN
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+t value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.37
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.07 – 2.68
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.044</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.65
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.08 – 1.22
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.23
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.031</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.81
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-5.42 – -0.20
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.11
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.039</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-9.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-10.34 – -7.68
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-13.30
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.44
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.71 – 1.58
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.75
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.458
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.12
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.06 – 0.82
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.25
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.800
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.11
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-3.77 – 1.54
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.82
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.415
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.89 – 0.86
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.296
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+91.461
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+25.200
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+3.080
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.incorrect_correct</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+24.666
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham:incorrect_correct</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+5.928
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ρ<sub>01</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.169
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.411
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.168
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.204
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+N <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+58
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+54998
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.049 / 0.244
+</td>
+</tr>
+</table>
+<p><br><br> There is a main effect of stimulation, group, and response type. <br><br></p>
+</div>
+<div id="assumption-checks" class="section level4">
+<h4>Assumption checks</h4>
+<pre class="r"><code># Check model assumptions
+performance::check_model(LMM_MFN, panel = TRUE)</code></pre>
+<p><img src="2_ERPs_files/figure-html/LMM-MFN-assumptions-1.png" width="1920" /></p>
+<pre class="r"><code># In addition to plots, print verbal output for some assumption tests to facilitate conclusion
+print(&quot;# Check for heteroscedasticity&quot;)
+performance::check_heteroscedasticity(LMM_MFN)
+
+print(&quot;# Check for influential observations (Cook&#39;s distance)&quot;)
+performance::check_outliers(LMM_MFN, effects = &quot;random&quot;)
+
+print(&quot;# Check for normal distributed random effects&quot;)
+performance::check_normality(LMM_MFN, effects = &quot;random&quot;)</code></pre>
+<pre><code>Could not compute standard errors from random effects for diagnostic plot.
+[1] &quot;# Check for heteroscedasticity&quot;
+Warning: Heteroscedasticity (non-constant error variance) detected (p = 0.000).
+[1] &quot;# Check for influential observations (Cook&#39;s distance)&quot;
+OK: No outliers detected.
+[1] &quot;# Check for normal distributed random effects&quot;
+Group: participant_id
+             (Intercept) OK: random effects appear as normally distributed (p = 0.270).
+                  OCD_HC OK: random effects appear as normally distributed (p = 0.316).
+       OCD_HC:verum_sham OK: random effects appear as normally distributed (p = 0.993).
+OCD_HC:incorrect_correct Warning: Non-normality of random effects detected (p = 0.049).
+
+Could not compute standard errors from random effects for diagnostic plot.</code></pre>
+<ul>
+<li><strong>Assumption 1: Independence of Data Points / Absence of collinearity -&gt; Is OK</strong>
+<ul>
+<li>Are predictors not highly correlated?</li>
+<li>Multicollinearity plot shows only low correlations</li>
+</ul></li>
+<li><strong>Assumption 2: Normality of Residuals -&gt; Is Not OK???</strong>
+<ul>
+<li>Are residuals approximately normally distributed?</li>
+<li>Q-Q plot and density plot look not so great; Q-Q plot quite a bit off at the extremes</li>
+<li>It is debated whether this is problematic at all; and violation does not seem so bad, so maybe not worry about it?</li>
+</ul></li>
+<li><strong>Assumption 3: Linearity -&gt; Is OK</strong>
+<ul>
+<li>Is the dependent variable linearly related to the fixed factors, random factors, and covariates?</li>
+<li>Plot of the residuals against the fitted values shows a random scatter pattern, no nonlinear or curvy pattern</li>
+</ul></li>
+<li><strong>Assumption 4: Homogeneity of Residual Variance (Heteroscedasticity) -&gt; Is OK???</strong>
+<ul>
+<li>Have residuals constant variance across the range of the predicted values?</li>
+<li>Plot of the residuals against the fitted values shows an even spread around the centered line; but written output says this is not ok</li>
+</ul></li>
+<li><strong>Assumption 5: Absence of Influential Data Points -&gt; Is OK</strong>
+<ul>
+<li>Are there are no influential values?</li>
+<li>Cook’s distance plot looks fine (for large N, Cook’s distances should be below 1) and written output says there are no outliers</li>
+</ul></li>
+<li><strong>Assumption 6: Normality of Random Effects -&gt; Is OK</strong>
+<ul>
+<li>Are random effects approximately normally distributed?</li>
+<li>Written output says this is (mostly) ok <br><br></li>
+</ul></li>
+</ul>
+</div>
+</div>
+<div id="lmm-separately-for-ern-crn" class="section level3 tabset">
+<h3>LMM separately for ERN / CRN</h3>
+<div id="model-1" class="section level4">
+<h4>Model</h4>
+<pre class="r"><code># ERN
+LMM_ERN &lt;- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC  +
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == &quot;incorrect&quot;,],
+REML = TRUE,
+control = lmerControl(optimizer = &quot;bobyqa&quot;)
+)
+
+
+# Check model output
+# summary(LMM_ERN) # Model does converge
+# isSingular(LMM_ERN) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_ERN)) # All terms explain variance (&gt; 0.5%)
+
+
+tab_model(LMM_ERN,
+  dv.labels = &quot;ERN&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
+)
+
+
+# CRN
+LMM_CRN &lt;- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC  +
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == &quot;correct&quot;,],
+REML = TRUE,
+control = lmerControl(optimizer = &quot;bobyqa&quot;)
+)
+
+
+# Check model output
+# summary(LMM_CRN) # Model does converge
+# isSingular(LMM_CRN) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_CRN)) # All terms explain variance
+
+
+tab_model(LMM_CRN,
+  dv.labels = &quot;CRN&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
+)</code></pre>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+ERN
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+t value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-3.11
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-4.81 – -1.40
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-3.58
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.001</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.68
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.18 – 1.54
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.55
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.128
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-3.42
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-6.83 – -0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.97
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.054
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.25
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.97 – 1.47
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.28
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.778
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+98.064
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+41.746
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+3.683
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ρ<sub>01</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.032
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.303
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+N <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+58
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+3312
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.021 / 0.318
+</td>
+</tr>
+</table>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+CRN
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+t value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+5.88
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+4.69 – 7.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+9.71
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.71
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.14 – 1.28
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.43
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.018</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.25
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-4.62 – 0.12
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.86
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.068
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.94
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.20 – 2.08
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.62
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.112
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+91.055
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+21.130
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+4.515
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ρ<sub>01</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.013
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.196
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+N <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+58
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+51686
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.013 / 0.207
+</td>
+</tr>
+</table>
+<p><br><br> There is a trend for a higher ERN in OCD compared to HC (p = 0.54) [NOTE: with REML = FALSE in the model, p = 0.049862]. There also is a trend for a higher CRN in OCD compared to HC (p = 0.068). For CRN, there is an effect of stimulation, with smaller (i.e., less neg.) CRN in the verum stimulation compared to the sham condition. <br><br></p>
+</div>
+<div id="assumption-checks-ern-model" class="section level4">
+<h4>Assumption checks ERN model</h4>
+<pre class="r"><code># ERN check model assumptions
+performance::check_model(LMM_ERN, panel = TRUE)</code></pre>
+<p><img src="2_ERPs_files/figure-html/LMM-ERN-CRN-assumptions1-1.png" width="1920" /></p>
+<pre class="r"><code># In addition to plots, print verbal output for some assumption tests to facilitate conclusion
+print(&quot;# Check for heteroscedasticity&quot;)
+performance::check_heteroscedasticity(LMM_ERN)
+
+print(&quot;# Check for influential observations (Cook&#39;s distance)&quot;)
+performance::check_outliers(LMM_ERN, effects = &quot;random&quot;)
+
+print(&quot;# Check for normal distributed random effects&quot;)
+performance::check_normality(LMM_ERN, effects = &quot;random&quot;)</code></pre>
+<pre><code>[1] &quot;# Check for heteroscedasticity&quot;
+Warning: Heteroscedasticity (non-constant error variance) detected (p = 0.000).
+[1] &quot;# Check for influential observations (Cook&#39;s distance)&quot;
+OK: No outliers detected.
+[1] &quot;# Check for normal distributed random effects&quot;
+Group: participant_id
+      (Intercept) OK: random effects appear as normally distributed (p = 0.125).
+       verum_sham Warning: Non-normality of random effects detected (p &lt; .001).
+           OCD_HC OK: random effects appear as normally distributed (p = 0.376).
+verum_sham:OCD_HC Warning: Non-normality of random effects detected (p = 0.008).</code></pre>
+<p>Notes for assumption check would be the same as written for the MFN model. <br><br></p>
+</div>
+<div id="assumption-checks-crn-model" class="section level4">
+<h4>Assumption checks CRN model</h4>
+<pre class="r"><code># CRN check model assumptions
+performance::check_model(LMM_CRN, panel = TRUE)</code></pre>
+<p><img src="2_ERPs_files/figure-html/LMM-ERN-CRN-assumptions2-1.png" width="1920" /></p>
+<pre class="r"><code># In addition to plots, print verbal output for some assumption tests to facilitate conclusion
+print(&quot;# Check for heteroscedasticity&quot;)
+performance::check_heteroscedasticity(LMM_CRN)
+
+print(&quot;# Check for influential observations (Cook&#39;s distance)&quot;)
+performance::check_outliers(LMM_CRN, effects = &quot;random&quot;)
+
+print(&quot;# Check for normal distributed random effects&quot;)
+performance::check_normality(LMM_CRN, effects = &quot;random&quot;)</code></pre>
+<pre><code>Could not compute standard errors from random effects for diagnostic plot.
+[1] &quot;# Check for heteroscedasticity&quot;
+Warning: Heteroscedasticity (non-constant error variance) detected (p = 0.000).
+[1] &quot;# Check for influential observations (Cook&#39;s distance)&quot;
+OK: No outliers detected.
+[1] &quot;# Check for normal distributed random effects&quot;
+Group: participant_id
+           OCD_HC OK: random effects appear as normally distributed (p = 0.237).
+OCD_HC:verum_sham OK: random effects appear as normally distributed (p = 0.933).
+
+Could not compute standard errors from random effects for diagnostic plot.</code></pre>
+<p>Notes for assumption check would be the same as written for the MFN model. <br><br></p>
+</div>
+</div>
+<div id="lmm-separately-for-ern-crn-stimulation-effect-nested-in-groups" class="section level3 tabset">
+<h3>LMM separately for ERN / CRN, stimulation effect nested in groups</h3>
+<div id="model-2" class="section level4">
+<h4>Model</h4>
+<pre class="r"><code># ERN
+LMM_ERN_group &lt;- lmer(MFN_0_100_FCz ~ group/stimulation  +
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == &quot;incorrect&quot;,],
+REML = TRUE,
+control = lmerControl(optimizer = &quot;bobyqa&quot;)
+)
+# model is not singular and all random terms explain variance, however according to summary output it seems to fail to converge?
+
+
+tab_model(LMM_ERN_group,
+  dv.labels = &quot;ERN&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
+)
+
+
+# CRN
+LMM_CRN_group &lt;- lmer(MFN_0_100_FCz ~ group/stimulation  +
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == &quot;correct&quot;,],
+REML = TRUE,
+control = lmerControl(optimizer = &quot;bobyqa&quot;)
+)
+
+
+tab_model(LMM_CRN_group,
+  dv.labels = &quot;CRN&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
+)</code></pre>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+ERN
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+t value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-3.11
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-4.81 – -1.40
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-3.58
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.001</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+group2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-3.42
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-6.83 – -0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.97
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.054
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+groupHC:stimulation2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.80
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.38 – 1.99
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.34
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.190
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+groupOCD:stimulation2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.56
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.70 – 1.81
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.87
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.388
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+98.064
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+41.746
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+3.683
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ρ<sub>01</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.032
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.299
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+N <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+58
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+3312
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.021 / 0.313
+</td>
+</tr>
+</table>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+CRN
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+t value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+5.88
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+4.69 – 7.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+9.71
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+group2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.25
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-4.62 – 0.12
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.86
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.068
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+groupHC:stimulation2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.24
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.57 – 1.05
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.58
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.565
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+groupOCD:stimulation2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.18
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.37 – 1.99
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.86
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.006</strong>
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+91.055
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+21.130
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+4.515
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ρ<sub>01</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.013
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.188
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+N <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+58
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+51686
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.013 / 0.199
+</td>
+</tr>
+</table>
+<p><br><br> Also for the separate groups, there is no evidence for an effect of stimulation on ERN. According to the plots above it seemed that at least in the HC group, there is a smaller (i.e., less negative) ERN in the verum than in the sham condition. But this is not reflected in the LMM. For the CRN, there was a main effect of stimulation (see above). When testing this effect separately in the groups, a stimulation effect on CRN is evident for the OCD but not for the HC group. The higher order interaction group * stimulation was not significant (p = .112). <br><br></p>
+</div>
+<div id="assumption-checks-1" class="section level4">
+<h4>Assumption checks</h4>
+<p>Is same as in non-nested models (tab LMM separately for ERN / CRN) <br><br></p>
+</div>
+</div>
+</div>
+<div id="anovas" class="section level2 tabset">
+<h2>ANOVAs</h2>
+<hr />
+<div id="anovas-1" class="section level3">
+<h3>ANOVAs</h3>
+<p>To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart &amp; Woodman 2014), MFN/ERN/CRN were additionally analyzed with repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), and (only for MRN) response type (correct, incorrect). No Greenhouse–Geisser correction was applied, as no factor had more than two levels. As can be seen below, the ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all effects. The group difference in ERN magnitude emerged in the LMMs as a statistical trend only (p = .056), in the ANOVA it is significant (p = .048).</p>
+<pre class="r"><code># Due to the afex package, contrasts are automatically set to effect-coding (contr.sum). Afex package 
+# also checks sphericity assumptions and automatically corrects for any violations if necessary.
+
+
+# ANOVA overall
+anova_MFN &lt;- aov_ez(
+  id     = &quot;participant_id&quot;, 
+  dv     = &quot;MFN&quot;, 
+  data   = df_aggregated_per_subject_MFN,
+  within = c(&quot;stimulation&quot;, &quot;response_type&quot;),
+  between= c(&quot;group&quot;),
+  observed = c(&quot;group&quot;)
+)
+
+
+# ANOVA ERN
+anova_ERN &lt;- aov_ez(
+  id     = &quot;participant_id&quot;, 
+  dv     = &quot;MFN&quot;, 
+  data   = df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$response_type == &quot;incorrect&quot;,],
+  within = c(&quot;stimulation&quot;),
+  between= c(&quot;group&quot;),
+  observed = c(&quot;group&quot;)
+)
+
+
+
+# ANOVA CRN
+anova_CRN &lt;- aov_ez(
+  id     = &quot;participant_id&quot;, 
+  dv     = &quot;MFN&quot;, 
+  data   = df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$response_type == &quot;correct&quot;,],
+  within = c(&quot;stimulation&quot;),
+  between= c(&quot;group&quot;),
+  observed = c(&quot;group&quot;)
+)
+
+
+# Display ANOVA results
+my_table_template(nice(anova_MFN, MSE = FALSE), caption = &quot;MFN&quot;)
+my_table_template(nice(anova_ERN, MSE = FALSE), caption = &quot;ERN&quot;)
+my_table_template(nice(anova_CRN, MSE = FALSE), caption = &quot;CRN&quot;)</code></pre>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+MFN
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Effect
+</th>
+<th style="text-align:left;">
+df
+</th>
+<th style="text-align:left;">
+F
+</th>
+<th style="text-align:left;">
+ges
+</th>
+<th style="text-align:left;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+group
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+4.67 *
+</td>
+<td style="text-align:left;">
+.058
+</td>
+<td style="text-align:left;">
+.035
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+4.39 *
+</td>
+<td style="text-align:left;">
+.003
+</td>
+<td style="text-align:left;">
+.041
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.44
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.508
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+response_type
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+175.28 ***
+</td>
+<td style="text-align:left;">
+.361
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:response_type
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.92
+</td>
+<td style="text-align:left;">
+.003
+</td>
+<td style="text-align:left;">
+.341
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulation:response_type
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.05
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.829
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulation:response_type
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.92
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.341
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+ERN
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Effect
+</th>
+<th style="text-align:left;">
+df
+</th>
+<th style="text-align:left;">
+F
+</th>
+<th style="text-align:left;">
+ges
+</th>
+<th style="text-align:left;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+group
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+4.10 *
+</td>
+<td style="text-align:left;">
+.063
+</td>
+<td style="text-align:left;">
+.048
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+1.35
+</td>
+<td style="text-align:left;">
+.002
+</td>
+<td style="text-align:left;">
+.250
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+0.01
+</td>
+<td style="text-align:left;">
+&lt;.001
+</td>
+<td style="text-align:left;">
+.912
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+CRN
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Effect
+</th>
+<th style="text-align:left;">
+df
+</th>
+<th style="text-align:left;">
+F
+</th>
+<th style="text-align:left;">
+ges
+</th>
+<th style="text-align:left;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+group
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+3.46 +
+</td>
+<td style="text-align:left;">
+.055
+</td>
+<td style="text-align:left;">
+.068
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+5.94 *
+</td>
+<td style="text-align:left;">
+.005
+</td>
+<td style="text-align:left;">
+.018
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+2.61
+</td>
+<td style="text-align:left;">
+.002
+</td>
+<td style="text-align:left;">
+.112
+</td>
+</tr>
+</tbody>
+</table>
+<p><br><br></p>
+</div>
+<div id="pairwise-comparisons" class="section level3">
+<h3>Pairwise comparisons</h3>
+<p>As no significant main effect with &gt; 2 levels or interaction effect was present, no post hoc pairwise comparisons are conducted. However, the stimulation effect on ERN in the separate groups may be seen as pre-planned contrast that we want to test. For these effects, I calculated two-tailed paired <em>t</em> tests with Holm–Bonferroni <em>p</em> value adjustments. There is still no stimulation effect on ERN in the two groups. The effect on CRN is present in the OCD group. In the sham condition, the CRN is higher (more negative) in the OCD group; in the verum condition there is no evidence for such group difference anymore.</p>
+<pre class="r"><code># Use multivariate model for all follow-up tests to adequately control for violations of sphericity
+afex_options(emmeans_model = &quot;multivariate&quot;)
+
+
+# Pairwise t tests
+pairwise_ERN    &lt;- summary(pairs(emmeans(anova_ERN, &quot;stimulation&quot;, by = &quot;group&quot;), adjust = &quot;holm&quot;))
+pairwise_CRN_1  &lt;- summary(pairs(emmeans(anova_CRN, &quot;stimulation&quot;, by = &quot;group&quot;), adjust = &quot;holm&quot;))
+pairwise_CRN_2  &lt;- summary(pairs(emmeans(anova_CRN, &quot;group&quot;, by = &quot;stimulation&quot;), adjust = &quot;holm&quot;))
+
+
+
+# Add Cohen&#39;s dz (CIs for d could be added if needed, as it can be returned by the &quot;t_to_d&quot; function)
+pairwise_ERN$cohens_dz   &lt;- round(t_to_d(pairwise_ERN$t.ratio,   pairwise_ERN$df,   paired = TRUE)[1], digits = 2)
+pairwise_CRN_1$cohens_dz &lt;- round(t_to_d(pairwise_CRN_1$t.ratio, pairwise_CRN_1$df, paired = TRUE)[1], digits = 2)
+pairwise_CRN_2$cohens_dz &lt;- round(t_to_d(pairwise_CRN_2$t.ratio, pairwise_CRN_2$df, paired = TRUE)[1], digits = 2)
+
+# Display results 
+my_table_template(pairwise_ERN, 
+                  digits = c(0, 0, 2, 2, 0, 2, 3, 2),
+                  caption = &quot;ERN: Stimulation Effect Within Groups&quot;,
+                  footnote = &quot;P values are adjusted with Holm–Bonferroni method.&quot;) 
+
+
+my_table_template(pairwise_CRN_1, 
+                  digits = c(0, 0, 2, 2, 0, 2, 3, 2),
+                  caption = &quot;CRN: Stimulation Effect Within Groups&quot;,
+                  footnote = &quot;P values are adjusted with Holm–Bonferroni method.&quot;) 
+
+
+my_table_template(pairwise_CRN_2, 
+                  digits = c(0, 0, 2, 2, 0, 2, 3, 2),
+                  caption = &quot;CRN: Stimulation Effect Within Groups&quot;,
+                  footnote = &quot;P values are adjusted with Holm–Bonferroni method.&quot;) </code></pre>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; border-bottom: 0;">
+<caption style="font-size: initial !important;">
+ERN: Stimulation Effect Within Groups
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+contrast
+</th>
+<th style="text-align:left;">
+group
+</th>
+<th style="text-align:right;">
+estimate
+</th>
+<th style="text-align:right;">
+SE
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+t.ratio
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:left;">
+cohens_dz
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+sham - verum
+</td>
+<td style="text-align:left;">
+HC
+</td>
+<td style="text-align:right;">
+-0.65
+</td>
+<td style="text-align:right;">
+0.72
+</td>
+<td style="text-align:right;">
+56
+</td>
+<td style="text-align:right;">
+-0.90
+</td>
+<td style="text-align:right;">
+0.372
+</td>
+<td style="text-align:left;">
+-0.12
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sham - verum
+</td>
+<td style="text-align:left;">
+OCD
+</td>
+<td style="text-align:right;">
+-0.53
+</td>
+<td style="text-align:right;">
+0.72
+</td>
+<td style="text-align:right;">
+56
+</td>
+<td style="text-align:right;">
+-0.74
+</td>
+<td style="text-align:right;">
+0.461
+</td>
+<td style="text-align:left;">
+-0.10
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<span style="font-style: italic;">Note: </span>
+</td>
+</tr>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<sup></sup> P values are adjusted with Holm–Bonferroni method.
+</td>
+</tr>
+</tfoot>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; border-bottom: 0;">
+<caption style="font-size: initial !important;">
+CRN: Stimulation Effect Within Groups
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+contrast
+</th>
+<th style="text-align:left;">
+group
+</th>
+<th style="text-align:right;">
+estimate
+</th>
+<th style="text-align:right;">
+SE
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+t.ratio
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:left;">
+cohens_dz
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+sham - verum
+</td>
+<td style="text-align:left;">
+HC
+</td>
+<td style="text-align:right;">
+-0.24
+</td>
+<td style="text-align:right;">
+0.41
+</td>
+<td style="text-align:right;">
+56
+</td>
+<td style="text-align:right;">
+-0.58
+</td>
+<td style="text-align:right;">
+0.564
+</td>
+<td style="text-align:left;">
+-0.08
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+sham - verum
+</td>
+<td style="text-align:left;">
+OCD
+</td>
+<td style="text-align:right;">
+-1.18
+</td>
+<td style="text-align:right;">
+0.41
+</td>
+<td style="text-align:right;">
+56
+</td>
+<td style="text-align:right;">
+-2.87
+</td>
+<td style="text-align:right;">
+0.006
+</td>
+<td style="text-align:left;">
+-0.38
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<span style="font-style: italic;">Note: </span>
+</td>
+</tr>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<sup></sup> P values are adjusted with Holm–Bonferroni method.
+</td>
+</tr>
+</tfoot>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; border-bottom: 0;">
+<caption style="font-size: initial !important;">
+CRN: Stimulation Effect Within Groups
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+contrast
+</th>
+<th style="text-align:left;">
+stimulation
+</th>
+<th style="text-align:right;">
+estimate
+</th>
+<th style="text-align:right;">
+SE
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+t.ratio
+</th>
+<th style="text-align:right;">
+p.value
+</th>
+<th style="text-align:left;">
+cohens_dz
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+HC - OCD
+</td>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:right;">
+2.72
+</td>
+<td style="text-align:right;">
+1.24
+</td>
+<td style="text-align:right;">
+56
+</td>
+<td style="text-align:right;">
+2.19
+</td>
+<td style="text-align:right;">
+0.032
+</td>
+<td style="text-align:left;">
+0.29
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+HC - OCD
+</td>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:right;">
+1.78
+</td>
+<td style="text-align:right;">
+1.25
+</td>
+<td style="text-align:right;">
+56
+</td>
+<td style="text-align:right;">
+1.43
+</td>
+<td style="text-align:right;">
+0.159
+</td>
+<td style="text-align:left;">
+0.19
+</td>
+</tr>
+</tbody>
+<tfoot>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<span style="font-style: italic;">Note: </span>
+</td>
+</tr>
+<tr>
+<td style="padding: 0; " colspan="100%">
+<sup></sup> P values are adjusted with Holm–Bonferroni method.
+</td>
+</tr>
+</tfoot>
+</table>
+</div>
+<div id="simple-t-tests" class="section level3">
+<h3>Simple t tests</h3>
+<p>Same results as with pairwise comparisons via emmeans and p value adjustment: There is still no stimulation effect on ERN in the two groups. The effect on CRN is present in the HC group.</p>
+<pre class="r"><code># Stimulation effect on ERN in OCD -&gt; n.s.
+t.test(MFN ~ stimulation,
+       data=df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$group == &quot;OCD&quot; &amp; df_aggregated_per_subject_MFN$response_type == &quot;incorrect&quot;,],
+       paired=TRUE)
+
+
+# Stimulation effect on CRN in OCD -&gt; sign. 
+t.test(MFN ~ stimulation,
+       data=df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$group == &quot;OCD&quot; &amp; df_aggregated_per_subject_MFN$response_type == &quot;correct&quot;,],
+       paired=TRUE)
+
+
+# Stimulation effect on ERN in HC -&gt; n.s.
+t.test(MFN ~ stimulation,
+       data=df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$group == &quot;HC&quot; &amp; df_aggregated_per_subject_MFN$response_type == &quot;incorrect&quot;,],
+       paired=TRUE)
+
+
+# Stimulation effect on CRN in HC -&gt; n.s. 
+t.test(MFN ~ stimulation,
+       data=df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$group == &quot;HC&quot; &amp; df_aggregated_per_subject_MFN$response_type == &quot;correct&quot;,],
+       paired=TRUE)</code></pre>
+<pre><code>
+    Paired t-test
+
+data:  MFN by stimulation
+t = -0.72031, df = 28, p-value = 0.4773
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -2.0540548  0.9852885
+sample estimates:
+mean of the differences 
+             -0.5343831 
+
+
+    Paired t-test
+
+data:  MFN by stimulation
+t = -2.7807, df = 28, p-value = 0.009589
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -2.0499049 -0.3108679
+sample estimates:
+mean of the differences 
+              -1.180386 
+
+
+    Paired t-test
+
+data:  MFN by stimulation
+t = -0.93027, df = 28, p-value = 0.3602
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -2.0730849  0.7781913
+sample estimates:
+mean of the differences 
+             -0.6474468 
+
+
+    Paired t-test
+
+data:  MFN by stimulation
+t = -0.59977, df = 28, p-value = 0.5535
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -1.0554504  0.5773627
+sample estimates:
+mean of the differences 
+             -0.2390438 </code></pre>
+<p><br><br></p>
+</div>
+<div id="assumption-checks-2" class="section level3">
+<h3>Assumption checks</h3>
+<pre class="r"><code># Get residuals
+residuals_anova_MFN      &lt;- as.data.frame(anova_MFN$lm$residuals)
+residuals_anova_ERN      &lt;- as.data.frame(anova_ERN$lm$residuals)
+residuals_anova_CRN      &lt;- as.data.frame(anova_CRN$lm$residuals)
+
+
+# Plot residuals
+hist_residuals_anova_MFN &lt;- ggplot(gather(residuals_anova_MFN, cols, value), aes(x = value)) + 
+  geom_histogram(color = my_figure_colors[2], fill = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = &quot;Histogram Residuals MFN&quot;) + my_figure_theme
+
+qqplot_residuals_anova_MFN &lt;- ggplot(gather(residuals_anova_MFN, cols, value), aes(sample = value)) + 
+  stat_qq(color = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = &quot;QQ-Plot Residuals MFN&quot;) + my_figure_theme
+
+hist_residuals_anova_ERN &lt;- ggplot(gather(residuals_anova_ERN, cols, value), aes(x = value)) + 
+  geom_histogram(color = my_figure_colors[2], fill = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = &quot;Histogram Residuals ERN&quot;) + my_figure_theme
+
+qqplot_residuals_anova_ERN &lt;- ggplot(gather(residuals_anova_ERN, cols, value), aes(sample = value)) + 
+  stat_qq(color = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = &quot;QQ-Plot Residuals ERN&quot;) + my_figure_theme
+
+hist_residuals_anova_CRN &lt;- ggplot(gather(residuals_anova_CRN, cols, value), aes(x = value)) + 
+  geom_histogram(color = my_figure_colors[2], fill = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = &quot;Histogram Residuals CRN&quot;) + my_figure_theme
+
+qqplot_residuals_anova_CRN &lt;- ggplot(gather(residuals_anova_CRN, cols, value), aes(sample = value)) + 
+  stat_qq(color = my_figure_colors[1]) + 
+  facet_wrap(.~cols) + labs(title = &quot;QQ-Plot Residuals CRN&quot;) + my_figure_theme
+
+ggdraw() +
+  draw_plot(hist_residuals_anova_MFN,       x =  0,   y = .6, width = .5, height = .4) +
+  draw_plot(qqplot_residuals_anova_MFN,     x =  .5,  y = .6, width = .5, height = .4) +
+  draw_plot(hist_residuals_anova_ERN,       x =  0,   y = .3, width = .5, height = .3) +
+  draw_plot(qqplot_residuals_anova_ERN,     x =  .5,  y = .3, width = .5, height = .3) +
+  draw_plot(hist_residuals_anova_CRN,       x =  0,   y = 0,  width = .5, height = .3) +
+  draw_plot(qqplot_residuals_anova_CRN,     x =  .5,  y = 0,  width = .5, height = .3) </code></pre>
+<p><img src="2_ERPs_files/figure-html/ANOVAs-assumptions-1.png" width="672" /></p>
+<pre class="r"><code># Test normality of residuals
+print(&quot;# ANOVA MFN: Normality of Residuals with Shapiro Wilk Test&quot;)
+do.call(rbind, lapply(residuals_anova_MFN[,], function(x) shapiro.test(x)[&quot;p.value&quot;]))
+
+print(&quot;# ANOVA ERN: Check Normality of Residuals with Shapiro Wilk Test&quot;)
+do.call(rbind, lapply(residuals_anova_ERN[,], function(x) shapiro.test(x)[&quot;p.value&quot;]))
+
+print(&quot;# ANOVA CRN: Check Normality of Residuals with Shapiro Wilk Test&quot;)
+do.call(rbind, lapply(residuals_anova_CRN[,], function(x) shapiro.test(x)[&quot;p.value&quot;]))</code></pre>
+<pre><code>[1] &quot;# ANOVA MFN: Normality of Residuals with Shapiro Wilk Test&quot;
+                p.value  
+sham_correct    0.4204871
+sham_incorrect  0.1814896
+verum_correct   0.1444263
+verum_incorrect 0.0149632
+[1] &quot;# ANOVA ERN: Check Normality of Residuals with Shapiro Wilk Test&quot;
+      p.value  
+sham  0.1814896
+verum 0.0149632
+[1] &quot;# ANOVA CRN: Check Normality of Residuals with Shapiro Wilk Test&quot;
+      p.value  
+sham  0.4204871
+verum 0.1444263</code></pre>
+<ul>
+<li><p><strong>Assumption #1: Dependent variable interval or ratio variable -&gt; Is OK</strong></p></li>
+<li><p><strong>Assumption #2: Balanced design</strong> (each subject has to have a value in each condition) <strong>-&gt; Is OK</strong></p></li>
+<li><p><strong>Assumption #3: No dependency in the scores between participants</strong> (dependency can exist only across scores for individuals) <strong>-&gt; Is OK</strong></p></li>
+<li><p><strong>Assumption #4: Residuals</strong> of the dependent variable in each level of the within-subjects factor are approximately <strong>normally distributed -&gt; Is OK</strong> (see above; for incorrect verum condition only small deviation)**</p></li>
+<li><p><strong>Assumption #5: Sphericity</strong> (only relevant for withlin-subject factors with &gt; 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) <strong>-&gt; Is ok</strong></p></li>
+</ul>
+<p><br><br></p>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = false;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
