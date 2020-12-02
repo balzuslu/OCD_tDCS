@@ -104,7 +104,7 @@ single_trial_data[single_trial_data$name =="C_01_T2"| single_trial_data$name =="
 #############
 
 
-# Rename columns and remove string '_T1/T2' fprom participant ID (to get correct number of factor levels later)
+# Rename columns and remove string '_T1/T2' from participant ID (to get correct number of factor levels later)
 single_trial_data <- single_trial_data %>% 
   subset(select = c("name", "group", "session", "stimulation", "trial", "stimulus_type", "response_type", "rt1", "rt_log", "rt_invalid" ,"response_type_2nd", "rt2", "MFN_0_100_FCz")) %>%
   dplyr::rename(participant_id     = name,
