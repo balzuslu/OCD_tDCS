@@ -1,0 +1,711 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>ERP Visualization</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/united.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+</style>
+
+<link rel="stylesheet" href="web_style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+.tocify-subheader {
+  display: inline;
+}
+.tocify-subheader .tocify-item {
+  font-size: 0.95em;
+}
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">OCD & tDCS</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">
+    <span class="glyphicon glyphicon-info-sign"></span>
+     
+    Task &amp; Data
+  </a>
+</li>
+<li>
+  <a href="1_Behavioral_Performance.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-hand-up"></span>
+     
+    Behavioral Performance
+  </a>
+</li>
+<li>
+  <a href="2_ERP_Analysis.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-flash"></span>
+     
+    ERP Analysis
+  </a>
+</li>
+<li>
+  <a href="3_ERP_Visualization.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-flash"></span>
+     
+    ERP Visualization
+  </a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="mailto:luisa.balzus@hu-berlin.de">
+    <span class="fa fa-envelope fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">ERP Visualization</h1>
+
+</div>
+
+
+<!-- Set general settings -->
+<!-- Load and clean data -->
+<pre class="r"><code># Load data
+resp_locked_data &lt;- read.csv(file = &quot;./data/response_locked_data_for_plots.csv&quot;, header = TRUE)
+
+
+# Rename conditions
+resp_locked_data$condition[resp_locked_data$condition == 1] &lt;- &quot;correct&quot;;
+resp_locked_data$condition[resp_locked_data$condition == 2] &lt;- &quot;incorrect&quot;;
+
+
+
+# Add stimulation condition variable
+resp_locked_data$stimulation &lt;- NA
+resp_locked_data[
+  resp_locked_data$participant_id ==&quot;C_01_T1&quot;| resp_locked_data$participant_id ==&quot;C_02_T1&quot;| resp_locked_data$participant_id ==&quot;C_03_T2&quot;|
+  resp_locked_data$participant_id ==&quot;C_04_T2&quot;| resp_locked_data$participant_id ==&quot;C_05_T1&quot;| resp_locked_data$participant_id ==&quot;C_06_T2&quot;|
+  resp_locked_data$participant_id ==&quot;C_07_T1&quot;| resp_locked_data$participant_id ==&quot;C_08_T1&quot;| resp_locked_data$participant_id ==&quot;C_09_T2&quot;|
+  resp_locked_data$participant_id ==&quot;C_10_T2&quot;| resp_locked_data$participant_id ==&quot;C_11_T2&quot;| resp_locked_data$participant_id ==&quot;C_12_T2&quot;|
+  resp_locked_data$participant_id ==&quot;C_13_T1&quot;| resp_locked_data$participant_id ==&quot;C_15_T2&quot;| resp_locked_data$participant_id ==&quot;C_16_T1&quot;|
+  resp_locked_data$participant_id ==&quot;C_17_T2&quot;| resp_locked_data$participant_id ==&quot;C_18_T2&quot;| resp_locked_data$participant_id ==&quot;C_19_T1&quot;|
+  resp_locked_data$participant_id ==&quot;C_20_T1&quot;| resp_locked_data$participant_id ==&quot;C_21_T2&quot;| resp_locked_data$participant_id ==&quot;C_22_T2&quot;|
+  resp_locked_data$participant_id ==&quot;C_23_T1&quot;| resp_locked_data$participant_id ==&quot;C_24_T1&quot;| resp_locked_data$participant_id ==&quot;C_25_T1&quot;|
+  resp_locked_data$participant_id ==&quot;C_26_T1&quot;| resp_locked_data$participant_id ==&quot;C_27_T2&quot;| resp_locked_data$participant_id ==&quot;C_28_T2&quot;|
+  resp_locked_data$participant_id ==&quot;C_29_T1&quot;| resp_locked_data$participant_id ==&quot;C_30_T2&quot;| resp_locked_data$participant_id ==&quot;P_01_T1&quot;|
+  resp_locked_data$participant_id ==&quot;P_02_T2&quot;| resp_locked_data$participant_id ==&quot;P_03_T2&quot;| resp_locked_data$participant_id ==&quot;P_04_T1&quot;|
+  resp_locked_data$participant_id ==&quot;P_05_T1&quot;| resp_locked_data$participant_id ==&quot;P_06_T1&quot;| resp_locked_data$participant_id ==&quot;P_07_T2&quot;|
+  resp_locked_data$participant_id ==&quot;P_08_T2&quot;| resp_locked_data$participant_id ==&quot;P_09_T2&quot;| resp_locked_data$participant_id ==&quot;P_10_T1&quot;|
+  resp_locked_data$participant_id ==&quot;P_11_T2&quot;| resp_locked_data$participant_id ==&quot;P_12_T2&quot;| resp_locked_data$participant_id ==&quot;P_13_T1&quot;|
+  resp_locked_data$participant_id ==&quot;P_15_T1&quot;| resp_locked_data$participant_id ==&quot;P_16_T1&quot;| resp_locked_data$participant_id ==&quot;P_17_T2&quot;|
+  resp_locked_data$participant_id ==&quot;P_18_T1&quot;| resp_locked_data$participant_id ==&quot;P_19_T1&quot;| resp_locked_data$participant_id ==&quot;P_20_T2&quot;|
+  resp_locked_data$participant_id ==&quot;P_21_T2&quot;| resp_locked_data$participant_id ==&quot;P_22_T1&quot;| resp_locked_data$participant_id ==&quot;P_23_T1&quot;|
+  resp_locked_data$participant_id ==&quot;P_24_T2&quot;| resp_locked_data$participant_id ==&quot;P_25_T1&quot;| resp_locked_data$participant_id ==&quot;P_26_T2&quot;|
+  resp_locked_data$participant_id ==&quot;P_27_T1&quot;| resp_locked_data$participant_id ==&quot;P_28_T2&quot;| resp_locked_data$participant_id ==&quot;P_29_T2&quot;|
+  resp_locked_data$participant_id ==&quot;P_30_T1&quot;,]$stimulation &lt;- &quot;sham&quot;
+
+resp_locked_data[
+  resp_locked_data$participant_id ==&quot;C_01_T2&quot;| resp_locked_data$participant_id ==&quot;C_02_T2&quot;| resp_locked_data$participant_id ==&quot;C_03_T1&quot;|
+  resp_locked_data$participant_id ==&quot;C_04_T1&quot;| resp_locked_data$participant_id ==&quot;C_05_T2&quot;| resp_locked_data$participant_id ==&quot;C_06_T1&quot;|
+  resp_locked_data$participant_id ==&quot;C_07_T2&quot;| resp_locked_data$participant_id ==&quot;C_08_T2&quot;| resp_locked_data$participant_id ==&quot;C_09_T1&quot;|
+  resp_locked_data$participant_id ==&quot;C_10_T1&quot;| resp_locked_data$participant_id ==&quot;C_11_T1&quot;| resp_locked_data$participant_id ==&quot;C_12_T1&quot;|
+  resp_locked_data$participant_id ==&quot;C_13_T2&quot;| resp_locked_data$participant_id ==&quot;C_15_T1&quot;| resp_locked_data$participant_id ==&quot;C_16_T2&quot;|
+  resp_locked_data$participant_id ==&quot;C_17_T1&quot;| resp_locked_data$participant_id ==&quot;C_18_T1&quot;| resp_locked_data$participant_id ==&quot;C_19_T2&quot;|
+  resp_locked_data$participant_id ==&quot;C_20_T2&quot;| resp_locked_data$participant_id ==&quot;C_21_T1&quot;| resp_locked_data$participant_id ==&quot;C_22_T1&quot;|
+  resp_locked_data$participant_id ==&quot;C_23_T2&quot;| resp_locked_data$participant_id ==&quot;C_24_T2&quot;| resp_locked_data$participant_id ==&quot;C_25_T2&quot;|
+  resp_locked_data$participant_id ==&quot;C_26_T2&quot;| resp_locked_data$participant_id ==&quot;C_27_T1&quot;| resp_locked_data$participant_id ==&quot;C_28_T1&quot;|
+  resp_locked_data$participant_id ==&quot;C_29_T2&quot;| resp_locked_data$participant_id ==&quot;C_30_T1&quot;| resp_locked_data$participant_id ==&quot;P_01_T2&quot;|
+  resp_locked_data$participant_id ==&quot;P_02_T1&quot;| resp_locked_data$participant_id ==&quot;P_03_T1&quot;| resp_locked_data$participant_id ==&quot;P_04_T2&quot;|
+  resp_locked_data$participant_id ==&quot;P_05_T2&quot;| resp_locked_data$participant_id ==&quot;P_06_T2&quot;| resp_locked_data$participant_id ==&quot;P_07_T1&quot;|
+  resp_locked_data$participant_id ==&quot;P_08_T1&quot;| resp_locked_data$participant_id ==&quot;P_09_T1&quot;| resp_locked_data$participant_id ==&quot;P_10_T2&quot;|
+  resp_locked_data$participant_id ==&quot;P_11_T1&quot;| resp_locked_data$participant_id ==&quot;P_12_T1&quot;| resp_locked_data$participant_id ==&quot;P_13_T2&quot;|
+  resp_locked_data$participant_id ==&quot;P_15_T2&quot;| resp_locked_data$participant_id ==&quot;P_16_T2&quot;| resp_locked_data$participant_id ==&quot;P_17_T1&quot;|
+  resp_locked_data$participant_id ==&quot;P_18_T2&quot;| resp_locked_data$participant_id ==&quot;P_19_T2&quot;| resp_locked_data$participant_id ==&quot;P_20_T1&quot;|
+  resp_locked_data$participant_id ==&quot;P_21_T1&quot;| resp_locked_data$participant_id ==&quot;P_22_T2&quot;| resp_locked_data$participant_id ==&quot;P_23_T2&quot;|
+  resp_locked_data$participant_id ==&quot;P_24_T1&quot;| resp_locked_data$participant_id ==&quot;P_25_T2&quot;| resp_locked_data$participant_id ==&quot;P_26_T1&quot;|
+  resp_locked_data$participant_id ==&quot;P_27_T2&quot;| resp_locked_data$participant_id ==&quot;P_28_T1&quot;| resp_locked_data$participant_id ==&quot;P_29_T1&quot;|
+  resp_locked_data$participant_id ==&quot;P_30_T2&quot;,]$stimulation &lt;- &quot;verum&quot;
+
+
+# Add group and session variables and remove string &#39;_T1/T2&#39; from participant ID (to get correct number of factor levels later); make all factors
+resp_locked_data &lt;- resp_locked_data  %&gt;% 
+  dplyr::mutate(
+    group          = as.factor(ifelse(substr(participant_id, 1,1) == &quot;C&quot;, &quot;HC&quot;, &quot;OCD&quot;)),
+    session        = as.factor(ifelse(substr(participant_id, 6,7) == &quot;T1&quot;, &quot;T1&quot;, &quot;T2&quot;)),
+    participant_id = as.factor(substr(participant_id, 1,4)), 
+    condition      = as.factor(condition),
+    stimulation    = as.factor(stimulation)
+    )</code></pre>
+<div id="erp-trajectories" class="section level2 tabset">
+<h2>ERP Trajectories</h2>
+<hr />
+<div id="per-participant" class="section level3">
+<h3>Per participant</h3>
+<pre class="r"><code># Plot ERPs per participant for HC
+plot_per_participant_HC &lt;- ggplot(resp_locked_data[resp_locked_data$group == &quot;HC&quot;,],aes(time, FCz)) +
+  stat_summary(fun = mean, geom = &quot;line&quot;, size = 0.5, linetype = &quot;solid&quot;, aes(colour = stimulation:condition)) +
+  geom_vline(xintercept = 0, linetype = &quot;dashed&quot;, colour=&quot;grey&quot; ) +
+  geom_hline(yintercept = 0, linetype = &quot;dashed&quot;, colour=&quot;grey&quot;) +  
+  geom_ribbon(aes(xmin=0, xmax=100), alpha=.1, fill=&quot;grey70&quot;) +
+  coord_cartesian(ylim=c(-15, 15), xlim=c(-500,600)) +
+  scale_y_continuous(breaks=seq(-15, 15, 10)) +
+  scale_x_continuous(breaks=c(-200, 100, 400)) +
+  scale_colour_manual(values = my_figure_colors_2) +  
+  facet_wrap(.~ participant_id+session, ncol = 8, labeller = labeller(.multi_line = FALSE, sep=&quot;: &quot;)) +
+  ggtitle(&quot;ERPs per participant: HC&quot;) +  
+  labs(x = &quot;\ntime (ms)&quot;, y = expression(paste(&quot;Mean amplitude at FCz [&quot;,mu,&quot;V]&quot;)), colour = &quot;&quot;) +  
+  theme(strip.text.x = element_text(margin = margin(0, 0, 0, 0))) +
+  my_figure_theme
+
+
+# Save plot
+ggsave(&quot;./figures/figure_ERPs_per_participant_HC.tiff&quot;, width = 36, height = 26, units = &quot;cm&quot;, dpi=600, compression = &quot;lzw&quot;)
+
+
+# Display plot
+plot_per_participant_HC</code></pre>
+<p><img src="3_ERP_Visualization_files/figure-html/plot-per-participant-1.png" width="960" /></p>
+<pre class="r"><code># Plot ERPs per participant for OCD
+plot_per_participant_OCD &lt;- ggplot(resp_locked_data[resp_locked_data$group == &quot;OCD&quot;,],aes(time, FCz)) +
+  stat_summary(fun = mean, geom = &quot;line&quot;, size = 0.5, linetype = &quot;solid&quot;, aes(colour = stimulation:condition)) +
+  geom_vline(xintercept = 0, linetype = &quot;dashed&quot;, colour=&quot;grey&quot; ) +
+  geom_hline(yintercept = 0, linetype = &quot;dashed&quot;, colour=&quot;grey&quot;) +  
+  geom_ribbon(aes(xmin=0, xmax=100), alpha=.1, fill=&quot;grey70&quot;) +
+  coord_cartesian(ylim=c(-15, 15), xlim=c(-500,600)) +
+  scale_y_continuous(breaks=seq(-15, 15, 10)) +
+  scale_x_continuous(breaks=c(-200, 100, 400)) +
+  scale_colour_manual(values = my_figure_colors_2) +  
+  facet_wrap(.~ participant_id+session, ncol = 8, labeller = labeller(.multi_line = FALSE, sep=&quot;: &quot;)) +
+  ggtitle(&quot;ERPs per participant: OCD&quot;) +  
+  labs(x = &quot;\ntime (ms)&quot;, y = expression(paste(&quot;Mean amplitude at FCz [&quot;,mu,&quot;V]&quot;)), colour = &quot;&quot;) +  
+  theme(strip.text.x = element_text(margin = margin(0, 0, 0, 0))) +
+  my_figure_theme
+
+
+# Save plot
+ggsave(&quot;./figures/figure_ERPs_per_participant_OCD.tiff&quot;, width = 36, height = 26, units = &quot;cm&quot;, dpi=600, compression = &quot;lzw&quot;)
+
+
+# Display plot
+plot_per_participant_OCD</code></pre>
+<p><img src="3_ERP_Visualization_files/figure-html/plot-per-participant-2.png" width="960" /> <br><br></p>
+</div>
+<div id="erps-as-a-function-of-group-and-stimulation" class="section level3 active">
+<h3>ERPs as a function of group and stimulation</h3>
+<pre class="r"><code># Calculate running within-subject CIs
+running_CIs_group_stim &lt;- resp_locked_data %&gt;%
+  split(.$time) %&gt;%
+  map(~summarySEwithinO(data = .,
+                       measurevar = &quot;FCz&quot;,
+                       withinvars = c(&quot;condition&quot;, &quot;stimulation&quot;),
+                       betweenvars = &quot;group&quot;,
+                       idvar = &quot;participant_id&quot;))
+
+
+# Calculate running within-subject CIs 
+CIs_group_stim &lt;- purrr::map_df(running_CIs_group_stim,magrittr::extract) %&gt;%
+  mutate(
+    time = rep(unique(resp_locked_data$time), each = 8) #Note, you&#39;ll have to change 3 to match the number of conditions
+    )
+
+
+# Plot ERPs per stimulation by group
+plot_stim_by_group &lt;- ggplot(resp_locked_data,aes(time, FCz)) +
+  stat_summary(fun = mean, geom = &quot;line&quot;, size = 0.5, linetype = &quot;solid&quot;, aes(colour= stimulation:condition)) +
+  geom_ribbon(data = CIs_group_stim, aes(ymin = FCz-ci, ymax = FCz+ci, fill = stimulation:condition), alpha = 0.15) + guides(fill = &quot;none&quot;) +
+  geom_vline(xintercept = 0, linetype = &quot;dashed&quot;, colour=&quot;grey&quot; ) +
+  geom_hline(yintercept = 0, linetype = &quot;dashed&quot;, colour=&quot;grey&quot;) +  
+  geom_ribbon(aes(xmin=0, xmax=100), alpha=.1, fill=&quot;grey70&quot;) +
+  coord_cartesian(ylim=c(-10,10), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-10,10,2)) +
+  scale_x_continuous(breaks=seq(-500,1000,200)) +
+  scale_colour_manual(values = my_figure_colors_2) +
+  scale_fill_manual(values = my_figure_colors_2) +
+  facet_grid(. ~ group) + 
+  ggtitle(&quot;ERPs per stimulation by group&quot;) +
+  labs(x = &quot;\ntime (ms)&quot;, y = expression(paste(&quot;Mean amplitude at FCz [&quot;,mu,&quot;V]&quot;)), colour = &quot;&quot;) +
+  my_figure_theme
+
+
+# Plot ERPs per group by stimulation
+plot_group_by_stim &lt;- ggplot(resp_locked_data,aes(time, FCz)) +
+  stat_summary(fun = mean, geom = &quot;line&quot;, size = 0.5, linetype = &quot;solid&quot;, aes(colour= group:condition)) +
+  geom_ribbon(data = CIs_group_stim, aes(ymin = FCz-ci, ymax = FCz+ci, fill = group:condition), alpha = 0.15) + guides(fill = &quot;none&quot;) +
+  geom_vline(xintercept = 0, linetype = &quot;dashed&quot;, colour=&quot;grey&quot; ) +
+  geom_hline(yintercept = 0, linetype = &quot;dashed&quot;, colour=&quot;grey&quot;) + 
+  geom_ribbon(aes(xmin=0, xmax=100), alpha=.1, fill=&quot;grey70&quot;) +
+  coord_cartesian(ylim=c(-10,10), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-10,10,2)) +
+  scale_x_continuous(breaks=seq(-500,1000,200)) +
+  scale_colour_manual(values = my_figure_colors_1) +
+  scale_fill_manual(values = my_figure_colors_1) +
+  facet_grid(. ~ stimulation) + 
+  ggtitle(&quot;ERPs per group by stimulation&quot;) +
+  labs(x = &quot;\ntime (ms)&quot;, y = expression(paste(&quot;Mean amplitude at FCz [&quot;,mu,&quot;V]&quot;)), colour = &quot;&quot;) +
+  my_figure_theme 
+
+
+# Arrange plots
+figure_ERP_trajectories &lt;- ggdraw() +
+  draw_plot(plot_stim_by_group,   x = 0, y =.5, width = 1, height =.5) +
+  draw_plot(plot_group_by_stim,  x = 0, y = 0, width = 1, height =.5) +
+  draw_plot_label(c(&quot;A&quot;, &quot;B&quot;), c(0, 0), c(1, .5), size = 15)
+
+
+# Save plot
+ggsave(&quot;./figures/figure_ERP_trajectories.tiff&quot;, width = 14, height = 18, units = &quot;cm&quot;, dpi=600, compression = &quot;lzw&quot;)
+
+
+# Display plot
+figure_ERP_trajectories</code></pre>
+<div class="figure">
+<img src="3_ERP_Visualization_files/figure-html/plot-group-by-stimulation-1.png" alt="Note. Response-locked ERP trajectories (mean amplitude at FCz from 0 to 100 ms) as a function of (A) stimulation by group and (B) group by stimulation. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008)." width="960" />
+<p class="caption">
+Note. Response-locked ERP trajectories (mean amplitude at FCz from 0 to 100 ms) as a function of (A) stimulation by group and (B) group by stimulation. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008).
+</p>
+</div>
+<p><br><br></p>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = false;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
