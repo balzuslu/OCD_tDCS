@@ -3,7 +3,7 @@ name: "Efficacy of tDCS in modulating neurocognitive markers of OCD"
 output_dir: "."      # specify name of output directory
 
 navbar:
-  title: "Efficacy of tDCS in modulating neurocognitive markers of OCD"
+  title: "OCD & tDCS"
   left:
     - text: "Task & Data"
       icon: glyphicon-info-sign
@@ -11,9 +11,12 @@ navbar:
     - text: "Behavioral Performance"
       icon: glyphicon glyphicon-hand-up
       href: 1_Behavioral_Performance.html
-    - text: "ERPs"
+    - text: "ERP Analysis"
       icon: glyphicon glyphicon-flash
-      href: 2_ERPs.html
+      href: 2_ERP_Analysis.html
+    - text: "ERP Visualization"
+      icon: glyphicon glyphicon-flash
+      href: 3_ERP_Visualization.html
   right:
     - icon: fa-envelope fa-lg
       href: mailto:luisa.balzus@hu-berlin.de
