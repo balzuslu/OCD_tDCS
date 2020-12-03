@@ -22,15 +22,15 @@ options(scipen = 999)
 # Define paths
 path_behavioral_data <- "C:/Users/Luisa/PhD/1_PhD_Project/7_ModERN_Stimulation_Study/4_Behavioral_Data/Flanker/"   
 path_ERP_data        <- "C:/Users/Luisa/PhD/1_PhD_Project/7_ModERN_Stimulation_Study/8_Analyses/1_Flanker_Analysis_with_EEGLAB/4_Single_Trial_ERPs/single_trial_MFN_0_100_FCz_with_events.csv"
-path_cleaned_data    <- "C:/Users/Luisa/PhD/1_PhD_Project/7_ModERN_Stimulation_Study/8_Analyses/1_Flanker_Analysis_with_EEGLAB/B_Statistical_Analyses/OCD_tDCS/data/"
+path_cleaned_data    <- "C:/Users/Luisa/PhD/1_PhD_Project/7_ModERN_Stimulation_Study/8_Analyses/1_Flanker_Analysis_with_EEGLAB/B_Statistical_Analyses/data/"
 
 
 
 ###################   Load Behavioral Data and ERP Data   ####################
 
-# Create empty data frames to write and single-trial behavioral data in it
+# Create empty data frame to write and single-trial behavioral data and feedback infos in it
 behavioral_data <- data.frame()   
-
+feedback_infos <- data.frame()   
 
 # Create list of behavioal data files that have to be loaded
 logfiles <- list.files(path_behavioral_data, pattern = ".txt")       
@@ -45,6 +45,21 @@ for (participant in logfiles){
 
 # Load ERP data
 ERP_data <- read.csv(path_ERP_data, header = TRUE, stringsAsFactors = FALSE)
+
+
+
+# Load feedback infos and concatenate data of all participants (read P_29_T2 in separately, because this subject had an additional task block)
+for (participant in logfiles){
+  if (participant != "Flanker_P_29_T2.txt") {
+    one_participant_feedback <- read.table(paste0(path_behavioral_data, participant), skip = 513, sep = ",", fill = TRUE, header = FALSE, na.strings=c("","NA"), stringsAsFactors = FALSE)
+  }
+  else
+  {
+    one_participant_feedback <- read.table(paste0(path_behavioral_data, participant), skip = 593, sep = ",", nrows = 6, fill = TRUE, header = FALSE, na.strings=c("","NA"), stringsAsFactors = FALSE)
+  }
+  one_participant_feedback$participant_id <- substr(participant, 9, 15) # add coumn with participant_id
+  feedback_infos <- rbind(feedback_infos, one_participant_feedback)
+}  
 
 
 
@@ -113,6 +128,26 @@ single_trial_data <- single_trial_data %>%
   dplyr::mutate(participant_id = substr(participant_id, 1, 4))
 
 
+
+
+####################   Clean Feedback Infos   ####################
+
+# Rename columns and remove string '_T1/T2' from participant ID (to get correct number of factor levels later), create session column, and make variables factors
+feedback_infos <- feedback_infos %>% 
+  dplyr::rename(block    = V1,
+                feedback = V4) %>% 
+  dplyr::mutate(block          = as.factor(gsub('Block: ', '', block)),
+                feedback       = as.factor(gsub('Feedback: ', '', feedback)),
+                session        = as.factor(ifelse(substr(participant_id, 6, 7) == "T1", "T1", "T2")),
+                participant_id = as.factor(substr(participant_id, 1, 4)),
+                group          = as.factor(ifelse(substr(participant_id, 1, 1) == "C", "HC", "OCD"))
+                ) %>%
+  subset(select = c("participant_id", "session", "group", "block", "feedback")) 
+
+
+
+
 ###################   Save Data   ####################
 
 save(single_trial_data, file = paste0(path_cleaned_data, "Single_Trial_Data.rda"))
+save(feedback_infos, file = paste0(path_cleaned_data, "Feedback_Infos.rda"))
