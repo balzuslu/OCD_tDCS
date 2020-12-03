@@ -1,0 +1,119 @@
+---
+title: "Trait Variables"
+output: 
+  html_document
+
+---
+
+<!-- Set general settings -->
+
+```{r setup, include = FALSE}
+
+# Set general settings for markdown file
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  comment = "",
+  results = "hold"
+)
+
+
+# Clear environment
+rm(list = ls())
+
+
+# Enable/disable caching of time-consuming code chunks
+knitr_cache_enabled = TRUE
+
+
+# Load packages
+library(dplyr)      # for data manipulation
+library(foreign)    # for opening .sav file
+library(ggplot2)    # for plotting
+library(tidyr)      # for gather function
+
+
+# Set figure theme and colors
+my_figure_theme <- theme_classic(base_size = 11) +
+  theme(legend.position = "bottom", 
+        strip.background = element_rect(fill="grey95", linetype = "blank"),
+        axis.ticks.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.title.x = element_blank(),
+        plot.title = element_text(hjust = 0.5)) 
+# instad of theme_classic: + theme_apa(base_size = 11)
+
+my_figure_colors <- c("#8ea6b4", "#465369")
+
+
+# Create function to label outliers
+is_outlier <- function(x) {
+  return(x < quantile(x, 0.25) - 1.5 * IQR(x) | x > quantile(x, 0.75) + 1.5 * IQR(x))
+}
+```
+
+<!-- Load and clean data -->
+
+```{r load-and-clean-data, cache = knitr_cache_enabled}
+
+# Load data 
+questionnaires <- read.spss("./data/psychoEQExport.sav", to.data.frame = TRUE, add.undeclared.levels = "no") # add.undeclared.levels required to prevent irrelevant warning message
+
+
+# Select relevant variables
+questionnaires <- questionnaires[,c("CODE", "BD2SUMT0", "BASO00T0", "BASO01T0", "BASO02T0", "BASO03T0", "BASO04T0", "FMPO00T0", "FMPO01T0", "FMPO02T0", "FMPO03T0", "FMPO04T0", "NNGO00T0", "NNGO01T0", "OCISUMT0", "OCIO00T0", "OCIO01T0", "OCIO02T0", "OCIO03T0", "OCIO04T0", "OCIO05T0" ,"PANO00T0", "PANO01T0", "PSWSUMT0", "STSSUMT0", "STTSUMT0", "TCISUMT0", "TCIO00T0", "TCIO01T0" ,"TCIO02T0" ,"TCIO03T0" ,"WSTSUMT0")] 
+
+
+# Rename variables
+colnames(questionnaires) <- c("participant_id", "BDI_Total", "BIS_Total", "BAS_Total", "BAS_Drive", "BAS_Fun_Seeking", "BAS_Reward_Responsiven.", "FMPS_CMD", "FMPS_PEC", "FMPS_PST", "FMPS_ORG", "FMPS_PER/Total", "NEO_Neuroticism", "NEO_Conscientiousness", "OCI_Total", "OCI_Washing", "OCI_Checking", "OCI_Ordering", "OCI_Obsessions", "OCI_Hoarding", "OCI_Neutralising", "PANAS_Pos", "PANAS_Neg", "PSWQ_Total", "STAI_State", "STAI_Trait", "TCI_Harm_Avoidance_Total", "TCI_Anticipatory_Worry", "TCI_Fear_of_Uncertainty", "TCI_Shyness", "TCI_Fatigability", "WST_Total")   
+
+
+# C_12 repeated the WST at T2, because score at T1 was very low (22); score achieved at T2 was 25; we will use this score 
+questionnaires[questionnaires$participant_id == "ModERN_tDCS_C12",]$WST_Total <- 25
+
+
+# Make format wide to long
+df4boxplots <- gather(questionnaires, trait, score, BDI_Total:WST_Total, factor_key=TRUE, na.rm = TRUE)
+
+
+# Add group variable
+df4boxplots <- df4boxplots %>%
+  dplyr::mutate(group = ifelse(substr(participant_id,13,13) == "C", "HC", "OCD"))   
+
+
+# Make participant_id variable numeric (needed for outlier function)
+df4boxplots$participant_id <- as.numeric(substr(df4boxplots$participant_id,14,15))
+```
+
+## Plot
+***
+
+```{r plot-trait-variables, cache = knitr_cache_enabled, fig.width = 9, fig.height = 12, fig.caption = "Note. Sum scores are plotted (not mean scores), because for BDI and OCI only sum scores are available and missing data are not possible because data were aquired with tablet; except for NEO and BIS/BAS, according to manuals, scoring is based on sum scores.)"}
+
+# Set seed to always produce same jitter
+set.seed(193)
+
+
+# Plot trait variables
+plot_trait_variables <- df4boxplots %>%
+  dplyr::group_by(group, trait) %>%
+  dplyr::mutate(outlier = ifelse(is_outlier(score), participant_id, as.numeric(NA))) %>%
+  ggplot(., aes(x = trait, y = score, fill = group)) + 
+  geom_boxplot(width=4, outlier.shape = NA) +          # remove outliers here, otherwise they are plotted twice (also as data point)
+  geom_point(aes(color = condition), alpha = 0.5, colour = "white", size = 2, shape=21, position = position_jitterdodge(dodge.width = 4, jitter.width = 1.5)) +
+  geom_text(aes(label = outlier, colour = group), position = position_jitterdodge(dodge.width = 10, jitter.width = 5), size = 4, na.rm = TRUE) + 
+  facet_wrap(~ trait, scales="free", ncol = 4) +
+  scale_fill_manual(values = my_figure_colors, name = "Group:") +
+  scale_colour_manual(values = my_figure_colors, name = "Group:") +
+  theme(strip.text.x = element_text(size = 12)) +
+  my_figure_theme 
+
+
+# Save plot
+ggsave("./figures/figure_trait_variables.tiff", width = 40, height = 30, units = "cm", dpi=600, compression = "lzw")
+
+
+# Display plot
+plot_trait_variables
+```
+<br><br>
