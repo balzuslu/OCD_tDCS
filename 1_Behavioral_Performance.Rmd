@@ -72,7 +72,7 @@ my_figure_colors <- c("#8ea6b4", "#465369")
 
 # Load data
 load(file = "./data/Single_Trial_Data.rda")
-
+load(file = "./data/Feedback_Infos.rda")
 
 
 # Create some variables: numeric word accuracy, correctness of previous response, post-error accuracy (pea), and post-correct accuracy (pca)
@@ -107,7 +107,6 @@ single_trial_data_clean <- single_trial_data_clean %>%
 # Create column with single-trial PES (RTpost-error − RTpre-error for all CCEC sequences)
 single_trial_data_clean$pes <- NA
 # also make sure to exclude sequences where a trial was excluded in between (or when error occurred in first or last trial)
-
 for (i in 3:(nrow(single_trial_data_clean)-1)) {
   if (single_trial_data_clean[i,]$response_type == "incorrect" &
       single_trial_data_clean[(i+1),]$response_type == "correct" &
@@ -131,22 +130,25 @@ single_trial_data_clean$accuracy_prev_trial <- as.factor(single_trial_data_clean
 
 
 # Calculate aggregated data per subject for boxplots and outlier detection
-df_aggregated_per_subject_rt <- ddply(single_trial_data_clean, 
-                                   .(participant_id, group, response_type, stimulus_type, stimulation, session), 
-                                   summarise,
-                                   rt = mean(rt, na.rm = TRUE))
+df_aggregated_per_subject_rt <- single_trial_data_clean %>%
+  dplyr::group_by(participant_id, group, response_type, stimulus_type, stimulation, session) %>%
+  dplyr::summarize(
+    rt = mean(rt, na.rm = TRUE)
+    ) 
 
-df_aggregated_per_subject_accuracy <- ddply(single_trial_data_clean, 
-                                   .(participant_id, group, stimulus_type, stimulation, session), 
-                                   summarise,
-                                   accuracy_numeric = mean(accuracy_numeric, na.rm = TRUE)*100)
+df_aggregated_per_subject_accuracy <- single_trial_data_clean %>%
+  dplyr::group_by(participant_id, group, stimulus_type, stimulation, session) %>%
+  dplyr::summarize(
+    accuracy_numeric = mean(accuracy_numeric, na.rm = TRUE)*100
+    ) 
 
-df_aggregated_per_subject_pes_pea_pca <- ddply(single_trial_data_clean, 
-                                   .(participant_id, group, stimulation, session), 
-                                   summarise,
-                                   pes = mean(pes, na.rm = TRUE),
-                                   pea = mean(pea, na.rm = TRUE)*100,
-                                   pca = mean(pca, na.rm = TRUE)*100)
+df_aggregated_per_subject_pes_pea_pca <- single_trial_data_clean %>%
+  dplyr::group_by(participant_id, group, stimulation, session) %>%
+  dplyr::summarize(
+    pes = mean(pes, na.rm = TRUE),
+    pea = mean(pea, na.rm = TRUE)*100,
+    pca = mean(pca, na.rm = TRUE)*100
+  ) 
 ```
 
 Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch. 
@@ -155,13 +157,13 @@ Trials were excluded from all analyses if RT was shorter than 100 ms or longer t
 
 # Calculate percentage of excluded trials
 excluded_trials <- single_trial_data %>%
-  group_by(group, participant_id, session) %>%
+  dplyr::group_by(group, participant_id, session) %>%
   dplyr::summarize(
     invalid_rt   = sum(!is.na(rt_invalid) & rt_invalid != FALSE) / length(participant_id) * 100,
     misses       = sum(response_type == "miss") / length(participant_id) * 100,
     EEG_artifact = sum(is.nan(MFN_0_100_FCz)) / length(participant_id) * 100,
    ) %>%
-  group_by(group) %>%
+  dplyr::group_by(group) %>%
   # Calculate M and SD of the variables
   dplyr::summarize(across(-c(participant_id, session), list(mean,sd,min,max)))
 
@@ -175,20 +177,38 @@ my_table_template(excluded_trials,
 
 
 # Detect performance outliers (accuracy deviates more than 2/3 SD below/above group mean per condition)
+library(plyr)
 performance_outliers <- df_aggregated_per_subject_accuracy %>% 
   dplyr::group_by(participant_id, stimulation, stimulus_type, group) %>%
-  mutate(outlier_2_sd_above = ifelse(abs(accuracy_numeric)>mean(accuracy_numeric)+2*sd(accuracy_numeric), TRUE, FALSE),
-         outlier_3_sd_above = ifelse(abs(accuracy_numeric)>mean(accuracy_numeric)+3*sd(accuracy_numeric), TRUE, FALSE),
-         outlier_2_sd_below = ifelse(abs(accuracy_numeric)<mean(accuracy_numeric)-2*sd(accuracy_numeric), TRUE, FALSE),
-         outlier_3_sd_below = ifelse(abs(accuracy_numeric)<mean(accuracy_numeric)-3*sd(accuracy_numeric), TRUE, FALSE)) %>%
+  plyr::mutate(outlier_2_sd_above = ifelse(abs(accuracy_numeric)>mean(accuracy_numeric)+2*sd(accuracy_numeric), TRUE, FALSE),
+               outlier_3_sd_above = ifelse(abs(accuracy_numeric)>mean(accuracy_numeric)+3*sd(accuracy_numeric), TRUE, FALSE),
+               outlier_2_sd_below = ifelse(abs(accuracy_numeric)<mean(accuracy_numeric)-2*sd(accuracy_numeric), TRUE, FALSE),
+               outlier_3_sd_below = ifelse(abs(accuracy_numeric)<mean(accuracy_numeric)-3*sd(accuracy_numeric), TRUE, FALSE)) %>%
   dplyr::filter(outlier_2_sd_above == TRUE | outlier_2_sd_below == TRUE )
 
 
 # Display performance outliers
 my_table_template(performance_outliers, caption = "Performance outliers (accuracy > 2/3 SD below/above group mean per condition (stimulus type x stimulation))")
 ```
-For some participants, accuracy in the task is more than 2 or even 3 SD below the group mean per condition (stimulus type x stimulation). But their accuracy is still quite good, so these will not be excluded. Being an outlier in task performance is also no exclusion criterion specified in the preregistration. 
+For some participants, accuracy in the task is more than 2 SD (N = 7) or even 3 SD (N = 2) below the group mean per condition (stimulus type x stimulation). But their accuracy is still quite good, so these will not be excluded. Being an outlier in task performance is also no exclusion criterion specified in the preregistration. 
 <br><br>
+
+```{r feedback}
+
+# Create contingency table
+feedback_contingency <- table(feedback_infos$feedback, feedback_infos$group)
+
+
+# Display contingency table
+my_table_template(feedback_contingency, caption = "Feedback in the task", row_names = TRUE)
+
+
+# Calculate Chi-squared test
+chisq.test(feedback_infos$feedback, feedback_infos$group)
+```
+The groups differ in the feedback they received.
+<br><br>
+
 
 ## Data Inspection {.tabset}
 ***
@@ -230,7 +250,7 @@ qqplot_rt_log <- ggplot(single_trial_data_clean, aes(sample = rt_log)) +
 
 
 # Plot distribution PES
-hist_pes <- ggplot(single_trial_data_clean, aes(x = pes)) +
+hist_pes <- ggplot(single_trial_data_clean[!is.na(single_trial_data_clean$pes),], aes(x = pes)) +
   geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
   stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$pes, na.rm = TRUE), 
                                      sd = sd(single_trial_data_clean$pes, na.rm = TRUE)), color = "black", size = 0.5) +
@@ -238,16 +258,16 @@ hist_pes <- ggplot(single_trial_data_clean, aes(x = pes)) +
   labs (title = "Histogram PES", x = "PES", y = "Density") + 
   my_figure_theme
 
-qqplot_pes <- ggplot(single_trial_data_clean, aes(sample = pes)) +
+qqplot_pes <- ggplot(single_trial_data_clean[!is.na(single_trial_data_clean$pes),], aes(sample = pes)) +
   stat_qq(color = "#8ea6b4") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot PES", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
   my_figure_theme
 
 
-## For accuracy, post-error and post-correct accuracy we need the aggregated values as only for those we can make a histogram 7 q-q plot (to check normality for ANOVA)
+## For accuracy, post-error and post-correct accuracy we need the aggregated values as only for those we can make a histogram / q-q plot (to check normality for ANOVA)
 accuracy_aggregated <- single_trial_data_clean %>%
-  group_by(participant_id, session) %>%
+  dplyr::group_by(participant_id, session) %>%
   dplyr::summarize(
     mean_accuracy = sum(accuracy_numeric) / length(participant_id) * 100,
     mean_pea      = sum(pea, na.rm = TRUE) / length(participant_id[!is.na(pea)]) * 100,
@@ -789,11 +809,11 @@ plot_pes_session <- ggplot() +
 # Create plot PEA
 plot_pea_session <- ggplot() +
   geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pea, fill = group), outlier.size =0.3)+
-  geom_point(data = descriptive_statistics_pea_no_session, aes(x = stimulation, y = pea, colour = group), 
+  geom_point(data = descriptive_statistics_pea, aes(x = stimulation, y = pea, colour = group), 
              position = position_dodge(width = 0.7), shape = 15, size = 1) +
-  geom_errorbar(data = descriptive_statistics_pea_no_session, aes(x = stimulation, ymax = pea + ci, ymin = pea - ci, colour = group),
+  geom_errorbar(data = descriptive_statistics_pea, aes(x = stimulation, ymax = pea + ci, ymin = pea - ci, colour = group),
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
-  geom_line(data = descriptive_statistics_pea_no_session, aes(x = stimulation, y = pea, group = group, color = group), 
+  geom_line(data = descriptive_statistics_pea, aes(x = stimulation, y = pea, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
   scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
@@ -871,7 +891,7 @@ I thought about including session as fixed effect. But this was not stated in pr
 
 **Random effects**
 
-Participants were specified as random factors. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants, as well as random slopes for all main effects and interactions specified as fixed effects. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).
+Participants were specified as random factors. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants, as well as random slopes for all main effects and interactions specified as fixed effects that were justified by the design. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).
 
 ```{r RT-accuracy-(G)LMM-contrast-coding}
 
@@ -913,7 +933,7 @@ I thought about whether I should exclude congruent errors from this RT analysis 
 
 * I thought about whether the effect of stimulus type could confound effect of response type, as errors are mostly incongruent whereas correct responses are half/half? But actually, when factors are included, I control for the effect of stimulus type for the effect of response type, don't I?! 
 
-For aggregation-based ANOVAs, I will excluded congruent errors.
+For the aggregation-based ANOVA on RT, I will excluded congruent errors.
 
 ```{r LMM-RT, cache = knitr_cache_enabled}
 
@@ -1167,21 +1187,21 @@ single_trial_data_anova <- single_trial_data_clean %>%
 
 # Get data in correct format for ANOVAs (aggregate within participants per condition)
 data_anova_rt <- single_trial_data_anova %>%
-  group_by(participant_id, stimulation, group, condition) %>%
+  dplyr::group_by(participant_id, stimulation, group, condition) %>%
   dplyr::summarize(
     rt_log = mean(rt_log, na.rm = TRUE)
   )
 
 
 data_anova_pes <- single_trial_data_clean[!is.na(single_trial_data_clean$pes),] %>%
-  group_by(participant_id, stimulation, group) %>%
+  dplyr::group_by(participant_id, stimulation, group) %>%
   dplyr::summarize(
     pes = mean(pes)
   )
 
 
 data_anova_accuracy <- single_trial_data_clean %>%
-  group_by(participant_id, stimulation, group, stimulus_type, accuracy_prev_trial) %>%
+  dplyr::group_by(participant_id, stimulation, group, stimulus_type, accuracy_prev_trial) %>%
   dplyr::summarize(
     percentage_correct_responses = sum(accuracy_numeric) / length(participant_id) * 100
   )
@@ -1317,4 +1337,5 @@ do.call(rbind, lapply(residuals_anova_accuracy[,], function(x) shapiro.test(x)["
 
 * **Assumption #4: Residuals** of the dependent variable in each level of the within-subjects factor are approximately **normally distributed -> NOT OK** (see above; but for RT and PES only small deviation)**
 
-* **Assumption #5: Sphericity** (only relevant for withlin-subject factors with > 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is ok**
+* **Assumption #5: Sphericity** (only relevant for withlin-subject factors with > 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is OK**
+<br><br>
