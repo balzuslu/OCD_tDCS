@@ -98,7 +98,7 @@ single_trial_data_clean$response_type       <- as.factor(single_trial_data_clean
 
 # Calculate aggregated data per subject for boxplots, ANOVAs, t tests, and outlier detection
 df_aggregated_per_subject_MFN <- single_trial_data_clean %>%
-  group_by(participant_id, group, response_type, stimulation, session) %>%
+  dplyr::group_by(participant_id, group, response_type, stimulation, session) %>%
   dplyr::summarize(
     MFN = mean(MFN_0_100_FCz, na.rm = TRUE)
    ) 
@@ -110,13 +110,13 @@ Trials were excluded from all analyses if RT was shorter than 100 ms or longer t
 
 # Calculate percentage of excluded trials
 excluded_trials <- single_trial_data %>%
-  group_by(group, participant_id, session) %>%
+  dplyr::group_by(group, participant_id, session) %>%
   dplyr::summarize(
     invalid_rt   = sum(!is.na(rt_invalid) & rt_invalid != FALSE) / length(participant_id) * 100,
     misses       = sum(response_type == "miss") / length(participant_id) * 100,
     EEG_artifact = sum(is.nan(MFN_0_100_FCz)) / length(participant_id) * 100
    ) %>%
-  group_by(group) %>%
+  dplyr::group_by(group) %>%
   # Calculate M and SD of the variables
   dplyr::summarize(across(-c(participant_id, session), list(mean,sd,min,max)))
 
@@ -130,12 +130,13 @@ my_table_template(excluded_trials,
 
 
 # Detect ERP outliers (ERP deviates more than 2/3 SD below/above group mean per condition)
+library(plyr)
 ERP_outliers <- df_aggregated_per_subject_MFN %>% 
   dplyr::group_by(participant_id, stimulation, group, response_type) %>%
-  mutate(outlier_2_sd_above = ifelse(abs(MFN)>mean(MFN)+2*sd(MFN), TRUE, FALSE),
-         outlier_3_sd_above = ifelse(abs(MFN)>mean(MFN)+3*sd(MFN), TRUE, FALSE),
-         outlier_2_sd_below = ifelse(abs(MFN)<mean(MFN)-2*sd(MFN), TRUE, FALSE),
-         outlier_3_sd_below = ifelse(abs(MFN)<mean(MFN)-3*sd(MFN), TRUE, FALSE)) %>%
+  plyr::mutate(outlier_2_sd_above = ifelse(abs(MFN)>mean(MFN)+2*sd(MFN), TRUE, FALSE),
+               outlier_3_sd_above = ifelse(abs(MFN)>mean(MFN)+3*sd(MFN), TRUE, FALSE),
+               outlier_2_sd_below = ifelse(abs(MFN)<mean(MFN)-2*sd(MFN), TRUE, FALSE),
+               outlier_3_sd_below = ifelse(abs(MFN)<mean(MFN)-3*sd(MFN), TRUE, FALSE)) %>%
   dplyr::filter(outlier_2_sd_above == TRUE | outlier_2_sd_below == TRUE)
 
 
@@ -292,7 +293,7 @@ invisible(capture.output(split_half_reliability <- splithalf(data = single_trial
 my_table_template(split_half_reliability$final_estimates)
 
 ```
-The internal consitency of ERN (and CRN) was estimated using a permutation-based split-half approach (Parsons 2020) with 5000 random splits. The (Spearman-Brown corrected) splithalf internal consistency of ERN and CRN are excellent. The columns SB_low and SB_high represent 95% confience intervall limits. The spearman-brown corrected reliability estimate for the ERN was .95, 95% CI [.93, .97].
+The internal consitency of ERN and CRN was estimated using a permutation-based split-half approach (Parsons 2020) with 5000 random splits. The (Spearman-Brown corrected) split-half internal consistency of ERN and CRN are excellent. The columns SB_low and SB_high represent 95% confience intervall limits. The spearman-brown corrected reliability estimate for the ERN was .95, 95% CI [.93, .97], for CRN 1, 95% CI [.99, 1].
 <br><br>
 
 ## Descriptive Statistics {.tabset}
@@ -351,7 +352,7 @@ descriptive_statistics_MFN_no_session <- summarySEwithinO(
 
 ### Raincloud plot {.active}
 
-```{r raincloud-plot, fig.width = 10, fig.height = 6, fig.cap = "Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of response type, stimulation condition, and group. Means and 95% confidence intervals were calculated based on single-trial data. Boxplots and violin plots are based on data aggregated by subject. CIs are adjusted for within-participant designs as described by Morey (2008)."}
+```{r raincloud-plot, fig.width = 10, fig.height = 6, fig.cap = "Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of response type, stimulation condition, and group. Means and 95% confidence intervals (= lines at violin plot bottom) were calculated based on single-trial data. Boxplots and violin plots are based on data aggregated by subject. CIs are adjusted for within-participant designs as described by Morey (2008)."}
 
 
 # define facet labels
@@ -362,7 +363,7 @@ names(response_type.labs) <- c("correct", "incorrect")
 # From JB: "Raincloud plots (Allen et al., 2019) show means and 95% CIs calculated with the summarySEwithin function (Morey, 2008) on single trial data, and points, and distributions for data aggregated by subject"
 
 # Create raincloud plot MFN 
-figure_MFN_raincloud <- ggplot() +
+plot_MFN_raincloud <- ggplot() +
   # Add aggregated distribution, boxplot and data points
   geom_flat_violin(data = df_aggregated_per_subject_MFN, aes(x = stimulation, y = MFN, fill = group), position = position_nudge(x = .1, y = 0), 
                    adjust = 1.5, trim = FALSE, alpha = .5, colour = NA)+
@@ -388,7 +389,7 @@ figure_MFN_raincloud <- ggplot() +
 
 
 # Display plot
-figure_MFN_raincloud
+plot_MFN_raincloud
 ```
 <br><br>
 
@@ -450,7 +451,7 @@ plot_MFN_session
 ```  
 <br><br>
 
-## LMM Analyses {.tabset}
+## LMM Analyses
 ***
 
 MFN/ERN/CRN were modeled using a linear mixed-effects models (LMMs). <br><br>
@@ -462,7 +463,7 @@ MFN/ERN/CRN were modeled using a linear mixed-effects models (LMMs). <br><br>
 
 **Random effects**
 
-Participants were specified as random factors. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants, as well as random slopes for all main effects and interactions specified as fixed effects. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).
+Participants were specified as random factors. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure  that was justified by the design, including random intercepts for participants, as well as random slopes for all main effects and interactions specified as fixed effects. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).
 
 ```{r MFN-LMM-contrast-coding}
 
@@ -569,14 +570,14 @@ performance::check_normality(LMM_MFN, effects = "random")
     + Written output says this is (mostly) ok 
 <br><br>
 
-### LMM separately for ERN / CRN {.tabset}
+### LMM for ERN / CRN {.tabset}
 
 #### Model
 
 ```{r LMM-ERN-CRN, cache = knitr_cache_enabled}
 
 # ERN
-LMM_ERN <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC  +
+LMM_ERN <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC  + 
   (1 + verum_sham | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
@@ -625,7 +626,7 @@ tab_model(LMM_CRN,
 )
 ```
 <br><br>
-There is a trend for a higher ERN in OCD compared to HC (p = 0.54) [NOTE: with REML = FALSE in the model, p = 0.049862]. There also is a trend for a higher CRN in OCD compared to HC (p = 0.068). For CRN, there is an effect of stimulation, with smaller (i.e., less neg.) CRN in the verum stimulation compared to the sham condition. 
+There is a trend for a higher ERN in OCD compared to HC (p = 0.54) [NOTE: with REML = FALSE in the model, p = 0.049862]. There also is a trend for a higher CRN in OCD compared to HC (p = 0.068). For CRN, there is an effect of stimulation, with smaller (i.e., less negative) CRN in the verum stimulation compared to the sham condition. 
 <br><br>
 
 #### Assumption checks ERN model
@@ -670,7 +671,7 @@ performance::check_normality(LMM_CRN, effects = "random")
 Notes for assumption check would be the same as written for the MFN model.
 <br><br>
 
-### LMM separately for ERN / CRN, stimulation effect nested in groups {.tabset}
+### LMM for ERN / CRN (nested) {.tabset}
 
 #### Model
 
@@ -723,7 +724,7 @@ Is same as in non-nested models (tab LMM separately for ERN / CRN)
 
 ### ANOVAs
 
-To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), MFN/ERN/CRN were additionally analyzed with repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), and (only for MRN) response type (correct, incorrect). No  Greenhouse–Geisser correction was applied, as no factor had more than two levels. As can be seen below, the ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all effects. The group difference in ERN magnitude emerged in the LMMs as a statistical trend only (p = .056), in the ANOVA it is significant (p = .048). 
+To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), MFN/ERN/CRN were additionally analyzed with repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), and (only for MRN) response type (correct, incorrect). No  Greenhouse–Geisser correction was applied, as no factor had more than two levels. As can be seen below, the ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all effects. The group difference in ERN magnitude emerged in the LMMs as a statistical trend only (p = .054), in the ANOVA it is significant (p = .048). 
 
 ```{r ANOVAs}
 
@@ -774,7 +775,7 @@ my_table_template(nice(anova_CRN, MSE = FALSE), caption = "CRN")
 
 ### Pairwise comparisons
 
-As no significant main effect with > 2 levels or interaction effect was present, no post hoc pairwise comparisons are conducted. However, the stimulation effect on ERN in the separate groups may be seen as pre-planned contrast that we want to test. For these effects, I calculated two-tailed paired *t* tests with Holm–Bonferroni *p* value adjustments. There is still no stimulation effect on ERN in the two groups. The effect on CRN is present in the OCD group. In the sham condition, the CRN is higher (more negative) in the OCD group; in the verum condition there is no evidence for such group difference anymore.
+As no significant main effect with > 2 levels or interaction effect was present, no post hoc pairwise comparisons would need to be conducted. However, the stimulation effect on ERN in the separate groups may be seen as pre-planned contrast that we want to test. For these effects, I calculated two-tailed paired *t* tests with Holm–Bonferroni *p* value adjustments. There is still no stimulation effect on ERN in the two groups. The effect on CRN is present in the OCD group. In the sham condition, the CRN is higher (more negative) in the OCD group; in the verum condition there is no evidence for such group difference anymore.
 
 ```{r ANOVAs-pairwise-tests}
 
@@ -814,31 +815,35 @@ my_table_template(pairwise_CRN_2,
 ```
 ### Simple t tests
 
-Same results as with pairwise comparisons via emmeans and p value adjustment: There is still no stimulation effect on ERN in the two groups. The effect on CRN is present in the OCD group. 
+Same results as with pairwise comparisons via emmeans and p value adjustment: There is still no stimulation effect on ERN in the two groups. The effect on CRN is present in the OCD group. Note that here the p values are not adjusted for multiple comparisons yet.
 
 ```{r t-tests}
 
 # Stimulation effect on ERN in OCD -> n.s.
 ERN_OCD <- t.test(MFN ~ stimulation,
-                  data=df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$group == "OCD" & df_aggregated_per_subject_MFN$response_type == "incorrect",],
+                  data=df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$group == "OCD" & 
+                                                     df_aggregated_per_subject_MFN$response_type == "incorrect",],
                   paired=TRUE)
 
 
 # Stimulation effect on ERN in HC -> n.s.
 ERN_HC <- t.test(MFN ~ stimulation,
-                 data=df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$group == "HC" & df_aggregated_per_subject_MFN$response_type == "incorrect",],
+                 data=df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$group == "HC" & 
+                                                    df_aggregated_per_subject_MFN$response_type == "incorrect",],
                  paired=TRUE)
 
 
 # Stimulation effect on CRN in OCD -> sign. 
 CRN_OCD <- t.test(MFN ~ stimulation,
-                  data=df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$group == "OCD" & df_aggregated_per_subject_MFN$response_type == "correct",],
+                  data=df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$group == "OCD" & 
+                                                     df_aggregated_per_subject_MFN$response_type == "correct",],
                   paired=TRUE)
 
 
 # Stimulation effect on CRN in HC -> n.s. 
 CRN_HC <- t.test(MFN ~ stimulation,
-                 data=df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$group == "HC" & df_aggregated_per_subject_MFN$response_type == "correct",],
+                 data=df_aggregated_per_subject_MFN[df_aggregated_per_subject_MFN$group == "HC" & 
+                                                    df_aggregated_per_subject_MFN$response_type == "correct",],
                  paired=TRUE)
 
 
@@ -915,7 +920,7 @@ do.call(rbind, lapply(residuals_anova_CRN[,], function(x) shapiro.test(x)["p.val
 
 * **Assumption #4: Residuals** of the dependent variable in each level of the within-subjects factor are approximately **normally distributed -> Is OK** (see above; for incorrect verum condition only small deviation)**
 
-* **Assumption #5: Sphericity** (only relevant for withlin-subject factors with > 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is ok**
+* **Assumption #5: Sphericity** (only relevant for withlin-subject factors with > 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is OK**
 
 <br><br>
 
