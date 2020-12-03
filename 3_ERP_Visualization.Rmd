@@ -30,7 +30,7 @@ knitr_cache_enabled = TRUE
 library(dplyr)      # for data manipulation
 library(ggplot2)    # for plotting
 library(cowplot)    # for arranging plots
-library(purrr)   # for calculate within-subject CIs for ERP trajectories
+library(purrr)      # for calculate within-subject CIs for ERP trajectories
 
 
 # Load functions
@@ -184,7 +184,7 @@ plot_per_participant_OCD
 
 ### ERPs as a function of group and stimulation {.active}
 
-```{r plot-group-by-stimulation, fig.height = 10, fig.width = 10, fig.cap = "Note. Response-locked ERP trajectories (mean amplitude at FCz from 0 to 100 ms) as a function of (A) stimulation by group and (B) group by stimulation. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008)."}
+```{r plot-group-by-stimulation, fig.height = 10, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP trajectories (mean amplitude at FCz from 0 to 100 ms) as a function of (A) stimulation by group and (B) group by stimulation. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008)."}
 
 # Calculate running within-subject CIs
 running_CIs_group_stim <- resp_locked_data %>%
