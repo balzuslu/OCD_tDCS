@@ -17,6 +17,9 @@ navbar:
     - text: "ERP Visualization"
       icon: glyphicon glyphicon-flash
       href: 3_ERP_Visualization.html
+    - text: "Trait Variables"
+      icon: glyphicon glyphicon-user
+      href: 4_Trait_Variables.html
   right:
     - icon: fa-envelope fa-lg
       href: mailto:luisa.balzus@hu-berlin.de
