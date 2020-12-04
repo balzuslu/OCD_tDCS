@@ -87,6 +87,17 @@ single_trial_data <- single_trial_data %>%
                  ifelse(lag(response_type == "correct") == TRUE & response_type == "incorrect", 0, NA))
     ) 
 
+# For each first trial in a block, accuracy_prev_trial cannot be determined; set these values to NA
+single_trial_data[single_trial_data$trial == 1   | single_trial_data$trial == 81 |
+                  single_trial_data$trial == 161 | single_trial_data$trial == 241| 
+                  single_trial_data$trial == 321 | single_trial_data$trial == 401, "accuracy_prev_trial"] <- NA
+
+
+# For each last trial in a block, pea and pca cannot be determined; set these values to NA
+single_trial_data[single_trial_data$trial == 80  | single_trial_data$trial == 160|
+                  single_trial_data$trial == 240 | single_trial_data$trial == 320| 
+                  single_trial_data$trial == 400 | single_trial_data$trial == 480, c("pea", "pca")] <- NA
+
 
 # Exclude missing responses, RT outliers and trials with ERP artifacts
 single_trial_data_clean <- single_trial_data %>%
@@ -118,6 +129,15 @@ for (i in 3:(nrow(single_trial_data_clean)-1)) {
 }
 
 
+# For each last first and trial in a block, PES cannot be determined; set these values to NA
+single_trial_data_clean[single_trial_data_clean$trial == 80  | single_trial_data_clean$trial ==81  |
+                        single_trial_data_clean$trial == 160 | single_trial_data_clean$trial == 161| 
+                        single_trial_data_clean$trial == 240 | single_trial_data_clean$trial == 241|
+                        single_trial_data_clean$trial == 320 | single_trial_data_clean$trial == 321|
+                        single_trial_data_clean$trial == 400 | single_trial_data_clean$trial == 401| 
+                        single_trial_data_clean$trial == 480, "pes"] <- NA
+
+
 # Make categorical variables factors
 single_trial_data_clean$participant_id      <- as.factor(single_trial_data_clean$participant_id) 
 single_trial_data_clean$group               <- as.factor(single_trial_data_clean$group)
@@ -129,7 +149,7 @@ single_trial_data_clean$response_type_2nd   <- as.factor(single_trial_data_clean
 single_trial_data_clean$accuracy_prev_trial <- as.factor(single_trial_data_clean$accuracy_prev_trial)
 
 
-# Calculate aggregated data per subject for boxplots and outlier detection
+# Calculate aggregated data per subject for boxplots,  outlier detection, and ANOVAs
 df_aggregated_per_subject_rt <- single_trial_data_clean %>%
   dplyr::group_by(participant_id, group, response_type, stimulus_type, stimulation, session) %>%
   dplyr::summarize(
@@ -151,30 +171,9 @@ df_aggregated_per_subject_pes_pea_pca <- single_trial_data_clean %>%
   ) 
 ```
 
-Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch. 
+Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch. Please see section "ERP Analysis" for percentage of excluded trials. 
 
-```{r excluded-trials}
-
-# Calculate percentage of excluded trials
-excluded_trials <- single_trial_data %>%
-  dplyr::group_by(group, participant_id, session) %>%
-  dplyr::summarize(
-    invalid_rt   = sum(!is.na(rt_invalid) & rt_invalid != FALSE) / length(participant_id) * 100,
-    misses       = sum(response_type == "miss") / length(participant_id) * 100,
-    EEG_artifact = sum(is.nan(MFN_0_100_FCz)) / length(participant_id) * 100,
-   ) %>%
-  dplyr::group_by(group) %>%
-  # Calculate M and SD of the variables
-  dplyr::summarize(across(-c(participant_id, session), list(mean,sd,min,max)))
-
-
-# Display percentage of excluded trials
-my_table_template(excluded_trials,
-  caption = "Excluded Trials (in %)", 
-  col_names = c("Group", "M", "SD", "min", "max", "M", "SD", "min", "max", "M", "SD", "min", "max"),
-  header_above_config = c(" " = 1, "RT < 100 / > 800 ms" = 4, "Misses" = 4, "EEG artifact" = 4)
-)
-
+```{r performance-outliers}
 
 # Detect performance outliers (accuracy deviates more than 2/3 SD below/above group mean per condition)
 library(plyr)
@@ -206,7 +205,7 @@ my_table_template(feedback_contingency, caption = "Feedback in the task", row_na
 # Calculate Chi-squared test
 chisq.test(feedback_infos$feedback, feedback_infos$group)
 ```
-The groups differ in the feedback they received.
+The groups differ in the feedback they received.The OCD group received more feedback emphasizing speed. 
 <br><br>
 
 
@@ -265,25 +264,20 @@ qqplot_pes <- ggplot(single_trial_data_clean[!is.na(single_trial_data_clean$pes)
   my_figure_theme
 
 
-## For accuracy, post-error and post-correct accuracy we need the aggregated values as only for those we can make a histogram / q-q plot (to check normality for ANOVA)
-accuracy_aggregated <- single_trial_data_clean %>%
+# Plot distribution accuracy (we first need the values aggregated per session and participant)
+accuracy_histogram <- single_trial_data_clean %>%
   dplyr::group_by(participant_id, session) %>%
-  dplyr::summarize(
-    mean_accuracy = sum(accuracy_numeric) / length(participant_id) * 100,
-    mean_pea      = sum(pea, na.rm = TRUE) / length(participant_id[!is.na(pea)]) * 100,
-    mean_pca      = sum(pca, na.rm = TRUE) / length(participant_id[!is.na(pca)]) * 100)
+  dplyr::summarize(mean_accuracy = sum(accuracy_numeric) / length(participant_id) * 100)
 
-
-# Plot distribution accuracy 
-hist_accuracy <- ggplot(accuracy_aggregated, aes(x = mean_accuracy)) +
+hist_accuracy <- ggplot(accuracy_histogram, aes(x = mean_accuracy)) +
   geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
-  stat_function(fun = dnorm, args = list(mean = mean(accuracy_aggregated$mean_accuracy, na.rm = TRUE), 
-                                     sd = sd(accuracy_aggregated$mean_accuracy, na.rm = TRUE)), color = "black", size = 0.5) +
+  stat_function(fun = dnorm, args = list(mean = mean(accuracy_histogram$mean_accuracy, na.rm = TRUE), 
+                                     sd = sd(accuracy_histogram$mean_accuracy, na.rm = TRUE)), color = "black", size = 0.5) +
   geom_vline(aes(xintercept = mean(mean_accuracy, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
   labs (title = "Histogram Mean Accuracy", x = "Mean Accuracy", y = "Density") + 
   my_figure_theme
 
-qqplot_accuracy <- ggplot(accuracy_aggregated, aes(sample = mean_accuracy)) +
+qqplot_accuracy <- ggplot(accuracy_histogram, aes(sample = mean_accuracy)) +
   stat_qq(color = "#8ea6b4") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot Accuracy", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
@@ -291,15 +285,15 @@ qqplot_accuracy <- ggplot(accuracy_aggregated, aes(sample = mean_accuracy)) +
 
 
 # Plot distribution PEA 
-hist_pea <- ggplot(accuracy_aggregated, aes(x = mean_pea)) +
+hist_pea <- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(x = pea)) +
   geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
-  stat_function(fun = dnorm, args = list(mean = mean(accuracy_aggregated$mean_pea, na.rm = TRUE), 
-                                     sd = sd(accuracy_aggregated$mean_pea, na.rm = TRUE)), color = "black", size = 0.5) +
-  geom_vline(aes(xintercept = mean(mean_pea, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
+  stat_function(fun = dnorm, args = list(mean = mean(df_aggregated_per_subject_pes_pea_pca$pea, na.rm = TRUE), 
+                                     sd = sd(df_aggregated_per_subject_pes_pea_pca$pea, na.rm = TRUE)), color = "black", size = 0.5) +
+  geom_vline(aes(xintercept = mean(pea, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
   labs (title = "Histogram Mean Post-Error Accuracy", x = "Post-Error Accuracy", y = "Density") + 
   my_figure_theme
 
-qqplot_pea <- ggplot(accuracy_aggregated, aes(sample = mean_pea)) +
+qqplot_pea <- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(sample = pea)) +
   stat_qq(color = "#8ea6b4") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot Mean Post-Error Accuracy", x = "Theoretical Quantiles", y = "Sample Quantiles") +
@@ -307,15 +301,15 @@ qqplot_pea <- ggplot(accuracy_aggregated, aes(sample = mean_pea)) +
 
 
 # Plot distribution PCA 
-hist_pca <- ggplot(accuracy_aggregated, aes(x = mean_pca)) +
+hist_pca <- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(x = pca)) +
   geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
-  stat_function(fun = dnorm, args = list(mean = mean(accuracy_aggregated$mean_pca, na.rm = TRUE), 
-                                     sd = sd(accuracy_aggregated$mean_pca, na.rm = TRUE)), color = "black", size = 0.5) +
-  geom_vline(aes(xintercept = mean(mean_pca, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
+  stat_function(fun = dnorm, args = list(mean = mean(df_aggregated_per_subject_pes_pea_pca$pca, na.rm = TRUE), 
+                                     sd = sd(df_aggregated_per_subject_pes_pea_pca$pca, na.rm = TRUE)), color = "black", size = 0.5) +
+  geom_vline(aes(xintercept = mean(pca, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
   labs (title = "Histogram Mean Post-Correct Accuracy", x = "Post-Correct Accuracy", y = "Density") + 
   my_figure_theme
 
-qqplot_pca <- ggplot(accuracy_aggregated, aes(sample = mean_pca)) +
+qqplot_pca <- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(sample = pca)) +
   stat_qq(color = "#8ea6b4") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot Mean Post-Correct Accuracy", x = "Theoretical Quantiles", y = "Sample Quantiles") +
@@ -905,15 +899,15 @@ contrasts(single_trial_data_clean$session)             <- contr.sdif(2)
 
 
 # Add contrasts as numerical covariates via model matrix* (specify all possible contasts for now)
-model_matrix <- model.matrix(~ stimulation * (group + response_type + stimulus_type + accuracy_prev_trial), single_trial_data_clean)
+model_matrix <- model.matrix(~ stimulation * (group + response_type + stimulus_type), single_trial_data_clean)
 
 
-# Attach the model matrix (10 columns) to the dataframe
-single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 10)] <- model_matrix
+# Attach the model matrix (8 columns) to the dataframe
+single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 8)] <- model_matrix
 
 
 # Assign descriptive names to the contrasts
-names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 9):ncol(single_trial_data_clean)] <- c("Grand Mean", "verum_sham", "OCD_HC", "incorrect_correct", "incongruent_congruent", "prev_trial_incorrect_correct", "verum_sham:OCD_HC", "verum_sham:incorrect_correct", "verum_sham:incongruent_congruent", "verum_sham:prev_trial_incorrect_correct")
+names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 7):ncol(single_trial_data_clean)] <- c("Grand Mean", "verum_sham", "OCD_HC", "incorrect_correct", "incongruent_congruent", "verum_sham:OCD_HC", "verum_sham:incorrect_correct", "verum_sham:incongruent_congruent")
 
 
 # *Note: For the random effects, we needed to enter the separate random effect terms in the models to enable
@@ -1099,12 +1093,13 @@ performance::check_normality(LMM_pes, effects = "random")
 
 #### GLMM
 
-I included the factor *accuracy of previous trial* in the model, to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered. (If preferred, I could also first run the preregistered model with only stimulation, group and stimulus type as fixed factors and then a second model, including additionally the factor *accuracy of previous trial*)
+I included the factor *accuracy of previous trial* in the model, to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered. (If preferred, I could also first run the preregistered model with only stimulation, group and stimulus type as fixed factors and then a second model, including additionally the factor *accuracy of previous trial*. This approach would also allow using all trials for the basic accuracy model, as when including the factor , I automatically lose all trials from the calculation at the start of a new task block, that have NA for the variable *accuracy of previous trial*. But the results remain the same, independent of whether I run the model with all trials or the subset). I did not add *accuracy of previous trial* as random effect here.Doing so would require specifying the model matrix separately for the subset of data where *accuracy of previous trial* is not NA.When not having this factor as random effect, the model allows having correlated random effect terms. This model also shows a trend for an interaction between stimulation and group, which before was not present. But following up this interaction does not yield an effect of stimulation in any of the groups (also not specifically in the incongruent condition, which seems (according to the plot) that the OCD group has lower accuracy to incongruent trials in the verum than in the sham condition). 
 
 ```{r GLMM-accuracy, cache = knitr_cache_enabled}
-# Run model with maximal random-effects structure (model with correlations failed to converge)
-GLMM_accuracy <- glmer(accuracy_numeric ~ verum_sham * (OCD_HC + incongruent_congruent + prev_trial_incorrect_correct) +
-  (1 + incongruent_congruent + verum_sham + prev_trial_incorrect_correct + verum_sham:incongruent_congruent + verum_sham:prev_trial_incorrect_correct  || participant_id),
+
+# Run model with maximal random-effects structure
+GLMM_accuracy <- glmer(accuracy_numeric ~ verum_sham * (OCD_HC + incongruent_congruent + accuracy_prev_trial) +
+  (1 + incongruent_congruent + verum_sham + verum_sham:incongruent_congruent  | participant_id),
 data = single_trial_data_clean,
 family = binomial,
 control = glmerControl(optimizer = "bobyqa")
@@ -1174,19 +1169,16 @@ To facilitate comparison with previously reported results obtained using a simil
 # also checks sphericity assumptions and automatically corrects for any violations if necessary.
 
 
-# For RT, exclude congruent errors by creating factor with 3 levels (correct congruent, correct incongruent, incorrect incongruent)
-single_trial_data_anova <- single_trial_data_clean %>%
+# Get data in correct format for ANOVAs (aggregate within participants per condition)
+data_anova_rt <- single_trial_data_clean %>%
+  # for RT exclude congruent errors -> use factor with 3 levels (correct congr., correct incongr., incorrect incongr.)
   dplyr::filter(
     condition != "congruent_incorrect"
     ) %>%
-# Adjust number of factor levels
- dplyr::mutate(
-   condition = as.factor(condition)
-   ) 
-
-
-# Get data in correct format for ANOVAs (aggregate within participants per condition)
-data_anova_rt <- single_trial_data_anova %>%
+  # Adjust number of factor levels
+  dplyr::mutate(
+    condition = as.factor(condition)
+    ) %>%
   dplyr::group_by(participant_id, stimulation, group, condition) %>%
   dplyr::summarize(
     rt_log = mean(rt_log, na.rm = TRUE)
@@ -1200,7 +1192,7 @@ data_anova_pes <- single_trial_data_clean[!is.na(single_trial_data_clean$pes),] 
   )
 
 
-data_anova_accuracy <- single_trial_data_clean %>%
+data_anova_accuracy <- single_trial_data_clean[!is.na(single_trial_data_clean$accuracy_prev_trial),] %>%
   dplyr::group_by(participant_id, stimulation, group, stimulus_type, accuracy_prev_trial) %>%
   dplyr::summarize(
     percentage_correct_responses = sum(accuracy_numeric) / length(participant_id) * 100

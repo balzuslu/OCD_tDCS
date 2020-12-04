@@ -459,6 +459,17 @@ single_trial_data &lt;- single_trial_data %&gt;%
                  ifelse(lag(response_type == &quot;correct&quot;) == TRUE &amp; response_type == &quot;incorrect&quot;, 0, NA))
     ) 
 
+# For each first trial in a block, accuracy_prev_trial cannot be determined; set these values to NA
+single_trial_data[single_trial_data$trial == 1   | single_trial_data$trial == 81 |
+                  single_trial_data$trial == 161 | single_trial_data$trial == 241| 
+                  single_trial_data$trial == 321 | single_trial_data$trial == 401, &quot;accuracy_prev_trial&quot;] &lt;- NA
+
+
+# For each last trial in a block, pea and pca cannot be determined; set these values to NA
+single_trial_data[single_trial_data$trial == 80  | single_trial_data$trial == 160|
+                  single_trial_data$trial == 240 | single_trial_data$trial == 320| 
+                  single_trial_data$trial == 400 | single_trial_data$trial == 480, c(&quot;pea&quot;, &quot;pca&quot;)] &lt;- NA
+
 
 # Exclude missing responses, RT outliers and trials with ERP artifacts
 single_trial_data_clean &lt;- single_trial_data %&gt;%
@@ -490,6 +501,15 @@ for (i in 3:(nrow(single_trial_data_clean)-1)) {
 }
 
 
+# For each last first and trial in a block, PES cannot be determined; set these values to NA
+single_trial_data_clean[single_trial_data_clean$trial == 80  | single_trial_data_clean$trial ==81  |
+                        single_trial_data_clean$trial == 160 | single_trial_data_clean$trial == 161| 
+                        single_trial_data_clean$trial == 240 | single_trial_data_clean$trial == 241|
+                        single_trial_data_clean$trial == 320 | single_trial_data_clean$trial == 321|
+                        single_trial_data_clean$trial == 400 | single_trial_data_clean$trial == 401| 
+                        single_trial_data_clean$trial == 480, &quot;pes&quot;] &lt;- NA
+
+
 # Make categorical variables factors
 single_trial_data_clean$participant_id      &lt;- as.factor(single_trial_data_clean$participant_id) 
 single_trial_data_clean$group               &lt;- as.factor(single_trial_data_clean$group)
@@ -501,7 +521,7 @@ single_trial_data_clean$response_type_2nd   &lt;- as.factor(single_trial_data_cl
 single_trial_data_clean$accuracy_prev_trial &lt;- as.factor(single_trial_data_clean$accuracy_prev_trial)
 
 
-# Calculate aggregated data per subject for boxplots and outlier detection
+# Calculate aggregated data per subject for boxplots,  outlier detection, and ANOVAs
 df_aggregated_per_subject_rt &lt;- single_trial_data_clean %&gt;%
   dplyr::group_by(participant_id, group, response_type, stimulus_type, stimulation, session) %&gt;%
   dplyr::summarize(
@@ -521,29 +541,8 @@ df_aggregated_per_subject_pes_pea_pca &lt;- single_trial_data_clean %&gt;%
     pea = mean(pea, na.rm = TRUE)*100,
     pca = mean(pca, na.rm = TRUE)*100
   ) </code></pre>
-<p>Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch.</p>
-<pre class="r"><code># Calculate percentage of excluded trials
-excluded_trials &lt;- single_trial_data %&gt;%
-  dplyr::group_by(group, participant_id, session) %&gt;%
-  dplyr::summarize(
-    invalid_rt   = sum(!is.na(rt_invalid) &amp; rt_invalid != FALSE) / length(participant_id) * 100,
-    misses       = sum(response_type == &quot;miss&quot;) / length(participant_id) * 100,
-    EEG_artifact = sum(is.nan(MFN_0_100_FCz)) / length(participant_id) * 100,
-   ) %&gt;%
-  dplyr::group_by(group) %&gt;%
-  # Calculate M and SD of the variables
-  dplyr::summarize(across(-c(participant_id, session), list(mean,sd,min,max)))
-
-
-# Display percentage of excluded trials
-my_table_template(excluded_trials,
-  caption = &quot;Excluded Trials (in %)&quot;, 
-  col_names = c(&quot;Group&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;min&quot;, &quot;max&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;min&quot;, &quot;max&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;min&quot;, &quot;max&quot;),
-  header_above_config = c(&quot; &quot; = 1, &quot;RT &lt; 100 / &gt; 800 ms&quot; = 4, &quot;Misses&quot; = 4, &quot;EEG artifact&quot; = 4)
-)
-
-
-# Detect performance outliers (accuracy deviates more than 2/3 SD below/above group mean per condition)
+<p>Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch. Please see section “ERP Analysis” for percentage of excluded trials.</p>
+<pre class="r"><code># Detect performance outliers (accuracy deviates more than 2/3 SD below/above group mean per condition)
 library(plyr)
 performance_outliers &lt;- df_aggregated_per_subject_accuracy %&gt;% 
   dplyr::group_by(participant_id, stimulation, stimulus_type, group) %&gt;%
@@ -556,157 +555,6 @@ performance_outliers &lt;- df_aggregated_per_subject_accuracy %&gt;%
 
 # Display performance outliers
 my_table_template(performance_outliers, caption = &quot;Performance outliers (accuracy &gt; 2/3 SD below/above group mean per condition (stimulus type x stimulation))&quot;)</code></pre>
-<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
-<caption style="font-size: initial !important;">
-Excluded Trials (in %)
-</caption>
-<thead>
-<tr>
-<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
-</th>
-<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
-<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
-RT &lt; 100 / &gt; 800 ms
-</div>
-</th>
-<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
-<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
-Misses
-</div>
-</th>
-<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
-<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
-EEG artifact
-</div>
-</th>
-</tr>
-<tr>
-<th style="text-align:left;">
-Group
-</th>
-<th style="text-align:right;">
-M
-</th>
-<th style="text-align:right;">
-SD
-</th>
-<th style="text-align:right;">
-min
-</th>
-<th style="text-align:right;">
-max
-</th>
-<th style="text-align:right;">
-M
-</th>
-<th style="text-align:right;">
-SD
-</th>
-<th style="text-align:right;">
-min
-</th>
-<th style="text-align:right;">
-max
-</th>
-<th style="text-align:right;">
-M
-</th>
-<th style="text-align:right;">
-SD
-</th>
-<th style="text-align:right;">
-min
-</th>
-<th style="text-align:right;">
-max
-</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left;">
-HC
-</td>
-<td style="text-align:right;">
-0.03
-</td>
-<td style="text-align:right;">
-0.10
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-0.42
-</td>
-<td style="text-align:right;">
-0.66
-</td>
-<td style="text-align:right;">
-1.07
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-5.00
-</td>
-<td style="text-align:right;">
-0.29
-</td>
-<td style="text-align:right;">
-0.50
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-2.08
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-OCD
-</td>
-<td style="text-align:right;">
-0.04
-</td>
-<td style="text-align:right;">
-0.11
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-0.62
-</td>
-<td style="text-align:right;">
-0.60
-</td>
-<td style="text-align:right;">
-0.75
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-2.71
-</td>
-<td style="text-align:right;">
-0.84
-</td>
-<td style="text-align:right;">
-1.18
-</td>
-<td style="text-align:right;">
-0
-</td>
-<td style="text-align:right;">
-5.42
-</td>
-</tr>
-</tbody>
-</table>
 <table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
 <caption style="font-size: initial !important;">
 Performance outliers (accuracy &gt; 2/3 SD below/above group mean per condition (stimulus type x stimulation))
@@ -1104,7 +952,7 @@ schneller
 
 data:  feedback_infos$feedback and feedback_infos$group
 X-squared = 10.982, df = 2, p-value = 0.004125</code></pre>
-<p>The groups differ in the feedback they received. <br><br></p>
+<p>The groups differ in the feedback they received.The OCD group received more feedback emphasizing speed. <br><br></p>
 </div>
 <div id="data-inspection" class="section level2 tabset">
 <h2>Data Inspection</h2>
@@ -1159,25 +1007,20 @@ qqplot_pes &lt;- ggplot(single_trial_data_clean[!is.na(single_trial_data_clean$p
   my_figure_theme
 
 
-## For accuracy, post-error and post-correct accuracy we need the aggregated values as only for those we can make a histogram / q-q plot (to check normality for ANOVA)
-accuracy_aggregated &lt;- single_trial_data_clean %&gt;%
+# Plot distribution accuracy (we first need the values aggregated per session and participant)
+accuracy_histogram &lt;- single_trial_data_clean %&gt;%
   dplyr::group_by(participant_id, session) %&gt;%
-  dplyr::summarize(
-    mean_accuracy = sum(accuracy_numeric) / length(participant_id) * 100,
-    mean_pea      = sum(pea, na.rm = TRUE) / length(participant_id[!is.na(pea)]) * 100,
-    mean_pca      = sum(pca, na.rm = TRUE) / length(participant_id[!is.na(pca)]) * 100)
+  dplyr::summarize(mean_accuracy = sum(accuracy_numeric) / length(participant_id) * 100)
 
-
-# Plot distribution accuracy 
-hist_accuracy &lt;- ggplot(accuracy_aggregated, aes(x = mean_accuracy)) +
+hist_accuracy &lt;- ggplot(accuracy_histogram, aes(x = mean_accuracy)) +
   geom_histogram(aes(y = ..density..), color=&quot;gray33&quot;, fill = &quot;#8ea6b4&quot;, size = 1) +
-  stat_function(fun = dnorm, args = list(mean = mean(accuracy_aggregated$mean_accuracy, na.rm = TRUE), 
-                                     sd = sd(accuracy_aggregated$mean_accuracy, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
+  stat_function(fun = dnorm, args = list(mean = mean(accuracy_histogram$mean_accuracy, na.rm = TRUE), 
+                                     sd = sd(accuracy_histogram$mean_accuracy, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
   geom_vline(aes(xintercept = mean(mean_accuracy, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
   labs (title = &quot;Histogram Mean Accuracy&quot;, x = &quot;Mean Accuracy&quot;, y = &quot;Density&quot;) + 
   my_figure_theme
 
-qqplot_accuracy &lt;- ggplot(accuracy_aggregated, aes(sample = mean_accuracy)) +
+qqplot_accuracy &lt;- ggplot(accuracy_histogram, aes(sample = mean_accuracy)) +
   stat_qq(color = &quot;#8ea6b4&quot;) +
   stat_qq_line() +
   labs (title = &quot;Q-Q-Plot Accuracy&quot;, x = &quot;Theoretical Quantiles&quot;, y = &quot;Sample Quantiles&quot;) + 
@@ -1185,15 +1028,15 @@ qqplot_accuracy &lt;- ggplot(accuracy_aggregated, aes(sample = mean_accuracy)) +
 
 
 # Plot distribution PEA 
-hist_pea &lt;- ggplot(accuracy_aggregated, aes(x = mean_pea)) +
+hist_pea &lt;- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(x = pea)) +
   geom_histogram(aes(y = ..density..), color=&quot;gray33&quot;, fill = &quot;#8ea6b4&quot;, size = 1) +
-  stat_function(fun = dnorm, args = list(mean = mean(accuracy_aggregated$mean_pea, na.rm = TRUE), 
-                                     sd = sd(accuracy_aggregated$mean_pea, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
-  geom_vline(aes(xintercept = mean(mean_pea, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  stat_function(fun = dnorm, args = list(mean = mean(df_aggregated_per_subject_pes_pea_pca$pea, na.rm = TRUE), 
+                                     sd = sd(df_aggregated_per_subject_pes_pea_pca$pea, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
+  geom_vline(aes(xintercept = mean(pea, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
   labs (title = &quot;Histogram Mean Post-Error Accuracy&quot;, x = &quot;Post-Error Accuracy&quot;, y = &quot;Density&quot;) + 
   my_figure_theme
 
-qqplot_pea &lt;- ggplot(accuracy_aggregated, aes(sample = mean_pea)) +
+qqplot_pea &lt;- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(sample = pea)) +
   stat_qq(color = &quot;#8ea6b4&quot;) +
   stat_qq_line() +
   labs (title = &quot;Q-Q-Plot Mean Post-Error Accuracy&quot;, x = &quot;Theoretical Quantiles&quot;, y = &quot;Sample Quantiles&quot;) +
@@ -1201,15 +1044,15 @@ qqplot_pea &lt;- ggplot(accuracy_aggregated, aes(sample = mean_pea)) +
 
 
 # Plot distribution PCA 
-hist_pca &lt;- ggplot(accuracy_aggregated, aes(x = mean_pca)) +
+hist_pca &lt;- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(x = pca)) +
   geom_histogram(aes(y = ..density..), color=&quot;gray33&quot;, fill = &quot;#8ea6b4&quot;, size = 1) +
-  stat_function(fun = dnorm, args = list(mean = mean(accuracy_aggregated$mean_pca, na.rm = TRUE), 
-                                     sd = sd(accuracy_aggregated$mean_pca, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
-  geom_vline(aes(xintercept = mean(mean_pca, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
+  stat_function(fun = dnorm, args = list(mean = mean(df_aggregated_per_subject_pes_pea_pca$pca, na.rm = TRUE), 
+                                     sd = sd(df_aggregated_per_subject_pes_pea_pca$pca, na.rm = TRUE)), color = &quot;black&quot;, size = 0.5) +
+  geom_vline(aes(xintercept = mean(pca, na.rm = TRUE)), color = &quot;black&quot;, linetype = &quot;dashed&quot;, size = 1) +
   labs (title = &quot;Histogram Mean Post-Correct Accuracy&quot;, x = &quot;Post-Correct Accuracy&quot;, y = &quot;Density&quot;) + 
   my_figure_theme
 
-qqplot_pca &lt;- ggplot(accuracy_aggregated, aes(sample = mean_pca)) +
+qqplot_pca &lt;- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(sample = pca)) +
   stat_qq(color = &quot;#8ea6b4&quot;) +
   stat_qq_line() +
   labs (title = &quot;Q-Q-Plot Mean Post-Correct Accuracy&quot;, x = &quot;Theoretical Quantiles&quot;, y = &quot;Sample Quantiles&quot;) +
@@ -1322,7 +1165,7 @@ bc_pes &lt;- boxcox(pes+1000 ~ 1, data = single_trial_data_clean[!is.na(single_t
 
 # Reset plot layout
 par(mfrow = c(1, 1)) </code></pre>
-<p>For RT (left plot), the optimal lambda is -0.42, suggesting that log transformation (for lambda = 0) is appropriate. Actually, for lambda = -0.5, the most appropriate transformation would be Y^-0.5 = 1/(√(Y)), but this does not seem very common to me. As our lambda is not far from 0, I chose log transformation, which is more commonly used. For PES (right plot), the optimal lambda is 0.79, suggesting that no transformation (for lambda = 1) is needed. <br><br></p>
+<p>For RT (left plot), the optimal lambda is -0.42, suggesting that log transformation (for lambda = 0) is appropriate. Actually, for lambda = -0.5, the most appropriate transformation would be Y^-0.5 = 1/(√(Y)), but this does not seem very common to me. As our lambda is not far from 0, I chose log transformation, which is more commonly used. For PES (right plot), the optimal lambda is 0.75, suggesting that no transformation (for lambda = 1) is needed. <br><br></p>
 </div>
 </div>
 <div id="descriptive-statistics" class="section level2 tabset">
@@ -2331,10 +2174,10 @@ T1
 [28, 48]
 </td>
 <td style="text-align:right;">
-47
+46
 </td>
 <td style="text-align:left;">
-[34, 60]
+[33, 59]
 </td>
 </tr>
 <tr>
@@ -2348,13 +2191,13 @@ T2
 21
 </td>
 <td style="text-align:left;">
-[10, 33]
+[9, 32]
 </td>
 <td style="text-align:right;">
-33
+34
 </td>
 <td style="text-align:left;">
-[21, 45]
+[22, 47]
 </td>
 </tr>
 <tr>
@@ -2368,13 +2211,13 @@ T1
 43
 </td>
 <td style="text-align:left;">
-[29, 57]
+[30, 56]
 </td>
 <td style="text-align:right;">
-54
+53
 </td>
 <td style="text-align:left;">
-[40, 67]
+[39, 67]
 </td>
 </tr>
 <tr>
@@ -2385,10 +2228,10 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-21
+22
 </td>
 <td style="text-align:left;">
-[11, 31]
+[11, 32]
 </td>
 <td style="text-align:right;">
 27
@@ -2460,16 +2303,16 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-95.38
+95.33
 </td>
 <td style="text-align:left;">
-[93.31, 97.46]
+[93.22, 97.43]
 </td>
 <td style="text-align:right;">
-95.20
+95.14
 </td>
 <td style="text-align:left;">
-[92.81, 97.59]
+[92.72, 97.56]
 </td>
 </tr>
 <tr>
@@ -2480,16 +2323,16 @@ sham
 T2
 </td>
 <td style="text-align:right;">
-93.54
+93.78
 </td>
 <td style="text-align:left;">
-[91.05, 96.02]
+[91.29, 96.26]
 </td>
 <td style="text-align:right;">
-93.67
+93.56
 </td>
 <td style="text-align:left;">
-[90.94, 96.4]
+[90.78, 96.33]
 </td>
 </tr>
 <tr>
@@ -2500,16 +2343,16 @@ verum
 T1
 </td>
 <td style="text-align:right;">
-95.02
+94.97
 </td>
 <td style="text-align:left;">
-[92.72, 97.33]
+[92.64, 97.29]
 </td>
 <td style="text-align:right;">
-96.14
+96.10
 </td>
 <td style="text-align:left;">
-[94.01, 98.28]
+[93.94, 98.25]
 </td>
 </tr>
 <tr>
@@ -2520,16 +2363,16 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-94.64
+94.74
 </td>
 <td style="text-align:left;">
-[92.37, 96.91]
+[92.46, 97.02]
 </td>
 <td style="text-align:right;">
-96.36
+96.31
 </td>
 <td style="text-align:left;">
-[94.36, 98.36]
+[94.29, 98.34]
 </td>
 </tr>
 </tbody>
@@ -2595,16 +2438,16 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-92.70
+92.75
 </td>
 <td style="text-align:left;">
-[91.95, 93.44]
+[92, 93.5]
 </td>
 <td style="text-align:right;">
-94.95
+94.98
 </td>
 <td style="text-align:left;">
-[94.35, 95.56]
+[94.37, 95.58]
 </td>
 </tr>
 <tr>
@@ -2615,10 +2458,10 @@ sham
 T2
 </td>
 <td style="text-align:right;">
-93.82
+93.81
 </td>
 <td style="text-align:left;">
-[93.15, 94.49]
+[93.14, 94.48]
 </td>
 <td style="text-align:right;">
 94.60
@@ -2635,16 +2478,16 @@ verum
 T1
 </td>
 <td style="text-align:right;">
-94.29
+94.28
 </td>
 <td style="text-align:left;">
-[93.65, 94.93]
+[93.63, 94.92]
 </td>
 <td style="text-align:right;">
-94.44
+94.48
 </td>
 <td style="text-align:left;">
-[93.78, 95.09]
+[93.82, 95.14]
 </td>
 </tr>
 <tr>
@@ -2655,16 +2498,16 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-92.50
+92.52
 </td>
 <td style="text-align:left;">
-[91.75, 93.26]
+[91.77, 93.28]
 </td>
 <td style="text-align:right;">
 93.85
 </td>
 <td style="text-align:left;">
-[93.19, 94.52]
+[93.18, 94.52]
 </td>
 </tr>
 </tbody>
@@ -2952,15 +2795,15 @@ contrasts(single_trial_data_clean$session)             &lt;- contr.sdif(2)
 
 
 # Add contrasts as numerical covariates via model matrix* (specify all possible contasts for now)
-model_matrix &lt;- model.matrix(~ stimulation * (group + response_type + stimulus_type + accuracy_prev_trial), single_trial_data_clean)
+model_matrix &lt;- model.matrix(~ stimulation * (group + response_type + stimulus_type), single_trial_data_clean)
 
 
-# Attach the model matrix (10 columns) to the dataframe
-single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 10)] &lt;- model_matrix
+# Attach the model matrix (8 columns) to the dataframe
+single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 8)] &lt;- model_matrix
 
 
 # Assign descriptive names to the contrasts
-names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 9):ncol(single_trial_data_clean)] &lt;- c(&quot;Grand Mean&quot;, &quot;verum_sham&quot;, &quot;OCD_HC&quot;, &quot;incorrect_correct&quot;, &quot;incongruent_congruent&quot;, &quot;prev_trial_incorrect_correct&quot;, &quot;verum_sham:OCD_HC&quot;, &quot;verum_sham:incorrect_correct&quot;, &quot;verum_sham:incongruent_congruent&quot;, &quot;verum_sham:prev_trial_incorrect_correct&quot;)
+names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 7):ncol(single_trial_data_clean)] &lt;- c(&quot;Grand Mean&quot;, &quot;verum_sham&quot;, &quot;OCD_HC&quot;, &quot;incorrect_correct&quot;, &quot;incongruent_congruent&quot;, &quot;verum_sham:OCD_HC&quot;, &quot;verum_sham:incorrect_correct&quot;, &quot;verum_sham:incongruent_congruent&quot;)
 
 
 # *Note: For the random effects, we needed to enter the separate random effect terms in the models to enable
@@ -3404,13 +3247,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-38.85
+38.70
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-31.14 – 46.56
+30.97 – 46.43
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.87
+9.81
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -3421,16 +3264,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.42
+-0.26
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--9.85 – 9.01
+-9.92 – 9.39
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.09
+-0.05
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.931
+0.957
 </td>
 </tr>
 <tr>
@@ -3438,16 +3281,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.25
+9.12
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.93 – 21.42
+-3.11 – 21.35
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.49
+1.46
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.142
+0.149
 </td>
 </tr>
 <tr>
@@ -3455,16 +3298,16 @@ OCD_HC
 incongruent_congruent
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--7.64
+-7.62
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--19.76 – 4.47
+-19.73 – 4.49
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.24
+-1.23
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.216
+0.217
 </td>
 </tr>
 <tr>
@@ -3472,16 +3315,16 @@ incongruent_congruent
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.45
+-3.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--21.31 – 16.41
+-22.44 – 16.17
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.26
+-0.32
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.800
+0.751
 </td>
 </tr>
 <tr>
@@ -3494,35 +3337,35 @@ Random Effects
 σ<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-9251.286
+9116.548
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>00</sub> <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-344.098
+349.743
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>00</sub> <sub>participant_id.1</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-501.985
+564.267
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.036
+0.037
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-2724
+2683
 </td>
 </tr>
 <tr>
@@ -3530,7 +3373,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.003 / 0.039
+0.003 / 0.040
 </td>
 </tr>
 </table>
@@ -3557,8 +3400,8 @@ Warning: Heteroscedasticity (non-constant error variance) detected (p = 0.000).
 OK: No outliers detected.
 [1] &quot;# Check for normal distributed random effects&quot;
 Group: participant_id
-(Intercept) OK: random effects appear as normally distributed (p = 0.244).
- verum_sham OK: random effects appear as normally distributed (p = 0.569).
+(Intercept) OK: random effects appear as normally distributed (p = 0.150).
+ verum_sham OK: random effects appear as normally distributed (p = 0.195).
 
 Could not compute standard errors from random effects for diagnostic plot.</code></pre>
 <ul>
@@ -3600,10 +3443,10 @@ Could not compute standard errors from random effects for diagnostic plot.</code
 <h3>Accuracy</h3>
 <div id="glmm" class="section level4">
 <h4>GLMM</h4>
-<p>I included the factor <em>accuracy of previous trial</em> in the model, to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered. (If preferred, I could also first run the preregistered model with only stimulation, group and stimulus type as fixed factors and then a second model, including additionally the factor <em>accuracy of previous trial</em>)</p>
-<pre class="r"><code># Run model with maximal random-effects structure (model with correlations failed to converge)
-GLMM_accuracy &lt;- glmer(accuracy_numeric ~ verum_sham * (OCD_HC + incongruent_congruent + prev_trial_incorrect_correct) +
-  (1 + incongruent_congruent + verum_sham + prev_trial_incorrect_correct + verum_sham:incongruent_congruent + verum_sham:prev_trial_incorrect_correct  || participant_id),
+<p>I included the factor <em>accuracy of previous trial</em> in the model, to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered. (If preferred, I could also first run the preregistered model with only stimulation, group and stimulus type as fixed factors and then a second model, including additionally the factor <em>accuracy of previous trial</em>. This approach would also allow using all trials for the basic accuracy model, as when including the factor , I automatically lose all trials from the calculation at the start of a new task block, that have NA for the variable <em>accuracy of previous trial</em>. But the results remain the same, independent of whether I run the model with all trials or the subset). I did not add <em>accuracy of previous trial</em> as random effect here.Doing so would require specifying the model matrix separately for the subset of data where <em>accuracy of previous trial</em> is not NA.When not having this factor as random effect, the model allows having correlated random effect terms. This model also shows a trend for an interaction between stimulation and group, which before was not present. But following up this interaction does not yield an effect of stimulation in any of the groups (also not specifically in the incongruent condition, which seems (according to the plot) that the OCD group has lower accuracy to incongruent trials in the verum than in the sham condition).</p>
+<pre class="r"><code># Run model with maximal random-effects structure
+GLMM_accuracy &lt;- glmer(accuracy_numeric ~ verum_sham * (OCD_HC + incongruent_congruent + accuracy_prev_trial) +
+  (1 + incongruent_congruent + verum_sham + verum_sham:incongruent_congruent  | participant_id),
 data = single_trial_data_clean,
 family = binomial,
 control = glmerControl(optimizer = &quot;bobyqa&quot;)
@@ -3656,13 +3499,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-33.29
+34.19
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-28.85 – 38.41
+29.32 – 39.88
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-48.02
+45.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -3676,13 +3519,13 @@ verum_sham
 1.06
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.89 – 1.28
+0.86 – 1.30
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.66
+0.52
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.506
+0.601
 </td>
 </tr>
 <tr>
@@ -3690,16 +3533,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.03
+1.15
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.81 – 1.31
+0.92 – 1.44
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.28
+1.20
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.779
+0.228
 </td>
 </tr>
 <tr>
@@ -3710,10 +3553,10 @@ incongruent_congruent
 0.10
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.08 – 0.13
+0.08 – 0.12
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--20.78
+-19.05
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -3721,16 +3564,16 @@ incongruent_congruent
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-prev_trial_incorrect_correct
+accuracy_prev_trial2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.43
+1.44
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.20 – 1.71
+1.23 – 1.69
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.02
+4.49
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -3741,16 +3584,16 @@ prev_trial_incorrect_correct
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.91
+0.83
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.74 – 1.11
+0.67 – 1.02
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.95
+-1.75
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.342
+0.080
 </td>
 </tr>
 <tr>
@@ -3761,30 +3604,30 @@ verum_sham * incongruent_congruent
 1.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.79 – 1.30
+0.75 – 1.36
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.11
+0.08
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.915
+0.936
 </td>
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-verum_sham * prev_trial_incorrect_correct
+verum_sham:accuracy_prev_trial2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.26
+1.25
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.90 – 1.76
+0.91 – 1.71
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.33
+1.36
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.182
+0.175
 </td>
 </tr>
 <tr>
@@ -3804,56 +3647,61 @@ Random Effects
 τ<sub>00</sub> <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.162
+0.209
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
-τ<sub>00</sub> <sub>participant_id.1</sub>
+τ<sub>11</sub> <sub>participant_id.incongruent_congruent</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.474
+0.602
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
-τ<sub>00</sub> <sub>participant_id.2</sub>
+τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.013
+0.058
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
-τ<sub>00</sub> <sub>participant_id.3</sub>
+τ<sub>11</sub> <sub>participant_id.incongruent_congruent:verum_sham</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.053
+0.235
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
-τ<sub>00</sub> <sub>participant_id.4</sub>
+ρ<sub>01</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.202
+-0.519
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
-τ<sub>00</sub> <sub>participant_id.5</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.175
+-0.022
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+-0.332
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.047
+0.102
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-54998
+54350
 </td>
 </tr>
 <tr>
@@ -3861,7 +3709,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.274 / 0.308
+0.276 / 0.350
 </td>
 </tr>
 </table>
@@ -3887,17 +3735,14 @@ overdisp_fun &lt;- function(model) {
 overdisp_fun(GLMM_accuracy) # If the p-value is &lt; 0.05, the data are overdispersed. Here p &gt; 0.05. Overdispersion is not a problem here. </code></pre>
 <pre><code>[1] &quot;Check for normal distributed random effects&quot;
 Group: participant_id
-                            (Intercept) OK: random effects appear as normally distributed (p = 0.060).
-                  incongruent_congruent OK: random effects appear as normally distributed (p = 0.258).
-                             verum_sham OK: random effects appear as normally distributed (p = 0.253).
-           prev_trial_incorrect_correct OK: random effects appear as normally distributed (p = 0.330).
-       incongruent_congruent:verum_sham OK: random effects appear as normally distributed (p = 0.601).
-verum_sham:prev_trial_incorrect_correct OK: random effects appear as normally distributed (p = 0.221).
+                     (Intercept) OK: random effects appear as normally distributed (p = 0.437).
+           incongruent_congruent OK: random effects appear as normally distributed (p = 0.611).
+                      verum_sham OK: random effects appear as normally distributed (p = 0.539).
+incongruent_congruent:verum_sham OK: random effects appear as normally distributed (p = 0.578).
 
-Could not compute standard errors from random effects for diagnostic plot.
 [1] &quot;Check for overdispersion&quot;
         chisq         ratio           rdf             p 
-50631.7820552     0.9208457 54984.0000000     1.0000000 </code></pre>
+50532.5907190     0.9300705 54332.0000000     1.0000000 </code></pre>
 <ul>
 <li><p><strong>Assumption 1: Chosen Link Function is Appropriate -&gt; Is OK</strong></p></li>
 <li><p><strong>Assumption 2: Normality of Random Effects -&gt; Is OK???</strong></p>
@@ -3921,19 +3766,16 @@ Could not compute standard errors from random effects for diagnostic plot.
 # also checks sphericity assumptions and automatically corrects for any violations if necessary.
 
 
-# For RT, exclude congruent errors by creating factor with 3 levels (correct congruent, correct incongruent, incorrect incongruent)
-single_trial_data_anova &lt;- single_trial_data_clean %&gt;%
+# Get data in correct format for ANOVAs (aggregate within participants per condition)
+data_anova_rt &lt;- single_trial_data_clean %&gt;%
+  # for RT exclude congruent errors -&gt; use factor with 3 levels (correct congr., correct incongr., incorrect incongr.)
   dplyr::filter(
     condition != &quot;congruent_incorrect&quot;
     ) %&gt;%
-# Adjust number of factor levels
- dplyr::mutate(
-   condition = as.factor(condition)
-   ) 
-
-
-# Get data in correct format for ANOVAs (aggregate within participants per condition)
-data_anova_rt &lt;- single_trial_data_anova %&gt;%
+  # Adjust number of factor levels
+  dplyr::mutate(
+    condition = as.factor(condition)
+    ) %&gt;%
   dplyr::group_by(participant_id, stimulation, group, condition) %&gt;%
   dplyr::summarize(
     rt_log = mean(rt_log, na.rm = TRUE)
@@ -3947,7 +3789,7 @@ data_anova_pes &lt;- single_trial_data_clean[!is.na(single_trial_data_clean$pes)
   )
 
 
-data_anova_accuracy &lt;- single_trial_data_clean %&gt;%
+data_anova_accuracy &lt;- single_trial_data_clean[!is.na(single_trial_data_clean$accuracy_prev_trial),] %&gt;%
   dplyr::group_by(participant_id, stimulation, group, stimulus_type, accuracy_prev_trial) %&gt;%
   dplyr::summarize(
     percentage_correct_responses = sum(accuracy_numeric) / length(participant_id) * 100
@@ -4168,13 +4010,13 @@ group
 1, 56
 </td>
 <td style="text-align:left;">
-2.79
+2.74
 </td>
 <td style="text-align:left;">
-.029
+.028
 </td>
 <td style="text-align:left;">
-.100
+.104
 </td>
 </tr>
 <tr>
@@ -4185,13 +4027,13 @@ stimulation
 1, 56
 </td>
 <td style="text-align:left;">
-0.09
+0.05
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.765
+.829
 </td>
 </tr>
 <tr>
@@ -4202,13 +4044,13 @@ group:stimulation
 1, 56
 </td>
 <td style="text-align:left;">
-0.12
+0.16
 </td>
 <td style="text-align:left;">
-&lt;.001
+.001
 </td>
 <td style="text-align:left;">
-.731
+.688
 </td>
 </tr>
 </tbody>
@@ -4245,13 +4087,13 @@ group
 1, 56
 </td>
 <td style="text-align:left;">
-1.72
+1.57
 </td>
 <td style="text-align:left;">
-.008
+.007
 </td>
 <td style="text-align:left;">
-.195
+.215
 </td>
 </tr>
 <tr>
@@ -4262,13 +4104,13 @@ stimulation
 1, 56
 </td>
 <td style="text-align:left;">
-0.21
+0.17
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.646
+.686
 </td>
 </tr>
 <tr>
@@ -4279,13 +4121,13 @@ group:stimulation
 1, 56
 </td>
 <td style="text-align:left;">
-0.02
+0.06
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.875
+.812
 </td>
 </tr>
 <tr>
@@ -4296,7 +4138,7 @@ stimulus_type
 1, 56
 </td>
 <td style="text-align:left;">
-182.84 ***
+181.74 ***
 </td>
 <td style="text-align:left;">
 .401
@@ -4313,13 +4155,13 @@ group:stimulus_type
 1, 56
 </td>
 <td style="text-align:left;">
-3.35 +
+3.16 +
 </td>
 <td style="text-align:left;">
 .012
 </td>
 <td style="text-align:left;">
-.073
+.081
 </td>
 </tr>
 <tr>
@@ -4330,10 +4172,10 @@ accuracy_prev_trial
 1, 56
 </td>
 <td style="text-align:left;">
-18.52 ***
+18.82 ***
 </td>
 <td style="text-align:left;">
-.033
+.034
 </td>
 <td style="text-align:left;">
 &lt;.001
@@ -4347,13 +4189,13 @@ group:accuracy_prev_trial
 1, 56
 </td>
 <td style="text-align:left;">
-0.36
+0.45
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.552
+.504
 </td>
 </tr>
 <tr>
@@ -4364,13 +4206,13 @@ stimulation:stimulus_type
 1, 56
 </td>
 <td style="text-align:left;">
-0.22
+0.16
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.641
+.692
 </td>
 </tr>
 <tr>
@@ -4381,13 +4223,13 @@ group:stimulation:stimulus_type
 1, 56
 </td>
 <td style="text-align:left;">
-0.57
+0.47
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.454
+.497
 </td>
 </tr>
 <tr>
@@ -4398,13 +4240,13 @@ stimulation:accuracy_prev_trial
 1, 56
 </td>
 <td style="text-align:left;">
-1.22
+1.23
 </td>
 <td style="text-align:left;">
 .002
 </td>
 <td style="text-align:left;">
-.273
+.272
 </td>
 </tr>
 <tr>
@@ -4415,13 +4257,13 @@ group:stimulation:accuracy_prev_trial
 1, 56
 </td>
 <td style="text-align:left;">
-1.49
+1.83
 </td>
 <td style="text-align:left;">
-.002
+.003
 </td>
 <td style="text-align:left;">
-.227
+.181
 </td>
 </tr>
 <tr>
@@ -4432,7 +4274,7 @@ stimulus_type:accuracy_prev_trial
 1, 56
 </td>
 <td style="text-align:left;">
-13.48 ***
+13.57 ***
 </td>
 <td style="text-align:left;">
 .024
@@ -4449,13 +4291,13 @@ group:stimulus_type:accuracy_prev_trial
 1, 56
 </td>
 <td style="text-align:left;">
-0.57
+0.65
 </td>
 <td style="text-align:left;">
 .001
 </td>
 <td style="text-align:left;">
-.453
+.424
 </td>
 </tr>
 <tr>
@@ -4466,13 +4308,13 @@ stimulation:stimulus_type:accuracy_prev_trial
 1, 56
 </td>
 <td style="text-align:left;">
-0.83
+0.78
 </td>
 <td style="text-align:left;">
-.001
+&lt;.001
 </td>
 <td style="text-align:left;">
-.365
+.382
 </td>
 </tr>
 <tr>
@@ -4483,13 +4325,13 @@ group:stimulation:stimulus_type:accuracy_prev_trial
 1, 56
 </td>
 <td style="text-align:left;">
-0.00
+0.03
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.956
+.867
 </td>
 </tr>
 </tbody>
@@ -4687,10 +4529,10 @@ congruent
 56
 </td>
 <td style="text-align:right;">
--1.13
+-1.14
 </td>
 <td style="text-align:right;">
-0.264
+0.258
 </td>
 <td style="text-align:left;">
 -0.15
@@ -4704,7 +4546,7 @@ correct - incorrect
 incongruent
 </td>
 <td style="text-align:right;">
--3.38
+-3.40
 </td>
 <td style="text-align:right;">
 0.81
@@ -4713,7 +4555,7 @@ incongruent
 56
 </td>
 <td style="text-align:right;">
--4.17
+-4.19
 </td>
 <td style="text-align:right;">
 0.000
@@ -4790,18 +4632,18 @@ verum_incongruent_correct   0.2868825
 verum_incongruent_incorrect 0.000177579
 [1] &quot;# ANOVA PES: Check Normality of Residuals with Shapiro Wilk Test&quot;
       p.value   
-sham  0.445014  
-verum 0.02939272
+sham  0.5768425 
+verum 0.02451397
 [1] &quot;# ANOVA Accuracy: Check Normality of Residuals with Shapiro Wilk Test&quot;
                             p.value              
-sham_congruent_correct      0.000004601339       
-sham_congruent_incorrect    0.0000000000005182287
-sham_incongruent_correct    0.04548416           
-sham_incongruent_incorrect  0.0004111306         
-verum_congruent_correct     0.0000001822369      
-verum_congruent_incorrect   0.00000000001080566  
-verum_incongruent_correct   0.02141916           
-verum_incongruent_incorrect 0.000006096841       </code></pre>
+sham_congruent_correct      0.000004893728       
+sham_congruent_incorrect    0.0000000000005649073
+sham_incongruent_correct    0.05022147           
+sham_incongruent_incorrect  0.000299746          
+verum_congruent_correct     0.0000001437877      
+verum_congruent_incorrect   0.00000000001041669  
+verum_incongruent_correct   0.02284975           
+verum_incongruent_incorrect 0.00000658609        </code></pre>
 <ul>
 <li><p><strong>Assumption #1: Dependent variable interval or ratio variable -&gt; Is OK</strong></p></li>
 <li><p><strong>Assumption #2: Balanced design</strong> (each subject has to have a value in each condition) <strong>-&gt; Is OK</strong></p></li>
