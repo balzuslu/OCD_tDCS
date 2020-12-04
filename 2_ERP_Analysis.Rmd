@@ -108,8 +108,8 @@ Trials were excluded from all analyses if RT was shorter than 100 ms or longer t
 
 ```{r excluded-trials}
 
-# Calculate percentage of excluded trials
-excluded_trials <- single_trial_data %>%
+# Calculate percentage of excluded trials per participant
+excluded_trials_per_participant <- single_trial_data %>%
   dplyr::group_by(group, participant_id, session) %>%
   dplyr::summarize(
     invalid_rt   = sum(!is.na(rt_invalid) & rt_invalid != FALSE) / length(participant_id) * 100,
@@ -121,12 +121,26 @@ excluded_trials <- single_trial_data %>%
   dplyr::summarize(across(-c(participant_id, session), list(mean,sd,min,max)))
 
 
-# Display percentage of excluded trials
-my_table_template(excluded_trials,
-  caption = "Excluded Trials (in %)", 
+# Display percentage of excluded trials per participant
+my_table_template(excluded_trials_per_participant,
+  caption = "Excluded Trials (M and SD in %) per Participant", 
   col_names = c("Group", "M", "SD", "min", "max", "M", "SD", "min", "max", "M", "SD", "min", "max"),
   header_above_config = c(" " = 1, "RT < 100 / > 800 ms" = 4, "Misses" = 4, "EEG artifact" = 4)
 )
+
+
+# Calculate percentage of excluded trials in total
+excluded_trials_in_total <- single_trial_data %>%
+  dplyr::summarize(
+    invalid_rt   = sum(!is.na(rt_invalid) & rt_invalid != FALSE) / nrow(single_trial_data) * 100,
+    misses       = sum(response_type == "miss") / nrow(single_trial_data) * 100,
+    EEG_artifact = sum(is.nan(MFN_0_100_FCz)) / nrow(single_trial_data) * 100
+   )
+
+
+# Display percentage of excluded trials in total
+my_table_template(excluded_trials_in_total,
+  caption = "Excluded Trials (in %) in Total") 
 
 
 # Detect ERP outliers (ERP deviates more than 2/3 SD below/above group mean per condition)
@@ -275,8 +289,9 @@ For CRN (right plot), the optimal lambda is `r round(optlambda_CRN, digits = 2)`
 
 ### Split-half reliability
 
-```{r split-half-reliability, cache = knitr_cache_enabled}
+```{r permutation-split-half-reliability, cache = knitr_cache_enabled}
 
+# Calculate permutation-based split-half internal consistency
 # use ""invisible(capture.output())" to avoid having ugly console output in html
 invisible(capture.output(split_half_reliability <- splithalf(data = single_trial_data_clean,
                                     outcome = "RT",
@@ -290,10 +305,51 @@ invisible(capture.output(split_half_reliability <- splithalf(data = single_trial
                                     conditionlist = c("correct","incorrect"),
                                     average = "mean")))
 
-my_table_template(split_half_reliability$final_estimates)
-
+# Display permutation-based split-half internal consistency
+my_table_template(split_half_reliability$final_estimates, caption = "Permutation-based split-half reliability")
 ```
-The internal consitency of ERN and CRN was estimated using a permutation-based split-half approach (Parsons 2020) with 5000 random splits. The (Spearman-Brown corrected) split-half internal consistency of ERN and CRN are excellent. The columns SB_low and SB_high represent 95% confience intervall limits. The spearman-brown corrected reliability estimate for the ERN was .95, 95% CI [.93, .97], for CRN 1, 95% CI [.99, 1].
+The internal consitency of ERN and CRN was estimated using a permutation-based split-half approach (Parsons 2020) with 5000 random splits. The (Spearman-Brown corrected) split-half internal consistency of ERN and CRN are excellent. The columns SB_low and SB_high represent 95% confience intervall limits. The spearman-brown corrected reliability estimate for the ERN was .95, 95% CI [.93, .97], for CRN 1, 95% CI [.99, 1]. The splithalf package was built to deal with RTs. However, the principle should also apply to ERP values, so the results should be correct. However, I also calculated the odd-even split-half reliabilty to compare the results (see below).
+<br><br>
+
+```{r odd-even-split-half-reliability}
+
+# Code odd and even trials for reliability 
+single_trial_data_clean$oddeven <- single_trial_data_clean$trial %% 2
+single_trial_data_clean$oddeven <- single_trial_data_clean$trial %% 2
+
+
+# Calculate mean CRN for odd and even trials per participant and session
+internal_consistency_CRN <- single_trial_data_clean[single_trial_data_clean$response_type == "correct",] %>%
+  dplyr::group_by(participant_id, session, oddeven) %>% 
+  dplyr::summarise(mean_CRN = mean(MFN_0_100_FCz, na.rm=TRUE)
+)
+
+
+# Calculate mean ERN for odd and even trials per participant and session
+internal_consistency_ERN <- single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",] %>%
+  dplyr::group_by(participant_id, session, oddeven) %>% 
+  dplyr::summarise(mean_ERN = mean(MFN_0_100_FCz, na.rm=TRUE)
+)
+
+
+# Correlating scores from even and odd items
+r_CRN <- cor.test(internal_consistency_CRN$mean_CRN[internal_consistency_CRN$oddeven==1], internal_consistency_CRN$mean_CRN[internal_consistency_CRN$oddeven==0])
+r_ERN <- cor.test(internal_consistency_ERN$mean_ERN[internal_consistency_ERN$oddeven==1], internal_consistency_ERN$mean_ERN[internal_consistency_ERN$oddeven==0])
+
+
+# Adjusting with the Spearman-Brown prophecy formula
+r_CRN_SB <- (2 * r_CRN$estimate) / (1 + r_CRN$estimate)
+r_ERN_SB <- (2 * r_ERN$estimate) / (1 + r_ERN$estimate)
+
+
+# Display odd-even split-half reliability
+oddeven_split_half_reliability <- matrix(c(r_CRN$estimate, r_ERN$estimate, r_CRN$conf.int[1], r_ERN$conf.int[1], 
+                                           r_CRN$conf.int[2], r_ERN$conf.int[2], r_CRN_SB, r_ERN_SB), ncol=4)
+colnames(oddeven_split_half_reliability) <- c("splithalf_raw", "splithalf_CI_lower_limit", "splithalf_CI_upper_limit", "splithalf_spearmanbrown")
+rownames(oddeven_split_half_reliability) <- c("CRN", "ERN")
+my_table_template(oddeven_split_half_reliability, row_names = TRUE, caption = "Odd-even split-half reliability")
+```
+Odd-even reliability for the ERN is also good. 
 <br><br>
 
 ## Descriptive Statistics {.tabset}
@@ -330,7 +386,7 @@ descriptive_statistics_MFN_display <-  left_join(descriptive_statistics_MFN_disp
 
 # Display descriptive statistics for MFN (and select columns)
 my_table_template(descriptive_statistics_MFN_display[,c(2:6,9:10)],
-  caption = "MFN (in mV)",
+  caption = "MFN (in μV)",
   col_names = c("Response type", "Stimulation", "Session", "M", "95% CI", "M", "95% CI"),
   header_above_config = c(" " = 3, "HC" = 2, "OCD" = 2),
   footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
@@ -379,8 +435,8 @@ plot_MFN_raincloud <- ggplot() +
   # Add style
   scale_colour_manual(values = my_figure_colors, name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
-  facet_wrap(~response_type,labeller = labeller(response_type = response_type.labs)) +
-  ggtitle("Mean MFN Amplitude (0-100 ms at FCz)")  +
+  facet_wrap(~response_type,labeller = labeller(response_type = response_type.labs)) + 
+  labs(x = "\nStimulation condition", y = "MFN (mean amplitude 0-100 ms at FCz [μV])") +
   my_figure_theme 
 
 
@@ -410,7 +466,7 @@ plot_MFN <- ggplot() +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   facet_wrap(~response_type, nrow = 1) +
   my_figure_theme + 
-  labs(x = "\nStimulation condition", y = "MFN (mV)")
+  labs(x = "\nStimulation condition", y = "MFN (mean amplitude 0-100 ms at FCz [μV])")
 
 
 # Save plot
@@ -439,7 +495,7 @@ plot_MFN_session <- ggplot() +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   facet_wrap(~response_type + session, nrow = 1) +
   my_figure_theme + 
-  labs(x = "\nStimulation condition", y = "MFN (mV)") 
+  labs(x = "\nStimulation condition", y = "MFN (mean amplitude 0-100 ms at FCz [μV])") 
 
 
 # Save plot
@@ -495,6 +551,8 @@ names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 15):ncol(single_
 
 #### Model
 
+Reporting this overall model is not really necessary. Reporting the separate ERN and CRN model should suffice.  
+
 ```{r LMM-MFN, cache = knitr_cache_enabled}
 
 # Run model with maximal random-effects structure
@@ -517,7 +575,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 # Display results (fixed effects)
 tab_model(LMM_MFN,
-  dv.labels = "MFN", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  dv.labels = "MFN [μV]", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
@@ -595,7 +653,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 
 tab_model(LMM_ERN,
-  dv.labels = "ERN", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  dv.labels = "ERN [μV]", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
@@ -620,7 +678,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 
 tab_model(LMM_CRN,
-  dv.labels = "CRN", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  dv.labels = "CRN [μV]", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
@@ -688,7 +746,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 
 tab_model(LMM_ERN_group,
-  dv.labels = "ERN", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  dv.labels = "ERN [μV]", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
@@ -704,7 +762,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 
 tab_model(LMM_CRN_group,
-  dv.labels = "CRN", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  dv.labels = "CRN [μV]", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
