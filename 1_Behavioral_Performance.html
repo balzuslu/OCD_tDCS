@@ -554,7 +554,26 @@ performance_outliers &lt;- df_aggregated_per_subject_accuracy %&gt;%
 
 
 # Display performance outliers
-my_table_template(performance_outliers, caption = &quot;Performance outliers (accuracy &gt; 2/3 SD below/above group mean per condition (stimulus type x stimulation))&quot;)</code></pre>
+my_table_template(performance_outliers, caption = &quot;Performance outliers (accuracy &gt; 2/3 SD below/above group mean per condition (stimulus type x stimulation))&quot;)
+
+
+# Calculate number of errors
+number_of_errors &lt;- single_trial_data %&gt;% 
+  dplyr::group_by(participant_id, group, session) %&gt;% 
+  dplyr::summarize(errors_total    = sum(response_type == &quot;incorrect&quot;), 
+                   errors_analyzed = sum(response_type == &quot;incorrect&quot; &amp; !is.nan(MFN_0_100_FCz) &amp; rt_invalid == FALSE)
+  ) %&gt;%
+  dplyr::group_by(group) %&gt;%
+  # Calculate M and SD of the variables
+  dplyr::summarize(across(-c(participant_id, session), list(mean,sd,min,max)))
+  
+                                                                                                 
+# Display number of errors
+my_table_template(number_of_errors, 
+                  caption = &quot;Number of errors&quot;, 
+                  col_names = c(&quot;Group&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;min&quot;, &quot;max&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;min&quot;, &quot;max&quot;),
+                  header_above_config = c(&quot; &quot; = 1, &quot;In total&quot; = 4, &quot;In analysis&quot; = 4)
+)</code></pre>
 <table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
 <caption style="font-size: initial !important;">
 Performance outliers (accuracy &gt; 2/3 SD below/above group mean per condition (stimulus type x stimulation))
@@ -884,7 +903,117 @@ FALSE
 </tr>
 </tbody>
 </table>
-<p>For some participants, accuracy in the task is more than 2 SD (N = 7) or even 3 SD (N = 2) below the group mean per condition (stimulus type x stimulation). But their accuracy is still quite good, so these will not be excluded. Being an outlier in task performance is also no exclusion criterion specified in the preregistration. <br><br></p>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Number of errors
+</caption>
+<thead>
+<tr>
+<th style="empty-cells: hide;border-bottom:hidden;" colspan="1">
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+In total
+</div>
+</th>
+<th style="border-bottom:hidden;padding-bottom:0; padding-left:3px;padding-right:3px;text-align: center; " colspan="4">
+<div style="border-bottom: 1px solid #ddd; padding-bottom: 5px; ">
+In analysis
+</div>
+</th>
+</tr>
+<tr>
+<th style="text-align:left;">
+Group
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:right;">
+SD
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+<th style="text-align:right;">
+M
+</th>
+<th style="text-align:right;">
+SD
+</th>
+<th style="text-align:right;">
+min
+</th>
+<th style="text-align:right;">
+max
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+HC
+</td>
+<td style="text-align:right;">
+31.41
+</td>
+<td style="text-align:right;">
+13.55
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+66
+</td>
+<td style="text-align:right;">
+31.16
+</td>
+<td style="text-align:right;">
+13.47
+</td>
+<td style="text-align:right;">
+10
+</td>
+<td style="text-align:right;">
+66
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+OCD
+</td>
+<td style="text-align:right;">
+26.60
+</td>
+<td style="text-align:right;">
+9.89
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+49
+</td>
+<td style="text-align:right;">
+25.95
+</td>
+<td style="text-align:right;">
+9.87
+</td>
+<td style="text-align:right;">
+8
+</td>
+<td style="text-align:right;">
+48
+</td>
+</tr>
+</tbody>
+</table>
+<p>For some participants, accuracy in the task is more than 2 SD (N = 7) or even 3 SD (N = 2) below the group mean per condition (stimulus type x stimulation). But their accuracy is still quite good, so these will not be excluded. Being an outlier in task performance is also no exclusion criterion specified in the preregistration. No participant committed &lt; 6 errors. Thus, no participant will be excluded based on this criterion. <br><br></p>
 <pre class="r"><code># Create contingency table
 feedback_contingency &lt;- table(feedback_infos$feedback, feedback_infos$group)
 
@@ -3713,7 +3842,7 @@ Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 </tr>
 </table>
-<p><br><br> Accuracy is lower in the incongruent condition than in the congruent condition. Furthermore, accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy). There is no interaction involving congruency on trial n and response type on trial n − 1. There is no evidence for an effect of group or stimulation. <br><br></p>
+<p><br><br> Accuracy is lower in the incongruent condition than in the congruent condition. Furthermore, accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy). There is no evidence for an effect of group or stimulation. <br><br></p>
 </div>
 <div id="assumption-checks-2" class="section level4">
 <h4>Assumption checks</h4>
@@ -3761,7 +3890,7 @@ incongruent_congruent:verum_sham OK: random effects appear as normally distribut
 <div id="anovas" class="section level2 tabset">
 <h2>ANOVAs</h2>
 <hr />
-<p>To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart &amp; Woodman 2014), RT, PES, and accuracy were additionally analyzed with Greenhouse–Geisser corrected repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), response type (correct, incorrect)/condition (congruent correct, incongruent correct, incongruent incorrect), and accuracy previous trial (correct, incorrect). As can be seen below, the ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all main effects, interaction effects, and all pairwise comparisons.</p>
+<p>To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart &amp; Woodman 2014), RT, PES, and accuracy were additionally analyzed with Greenhouse–Geisser corrected repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), response type (correct, incorrect)/condition (congruent correct, incongruent correct, incongruent incorrect), and accuracy previous trial (correct, incorrect). As can be seen below, the ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all main effects, interaction effects, and all pairwise comparisons. I additionally analyzed whether there is an stimulation effect on the number of corrective second responses (was erroneously written in preregistration). There is none. This analysis requires aggregated data, hence I only calculated an ANOVA, no LMM.</p>
 <pre class="r"><code># Due to the afex package, contrasts are automatically set to effect-coding (contr.sum). Afex package 
 # also checks sphericity assumptions and automatically corrects for any violations if necessary.
 
@@ -3796,6 +3925,13 @@ data_anova_accuracy &lt;- single_trial_data_clean[!is.na(single_trial_data_clean
   )
 
 
+data_anova_number_2nd_resp &lt;- single_trial_data_clean %&gt;%
+  dplyr::group_by(participant_id, group, stimulation, session) %&gt;%
+  dplyr::summarize(
+    number_2nd_resp = sum(!is.na(response_type_2nd[response_type_2nd == &quot;correct&quot;]))
+  )
+      
+
 # ANOVA RT
 anova_rt &lt;- aov_ez(
   id     = &quot;participant_id&quot;, 
@@ -3829,10 +3965,22 @@ anova_accuracy &lt;- aov_ez(
 )
 
 
+# ANOVA number 2nd responses
+anova_number_2nd_resp &lt;- aov_ez(
+  id     = &quot;participant_id&quot;, 
+  dv     = &quot;number_2nd_resp&quot;, 
+  data   = data_anova_number_2nd_resp,
+  within = c(&quot;stimulation&quot;),
+  between= c(&quot;group&quot;),
+  observed = c(&quot;group&quot;)
+)
+
+
 # Display ANOVA results
 my_table_template(nice(anova_rt,       MSE = FALSE), caption = &quot;RT&quot;)
 my_table_template(nice(anova_pes,      MSE = FALSE), caption = &quot;PES&quot;)                  
-my_table_template(nice(anova_accuracy, MSE = FALSE), caption = &quot;Accuracy&quot;)</code></pre>
+my_table_template(nice(anova_accuracy, MSE = FALSE), caption = &quot;Accuracy&quot;)
+my_table_template(nice(anova_number_2nd_resp, MSE = FALSE), caption = &quot;Number of corrective second responses (only correct)&quot;)</code></pre>
 <table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
 <caption style="font-size: initial !important;">
 RT
@@ -4332,6 +4480,83 @@ group:stimulation:stimulus_type:accuracy_prev_trial
 </td>
 <td style="text-align:left;">
 .867
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Number of corrective second responses (only correct)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Effect
+</th>
+<th style="text-align:left;">
+df
+</th>
+<th style="text-align:left;">
+F
+</th>
+<th style="text-align:left;">
+ges
+</th>
+<th style="text-align:left;">
+p.value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+group
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+1.46
+</td>
+<td style="text-align:left;">
+.022
+</td>
+<td style="text-align:left;">
+.232
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+1.53
+</td>
+<td style="text-align:left;">
+.004
+</td>
+<td style="text-align:left;">
+.221
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+group:stimulation
+</td>
+<td style="text-align:left;">
+1, 56
+</td>
+<td style="text-align:left;">
+1.82
+</td>
+<td style="text-align:left;">
+.005
+</td>
+<td style="text-align:left;">
+.182
 </td>
 </tr>
 </tbody>

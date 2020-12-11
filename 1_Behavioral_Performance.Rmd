@@ -188,8 +188,27 @@ performance_outliers <- df_aggregated_per_subject_accuracy %>%
 
 # Display performance outliers
 my_table_template(performance_outliers, caption = "Performance outliers (accuracy > 2/3 SD below/above group mean per condition (stimulus type x stimulation))")
+
+
+# Calculate number of errors
+number_of_errors <- single_trial_data %>% 
+  dplyr::group_by(participant_id, group, session) %>% 
+  dplyr::summarize(errors_total    = sum(response_type == "incorrect"), 
+                   errors_analyzed = sum(response_type == "incorrect" & !is.nan(MFN_0_100_FCz) & rt_invalid == FALSE)
+  ) %>%
+  dplyr::group_by(group) %>%
+  # Calculate M and SD of the variables
+  dplyr::summarize(across(-c(participant_id, session), list(mean,sd,min,max)))
+  
+                                                                                                 
+# Display number of errors
+my_table_template(number_of_errors, 
+                  caption = "Number of errors", 
+                  col_names = c("Group", "M", "SD", "min", "max", "M", "SD", "min", "max"),
+                  header_above_config = c(" " = 1, "In total" = 4, "In analysis" = 4)
+)
 ```
-For some participants, accuracy in the task is more than 2 SD (N = 7) or even 3 SD (N = 2) below the group mean per condition (stimulus type x stimulation). But their accuracy is still quite good, so these will not be excluded. Being an outlier in task performance is also no exclusion criterion specified in the preregistration. 
+For some participants, accuracy in the task is more than 2 SD (N = 7) or even 3 SD (N = 2) below the group mean per condition (stimulus type x stimulation). But their accuracy is still quite good, so these will not be excluded. Being an outlier in task performance is also no exclusion criterion specified in the preregistration. No participant committed < 6 errors. Thus, no participant will be excluded based on this criterion.
 <br><br>
 
 ```{r feedback}
@@ -1123,7 +1142,7 @@ tab_model(GLMM_accuracy,
 )
 ```
 <br><br>
-Accuracy is lower in the incongruent condition than in the congruent condition. Furthermore, accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy). There is no interaction involving congruency on trial n and response type on trial n − 1. There is no evidence for an effect of group or stimulation. 
+Accuracy is lower in the incongruent condition than in the congruent condition. Furthermore, accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy). There is no evidence for an effect of group or stimulation. 
 <br><br>
 
 #### Assumption checks
@@ -1161,7 +1180,7 @@ overdisp_fun(GLMM_accuracy) # If the p-value is < 0.05, the data are overdispers
 
 ## ANOVAs {.tabset}
 ***
-To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), RT, PES, and accuracy were additionally analyzed with Greenhouse–Geisser corrected repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), response type (correct, incorrect)/condition (congruent correct, incongruent correct, incongruent incorrect), and accuracy previous trial (correct, incorrect). As can be seen below, the ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all main effects, interaction effects, and all pairwise comparisons. 
+To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), RT, PES, and accuracy were additionally analyzed with Greenhouse–Geisser corrected repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), response type (correct, incorrect)/condition (congruent correct, incongruent correct, incongruent incorrect), and accuracy previous trial (correct, incorrect). As can be seen below, the ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all main effects, interaction effects, and all pairwise comparisons. I additionally analyzed whether there is an stimulation effect on the number of corrective second responses (was erroneously written in preregistration). There is none. This analysis requires aggregated data, hence I only calculated an ANOVA, no LMM.
 
 ```{r ANOVAs}
 
@@ -1199,6 +1218,13 @@ data_anova_accuracy <- single_trial_data_clean[!is.na(single_trial_data_clean$ac
   )
 
 
+data_anova_number_2nd_resp <- single_trial_data_clean %>%
+  dplyr::group_by(participant_id, group, stimulation, session) %>%
+  dplyr::summarize(
+    number_2nd_resp = sum(!is.na(response_type_2nd[response_type_2nd == "correct"]))
+  )
+      
+
 # ANOVA RT
 anova_rt <- aov_ez(
   id     = "participant_id", 
@@ -1232,10 +1258,22 @@ anova_accuracy <- aov_ez(
 )
 
 
+# ANOVA number 2nd responses
+anova_number_2nd_resp <- aov_ez(
+  id     = "participant_id", 
+  dv     = "number_2nd_resp", 
+  data   = data_anova_number_2nd_resp,
+  within = c("stimulation"),
+  between= c("group"),
+  observed = c("group")
+)
+
+
 # Display ANOVA results
 my_table_template(nice(anova_rt,       MSE = FALSE), caption = "RT")
 my_table_template(nice(anova_pes,      MSE = FALSE), caption = "PES")                  
 my_table_template(nice(anova_accuracy, MSE = FALSE), caption = "Accuracy")
+my_table_template(nice(anova_number_2nd_resp, MSE = FALSE), caption = "Number of corrective second responses (only correct)")
 ```
 <br><br>
 
