@@ -447,6 +447,11 @@ load(file = &quot;./data/Single_Trial_Data.rda&quot;)
 load(file = &quot;./data/Feedback_Infos.rda&quot;)
 
 
+# Exclude P_02 (due to retainer) and C_02 (as preregistered: patients are excluded with their match)
+single_trial_data &lt;- single_trial_data[single_trial_data$participant_id != &quot;P_02&quot; &amp; single_trial_data$participant_id != &quot;C_02&quot;,]
+feedback_infos    &lt;- feedback_infos[feedback_infos$participant_id != &quot;P_02&quot; &amp; feedback_infos$participant_id != &quot;C_02&quot;,]
+
+
 # Create some variables: numeric word accuracy, correctness of previous response, post-error accuracy (pea), and post-correct accuracy (pca)
 # Important to do this before trial exclusion! Otherwise the previous trial in the table might not have been the previous trial in the task!
 single_trial_data &lt;- single_trial_data %&gt;%
@@ -508,6 +513,29 @@ single_trial_data_clean[single_trial_data_clean$trial == 80  | single_trial_data
                         single_trial_data_clean$trial == 320 | single_trial_data_clean$trial == 321|
                         single_trial_data_clean$trial == 400 | single_trial_data_clean$trial == 401| 
                         single_trial_data_clean$trial == 480, &quot;pes&quot;] &lt;- NA
+
+
+# Add column for number of errors (needed as covariate later) - this variable contains total number of errors, not only those entering analysis (preferred according to JK)
+single_trial_data_clean &lt;- single_trial_data %&gt;% 
+  dplyr::group_by(participant_id, session) %&gt;% 
+  dplyr::summarize(number_errors = sum(response_type == &quot;incorrect&quot;)) %&gt;%
+  dplyr::ungroup(.) %&gt;%
+  dplyr::left_join(single_trial_data_clean, ., by = c(&quot;participant_id&quot;, &quot;session&quot;))
+# Standardize this variable
+single_trial_data_clean$number_errors_standardized &lt;- scale(single_trial_data_clean$number_errors, center = TRUE, scale = TRUE)
+
+
+# Add column for number of speeding (needed as covariate later) 
+single_trial_data_clean &lt;- feedback_infos[feedback_infos$block != 6,] %&gt;% 
+  dplyr::group_by(participant_id, session, feedback) %&gt;%
+  dplyr::count(feedback, .drop = FALSE) %&gt;%
+  dplyr::filter(feedback == &quot; schneller&quot;) %&gt;%
+  dplyr::rename(number_feedback_faster = n) %&gt;%
+  dplyr::ungroup(.) %&gt;%  
+  dplyr::select(-feedback) %&gt;%
+  dplyr::left_join(single_trial_data_clean, ., by = c(&quot;participant_id&quot;, &quot;session&quot;))
+# Standardize this variable
+single_trial_data_clean$number_feedback_faster_standardized &lt;- scale(single_trial_data_clean$number_feedback_faster, center = TRUE, scale = TRUE)
 
 
 # Make categorical variables factors
@@ -663,38 +691,6 @@ T2
 </td>
 <td style="text-align:right;">
 78.97
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-C_10
-</td>
-<td style="text-align:left;">
-HC
-</td>
-<td style="text-align:left;">
-incongruent
-</td>
-<td style="text-align:left;">
-sham
-</td>
-<td style="text-align:left;">
-T2
-</td>
-<td style="text-align:right;">
-82.08
 </td>
 <td style="text-align:left;">
 FALSE
@@ -958,10 +954,10 @@ max
 HC
 </td>
 <td style="text-align:right;">
-31.41
+31.75
 </td>
 <td style="text-align:right;">
-13.55
+13.61
 </td>
 <td style="text-align:right;">
 10
@@ -970,10 +966,10 @@ HC
 66
 </td>
 <td style="text-align:right;">
-31.16
+31.48
 </td>
 <td style="text-align:right;">
-13.47
+13.53
 </td>
 <td style="text-align:right;">
 10
@@ -987,10 +983,10 @@ HC
 OCD
 </td>
 <td style="text-align:right;">
-26.60
+27.11
 </td>
 <td style="text-align:right;">
-9.89
+9.69
 </td>
 <td style="text-align:right;">
 8
@@ -999,10 +995,10 @@ OCD
 49
 </td>
 <td style="text-align:right;">
-25.95
+26.45
 </td>
 <td style="text-align:right;">
-9.87
+9.67
 </td>
 <td style="text-align:right;">
 8
@@ -1057,7 +1053,7 @@ genauer
 schnell und genau
 </td>
 <td style="text-align:right;">
-141
+136
 </td>
 <td style="text-align:right;">
 113
@@ -1068,10 +1064,10 @@ schnell und genau
 schneller
 </td>
 <td style="text-align:right;">
-139
+134
 </td>
 <td style="text-align:right;">
-175
+165
 </td>
 </tr>
 </tbody>
@@ -1080,7 +1076,7 @@ schneller
     Pearson&#39;s Chi-squared test
 
 data:  feedback_infos$feedback and feedback_infos$group
-X-squared = 10.982, df = 2, p-value = 0.004125</code></pre>
+X-squared = 9.106, df = 2, p-value = 0.01054</code></pre>
 <p>The groups differ in the feedback they received.The OCD group received more feedback emphasizing speed. <br><br></p>
 </div>
 <div id="data-inspection" class="section level2 tabset">
@@ -1253,7 +1249,7 @@ Skewness
 0.9
 </td>
 <td style="text-align:right;">
-0.3
+0.2
 </td>
 <td style="text-align:right;">
 0.1
@@ -1294,7 +1290,7 @@ bc_pes &lt;- boxcox(pes+1000 ~ 1, data = single_trial_data_clean[!is.na(single_t
 
 # Reset plot layout
 par(mfrow = c(1, 1)) </code></pre>
-<p>For RT (left plot), the optimal lambda is -0.42, suggesting that log transformation (for lambda = 0) is appropriate. Actually, for lambda = -0.5, the most appropriate transformation would be Y^-0.5 = 1/(√(Y)), but this does not seem very common to me. As our lambda is not far from 0, I chose log transformation, which is more commonly used. For PES (right plot), the optimal lambda is 0.75, suggesting that no transformation (for lambda = 1) is needed. <br><br></p>
+<p>For RT (left plot), the optimal lambda is -0.38, suggesting that log transformation (for lambda = 0) is appropriate. Actually, for lambda = -0.5, the most appropriate transformation would be Y^-0.5 = 1/(√(Y)), but this does not seem very common to me. As our lambda is not far from 0, I chose log transformation, which is more commonly used. For PES (right plot), the optimal lambda is 0.75, suggesting that no transformation (for lambda = 1) is needed. <br><br></p>
 </div>
 </div>
 <div id="descriptive-statistics" class="section level2 tabset">
@@ -1622,10 +1618,10 @@ T2
 [374, 378]
 </td>
 <td style="text-align:right;">
-381
+384
 </td>
 <td style="text-align:left;">
-[379, 384]
+[381, 386]
 </td>
 </tr>
 <tr>
@@ -1648,10 +1644,10 @@ T1
 [382, 387]
 </td>
 <td style="text-align:right;">
-399
+400
 </td>
 <td style="text-align:left;">
-[396, 401]
+[398, 403]
 </td>
 </tr>
 <tr>
@@ -1668,10 +1664,10 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-358
+359
 </td>
 <td style="text-align:left;">
-[356, 360]
+[357, 361]
 </td>
 <td style="text-align:right;">
 371
@@ -1694,10 +1690,10 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-432
+434
 </td>
 <td style="text-align:left;">
-[430, 435]
+[431, 436]
 </td>
 <td style="text-align:right;">
 451
@@ -1726,10 +1722,10 @@ T2
 [430, 434]
 </td>
 <td style="text-align:right;">
-436
+438
 </td>
 <td style="text-align:left;">
-[433, 438]
+[435, 441]
 </td>
 </tr>
 <tr>
@@ -1752,10 +1748,10 @@ T1
 [445, 450]
 </td>
 <td style="text-align:right;">
-453
+455
 </td>
 <td style="text-align:left;">
-[450, 456]
+[452, 458]
 </td>
 </tr>
 <tr>
@@ -1772,10 +1768,10 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-423
+425
 </td>
 <td style="text-align:left;">
-[421, 425]
+[422, 427]
 </td>
 <td style="text-align:right;">
 427
@@ -1830,10 +1826,10 @@ T2
 [320, 398]
 </td>
 <td style="text-align:right;">
-386
+383
 </td>
 <td style="text-align:left;">
-[357, 414]
+[355, 411]
 </td>
 </tr>
 <tr>
@@ -1859,7 +1855,7 @@ T1
 355
 </td>
 <td style="text-align:left;">
-[330, 380]
+[329, 380]
 </td>
 </tr>
 <tr>
@@ -1876,10 +1872,10 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-323
+322
 </td>
 <td style="text-align:left;">
-[290, 355]
+[288, 356]
 </td>
 <td style="text-align:right;">
 356
@@ -1902,10 +1898,10 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-326
+327
 </td>
 <td style="text-align:left;">
-[321, 331]
+[322, 332]
 </td>
 <td style="text-align:right;">
 341
@@ -1934,10 +1930,10 @@ T2
 [345, 360]
 </td>
 <td style="text-align:right;">
-346
+347
 </td>
 <td style="text-align:left;">
-[338, 353]
+[339, 354]
 </td>
 </tr>
 <tr>
@@ -1963,7 +1959,7 @@ T1
 347
 </td>
 <td style="text-align:left;">
-[339, 354]
+[340, 355]
 </td>
 </tr>
 <tr>
@@ -1980,10 +1976,10 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-327
+328
 </td>
 <td style="text-align:left;">
-[322, 331]
+[323, 333]
 </td>
 <td style="text-align:right;">
 340
@@ -2061,10 +2057,10 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-98.77
+98.68
 </td>
 <td style="text-align:left;">
-[98.36, 99.18]
+[98.24, 99.12]
 </td>
 <td style="text-align:right;">
 98.46
@@ -2090,10 +2086,10 @@ T2
 [98.46, 99.23]
 </td>
 <td style="text-align:right;">
-98.68
+98.61
 </td>
 <td style="text-align:left;">
-[98.26, 99.1]
+[98.16, 99.05]
 </td>
 </tr>
 <tr>
@@ -2113,10 +2109,10 @@ T1
 [98.12, 98.96]
 </td>
 <td style="text-align:right;">
-98.18
+98.08
 </td>
 <td style="text-align:left;">
-[97.69, 98.68]
+[97.55, 98.6]
 </td>
 </tr>
 <tr>
@@ -2130,10 +2126,10 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-99.01
+98.97
 </td>
 <td style="text-align:left;">
-[98.64, 99.38]
+[98.58, 99.36]
 </td>
 <td style="text-align:right;">
 98.70
@@ -2153,10 +2149,10 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-87.02
+86.51
 </td>
 <td style="text-align:left;">
-[85.81, 88.23]
+[85.23, 87.79]
 </td>
 <td style="text-align:right;">
 91.44
@@ -2182,10 +2178,10 @@ T2
 [87.63, 89.84]
 </td>
 <td style="text-align:right;">
-90.41
+90.09
 </td>
 <td style="text-align:left;">
-[89.35, 91.47]
+[88.97, 91.2]
 </td>
 </tr>
 <tr>
@@ -2205,10 +2201,10 @@ T1
 [89.06, 91.15]
 </td>
 <td style="text-align:right;">
-90.89
+90.48
 </td>
 <td style="text-align:left;">
-[89.85, 91.93]
+[89.38, 91.59]
 </td>
 </tr>
 <tr>
@@ -2222,10 +2218,10 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-86.32
+86.16
 </td>
 <td style="text-align:left;">
-[85.08, 87.55]
+[84.87, 87.45]
 </td>
 <td style="text-align:right;">
 89.31
@@ -2297,10 +2293,10 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-38
+37
 </td>
 <td style="text-align:left;">
-[28, 48]
+[27, 48]
 </td>
 <td style="text-align:right;">
 46
@@ -2323,10 +2319,10 @@ T2
 [9, 32]
 </td>
 <td style="text-align:right;">
-34
+33
 </td>
 <td style="text-align:left;">
-[22, 47]
+[20, 46]
 </td>
 </tr>
 <tr>
@@ -2343,10 +2339,10 @@ T1
 [30, 56]
 </td>
 <td style="text-align:right;">
-53
+55
 </td>
 <td style="text-align:left;">
-[39, 67]
+[41, 69]
 </td>
 </tr>
 <tr>
@@ -2432,10 +2428,10 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-95.33
+95.15
 </td>
 <td style="text-align:left;">
-[93.22, 97.43]
+[92.97, 97.33]
 </td>
 <td style="text-align:right;">
 95.14
@@ -2458,10 +2454,10 @@ T2
 [91.29, 96.26]
 </td>
 <td style="text-align:right;">
-93.56
+93.32
 </td>
 <td style="text-align:left;">
-[90.78, 96.33]
+[90.44, 96.19]
 </td>
 </tr>
 <tr>
@@ -2478,10 +2474,10 @@ T1
 [92.64, 97.29]
 </td>
 <td style="text-align:right;">
-96.10
+95.98
 </td>
 <td style="text-align:left;">
-[93.94, 98.25]
+[93.76, 98.2]
 </td>
 </tr>
 <tr>
@@ -2492,10 +2488,10 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-94.74
+95.03
 </td>
 <td style="text-align:left;">
-[92.46, 97.02]
+[92.74, 97.32]
 </td>
 <td style="text-align:right;">
 96.31
@@ -2567,10 +2563,10 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-92.75
+92.42
 </td>
 <td style="text-align:left;">
-[92, 93.5]
+[91.63, 93.22]
 </td>
 <td style="text-align:right;">
 94.98
@@ -2593,10 +2589,10 @@ T2
 [93.14, 94.48]
 </td>
 <td style="text-align:right;">
-94.60
+94.41
 </td>
 <td style="text-align:left;">
-[93.95, 95.24]
+[93.72, 95.09]
 </td>
 </tr>
 <tr>
@@ -2613,10 +2609,10 @@ T1
 [93.63, 94.92]
 </td>
 <td style="text-align:right;">
-94.48
+94.21
 </td>
 <td style="text-align:left;">
-[93.82, 95.14]
+[93.51, 94.91]
 </td>
 </tr>
 <tr>
@@ -2627,10 +2623,10 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-92.52
+92.40
 </td>
 <td style="text-align:left;">
-[91.77, 93.28]
+[91.61, 93.19]
 </td>
 <td style="text-align:right;">
 93.85
@@ -2910,8 +2906,8 @@ Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, 
 <p>RT, PES, and accuracy were modeled using two linear mixed-effects models (LMM) and a binomial generalized linear mixed-effects model (GLMM), respectively. <br><br></p>
 <p><strong>Fixed effects</strong></p>
 <p><em>Stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), and, where applicable (= for RT), response type (correct, incorrect)</em> were specified as fixed factors.Fixed effects were coded using effect coding (this equals sliding difference contrasts for two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. Fixed effects were not eliminated using model comparison techniques because they correspond to the original experimental design and a priori hypotheses. <br><br></p>
-<p>I decided to specify models that only predict all main effects and interactions only with the factor stimulation. This is the most sparse model for testing the effect of stimulation. Other models could also be specified, additionally testing interactions with the factor group or testing all possible interactions. For example, these models additionally test the following effects: group:response_type, group:stimulus_type, group:response_type:stimulation, and group:stimulus_type:stimulation. But to me, these effects are of no prior interest, and/or difficult to interpret. Thus, I chose the simple models that only tests interactions with the factor stimulation. <br><br></p>
-<p>I thought about including session as fixed effect. But this was not stated in preregistration and is of no real interest. I checked the effect of session once. For RT, there is a main effect, but no interaction with stimulation (there is a trend though, but I do not find this effect to be meaningfully interpretable). <br><br></p>
+<p>I decided to specify models that only predict all main effects and interactions only with the factor stimulation and group. This is the most sparse model for testing the effects of interest.<br><br></p>
+<p>I thought about including session as fixed effect. But this was not stated in preregistration and is of no real interest. I checked the effect of session as a covariate. For RT, there is a main effect, but no interaction with stimulation (there is a trend though, but I do not find this effect to be meaningfully interpretable). <br><br></p>
 <p><strong>Random effects</strong></p>
 <p>Participants were specified as random factors. The random-effects structure for each model was determined based on the procedure proposed by Bates, Kliegl, et al. (2015). We started with the maximal random-effects structure, including random intercepts for participants, as well as random slopes for all main effects and interactions specified as fixed effects that were justified by the design. If the model with the maximal random-effects structure would not converge, correlations of the random terms were set to zero. We performed a principal components analysis on the random-effects variance–covariance estimates to determine the number of components supported by the data and removed random effects explaining zero variance to prevent overparametrization (Matuschek et al., 2017).</p>
 <pre class="r"><code># Define contrasts (sliding difference contrasts)
@@ -2924,15 +2920,15 @@ contrasts(single_trial_data_clean$session)             &lt;- contr.sdif(2)
 
 
 # Add contrasts as numerical covariates via model matrix* (specify all possible contasts for now)
-model_matrix &lt;- model.matrix(~ stimulation * (group + response_type + stimulus_type), single_trial_data_clean)
+model_matrix &lt;- model.matrix(~ stimulation * group * (response_type + stimulus_type), single_trial_data_clean)
 
 
 # Attach the model matrix (8 columns) to the dataframe
-single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 8)] &lt;- model_matrix
+single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 12)] &lt;- model_matrix
 
 
 # Assign descriptive names to the contrasts
-names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 7):ncol(single_trial_data_clean)] &lt;- c(&quot;Grand Mean&quot;, &quot;verum_sham&quot;, &quot;OCD_HC&quot;, &quot;incorrect_correct&quot;, &quot;incongruent_congruent&quot;, &quot;verum_sham:OCD_HC&quot;, &quot;verum_sham:incorrect_correct&quot;, &quot;verum_sham:incongruent_congruent&quot;)
+names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 11):ncol(single_trial_data_clean)] &lt;- c(&quot;Grand Mean&quot;, &quot;verum_sham&quot;, &quot;OCD_HC&quot;, &quot;incorrect_correct&quot;, &quot;incongruent_congruent&quot;, &quot;verum_sham:OCD_HC&quot;, &quot;verum_sham:incorrect_correct&quot;, &quot;verum_sham:incongruent_congruent&quot;, &quot;OCD_HC:incorrect_correct&quot; , &quot;OCD_HC:incongruent_congruent&quot;, &quot;verum_sham:OCD_HC:incorrect_correct&quot;, &quot;verum_sham:OCD_HC:incongruent_congruent&quot;)
 
 
 # *Note: For the random effects, we needed to enter the separate random effect terms in the models to enable
@@ -2950,7 +2946,7 @@ names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 7):ncol(single_t
 </ul>
 <p>For the aggregation-based ANOVA on RT, I will excluded congruent errors.</p>
 <pre class="r"><code># Run model with maximal random-effects structure
-LMM_rt &lt;- lmer(rt_log ~ verum_sham * (OCD_HC + incorrect_correct + incongruent_congruent) +
+LMM_rt &lt;- lmer(rt_log ~ verum_sham * OCD_HC * (incorrect_correct + incongruent_congruent) +
   (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
 data = single_trial_data_clean,
 REML = TRUE,
@@ -2959,12 +2955,12 @@ control = lmerControl(optimizer = &quot;bobyqa&quot;)
 
 
 # Check model output
-# summary(LMM_rt) # Model does converge
+# summary(LMM_rt) # Model does converge 
 # isSingular(LMM_rt) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
 
 
 # Check PCA of random-effects variance-covariance estimates
-# summary(rePCA(LMM_rt)) # All terms explain variance
+# summary(rePCA(LMM_rt)) # All terms explain variance 
 
 
 # Display results (fixed effects)
@@ -3010,7 +3006,7 @@ p value
 5.86 – 5.90
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-566.41
+553.13
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -3027,10 +3023,10 @@ verum_sham
 -0.02 – 0.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.65
+-0.62
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.519
+0.537
 </td>
 </tr>
 <tr>
@@ -3041,13 +3037,13 @@ OCD_HC
 0.03
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.01 – 0.07
+-0.02 – 0.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.35
+1.22
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.183
+0.227
 </td>
 </tr>
 <tr>
@@ -3061,7 +3057,7 @@ incorrect_correct
 -0.25 – -0.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--23.26
+-22.35
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -3078,7 +3074,7 @@ incongruent_congruent
 0.13 – 0.15
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-30.32
+30.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -3089,16 +3085,16 @@ incongruent_congruent
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.01
+0.00
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.04 – 0.01
+-0.03 – 0.04
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.89
+0.15
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.380
+0.882
 </td>
 </tr>
 <tr>
@@ -3112,10 +3108,10 @@ verum_sham * incorrect_correct
 -0.02 – 0.02
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.15
+-0.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.879
+0.889
 </td>
 </tr>
 <tr>
@@ -3129,10 +3125,78 @@ verum_sham * incongruent_congruent
 -0.00 – 0.02
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.69
+1.57
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.096
+0.121
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.04 – 0.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.11
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.914
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.04 – -0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.050
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00 – 0.08
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.87
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.067
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.17
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.249
 </td>
 </tr>
 <tr>
@@ -3194,52 +3258,52 @@ Random Effects
 ρ<sub>01</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.028
+0.021
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.108
+0.099
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
--0.183
+-0.202
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
--0.138
+-0.141
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.190
+0.218
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.268
+0.271
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-54998
+53093
 </td>
 </tr>
 <tr>
@@ -3247,7 +3311,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.181 / 0.400
+0.180 / 0.403
 </td>
 </tr>
 </table>
@@ -3273,11 +3337,11 @@ Warning: Heteroscedasticity (non-constant error variance) detected (p = 0.000).
 OK: No outliers detected.
 [1] &quot;# Check for normal distributed random effects&quot;
 Group: participant_id
-                     (Intercept) OK: random effects appear as normally distributed (p = 0.068).
-                      verum_sham OK: random effects appear as normally distributed (p = 0.096).
-               incorrect_correct OK: random effects appear as normally distributed (p = 0.282).
-           incongruent_congruent OK: random effects appear as normally distributed (p = 0.540).
-    verum_sham:incorrect_correct OK: random effects appear as normally distributed (p = 0.473).
+                     (Intercept) OK: random effects appear as normally distributed (p = 0.125).
+                      verum_sham OK: random effects appear as normally distributed (p = 0.195).
+               incorrect_correct OK: random effects appear as normally distributed (p = 0.254).
+           incongruent_congruent OK: random effects appear as normally distributed (p = 0.135).
+    verum_sham:incorrect_correct OK: random effects appear as normally distributed (p = 0.672).
 verum_sham:incongruent_congruent Warning: Non-normality of random effects detected (p &lt; .001).</code></pre>
 <ul>
 <li><strong>Assumption 1: Independence of Data Points / Absence of collinearity -&gt; Is OK</strong>
@@ -3313,6 +3377,1704 @@ verum_sham:incongruent_congruent Warning: Non-normality of random effects detect
 </ul></li>
 </ul>
 </div>
+<div id="check-covariates" class="section level4">
+<h4>Check covariates</h4>
+<p>The purpose for including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models are reported.</p>
+<pre class="r"><code># RT check covariate session
+LMM_rt_session &lt;- lmer(rt_log ~ verum_sham * OCD_HC * session * (incorrect_correct + incongruent_congruent) +
+  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = &quot;bobyqa&quot;)
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_rt_session,
+  dv.labels = &quot;log(RT), covariate session&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
+)
+
+
+# RT check covariate number of errors (predictor was z standardized)
+LMM_rt_number_errors &lt;- lmer(rt_log ~ verum_sham * OCD_HC * number_errors_standardized * (incorrect_correct + incongruent_congruent) +
+  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = &quot;bobyqa&quot;)
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_rt_number_errors,
+  dv.labels = &quot;log(RT), covariate number of errors&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
+)
+
+
+# RT check covariate number of feedback faster (predictor was z standardized)
+LMM_rt_number_feedback_faster &lt;- lmer(rt_log ~ verum_sham * OCD_HC * number_feedback_faster_standardized * (incorrect_correct + incongruent_congruent) +
+  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = &quot;bobyqa&quot;)
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_rt_number_feedback_faster,
+  dv.labels = &quot;log(RT), covariate number of feedback faster&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
+)</code></pre>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+log(RT), covariate session
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+t value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+5.88
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+5.86 – 5.90
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+563.71
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.58
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.564
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01 – 0.07
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.37
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.176
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+session2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – -0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.20
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.032</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.23
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.25 – -0.21
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-22.55
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.14
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.13 – 0.15
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+30.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – 0.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.30
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.762
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:session2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.08
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.16 – 0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.93
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.060
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC:session2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.04 – 0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.73
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.469
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02 – 0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.22
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.828
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00 – 0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.51
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.137
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.04 – 0.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.984
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.04 – -0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.08
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.043</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+session2-1:incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.02 – 0.05
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+4.05
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+session2-1:incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.40
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.687
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:OCD_HC:session2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.10 – 0.23
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.76
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.451
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00 – 0.07
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.81
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.077
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.18
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.242
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:session2-1:incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.14 – 0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.50
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.139
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:session2-1:incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01 – 0.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.19
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.238
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC:session2-1:incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02 – 0.05
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.320
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC:session2-1:incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01 – 0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.54
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.591
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:OCD_HC:session2-1:incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.08
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.08 – 0.23
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.92
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.360
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:OCD_HC:session2-1:incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.10 – 0.05
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.59
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.558
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.022
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.006
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.003
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.incorrect_correct</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.005
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.incongruent_congruent</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.001
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham:incorrect_correct</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.003
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham:incongruent_congruent</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.001
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ρ<sub>01</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+-0.061
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.033
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+-0.157
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+-0.018
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.232
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.265
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+N <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+56
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+53093
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.195 / 0.408
+</td>
+</tr>
+</table>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+log(RT), covariate number of errors
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+t value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+5.89
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+5.87 – 5.91
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+568.07
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.16
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.251
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02 – 0.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.82
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.416
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+number_errors_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.04 – -0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-3.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.003</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.23
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.25 – -0.21
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-21.63
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.14
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.13 – 0.15
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+30.10
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02 – 0.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.65
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.517
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * number_errors_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02 – 0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.13
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.896
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * number_errors_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00 – 0.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.70
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.093
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.53
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.595
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00 – 0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.76
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.085
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.05 – 0.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.25
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.804
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.04 – 0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.81
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.075
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+number_errors_standardized * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.69
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.494
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+number_errors_standardized * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.20
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.234
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * number_errors_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.07 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.51
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.136
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.05
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01 – 0.09
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.21
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.031</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.31
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.196
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * number_errors_standardized) * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01 – 0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.77
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.444
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * number_errors_standardized) * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.37
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.709
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(OCD_HC * number_errors_standardized) * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – 0.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.32
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.751
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(OCD_HC * number_errors_standardized) * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.95
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.343
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC * number_errors_standardized) * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.08 – 0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.30
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.198
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC * number_errors_standardized) * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01 – 0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.80
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.429
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.022
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.006
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.003
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.incorrect_correct</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.006
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.incongruent_congruent</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.001
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham:incorrect_correct</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.004
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham:incongruent_congruent</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.001
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ρ<sub>01</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.031
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.081
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+-0.135
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+-0.052
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.197
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.261
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+N <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+56
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+53093
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.204 / 0.412
+</td>
+</tr>
+</table>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+log(RT), covariate number of feedback faster
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+t value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+5.89
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+5.87 – 5.91
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+571.37
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.315
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02 – 0.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.95
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.347
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+number_feedback_faster_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.00 – 0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.43
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.017</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.23
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.25 – -0.21
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-21.84
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.14
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.13 – 0.15
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+30.18
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02 – 0.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.59
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.559
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * number_feedback_faster_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.90
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.372
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * number_feedback_faster_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.05 – 0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.78
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.078
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.87
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.388
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00 – 0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.66
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.103
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.05 – 0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.30
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.764
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.04 – 0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.86
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.068
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+number_feedback_faster_standardized * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01 – 0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.15
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.252
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+number_feedback_faster_standardized * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01 – 0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.27
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.209
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * number_feedback_faster_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01 – 0.07
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.42
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.162
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.05
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01 – 0.09
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.40
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.020</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.22
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.229
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * number_feedback_faster_standardized) * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.04 – 0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.62
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.110
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * number_feedback_faster_standardized) * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.17
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.863
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(OCD_HC * number_feedback_faster_standardized) * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.06 – 0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.65
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.101
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(OCD_HC * number_feedback_faster_standardized) * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01 – 0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.63
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.531
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC * number_feedback_faster_standardized) * incorrect_correct
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.05
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.01 – 0.10
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.32
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.023</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC * number_feedback_faster_standardized) *<br>incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.03 – 0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.99
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.327
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.022
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.006
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.003
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.incorrect_correct</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.005
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.incongruent_congruent</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.001
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham:incorrect_correct</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.003
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham:incongruent_congruent</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.001
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ρ<sub>01</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.030
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.057
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+-0.146
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+-0.018
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.214
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.265
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+N <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+56
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+53093
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.190 / 0.405
+</td>
+</tr>
+</table>
+<p><br><br></p>
+</div>
 </div>
 <div id="pes" class="section level3 tabset">
 <h3>PES</h3>
@@ -3341,7 +5103,7 @@ control = lmerControl(optimizer = &quot;bobyqa&quot;)
 
 # Display results (fixed effects)
 tab_model(LMM_pes,
-  dv.labels = &quot;PES&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  dv.labels = &quot;PES (ms)&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = TRUE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
   string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
 )</code></pre>
@@ -3351,7 +5113,7 @@ tab_model(LMM_pes,
  
 </th>
 <th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
-PES
+PES (ms)
 </th>
 </tr>
 <tr>
@@ -3376,13 +5138,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-38.70
+38.69
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-30.97 – 46.43
+30.80 – 46.58
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.81
+9.61
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -3393,16 +5155,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.26
+1.04
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--9.92 – 9.39
+-8.70 – 10.78
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.05
+0.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.957
+0.835
 </td>
 </tr>
 <tr>
@@ -3410,16 +5172,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.12
+9.26
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.11 – 21.35
+-3.33 – 21.86
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.46
+1.44
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.149
+0.155
 </td>
 </tr>
 <tr>
@@ -3427,16 +5189,16 @@ OCD_HC
 incongruent_congruent
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--7.62
+-7.68
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--19.73 – 4.49
+-19.91 – 4.55
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 -1.23
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.217
+0.218
 </td>
 </tr>
 <tr>
@@ -3444,16 +5206,16 @@ incongruent_congruent
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.14
+-3.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--22.44 – 16.17
+-22.55 – 16.40
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.32
+-0.31
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.751
+0.758
 </td>
 </tr>
 <tr>
@@ -3466,35 +5228,35 @@ Random Effects
 σ<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-9116.548
+9183.210
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>00</sub> <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-349.743
+364.491
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>00</sub> <sub>participant_id.1</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-564.267
+546.093
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.037
+0.038
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-2683
+2622
 </td>
 </tr>
 <tr>
@@ -3502,7 +5264,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.003 / 0.040
+0.003 / 0.041
 </td>
 </tr>
 </table>
@@ -3529,8 +5291,8 @@ Warning: Heteroscedasticity (non-constant error variance) detected (p = 0.000).
 OK: No outliers detected.
 [1] &quot;# Check for normal distributed random effects&quot;
 Group: participant_id
-(Intercept) OK: random effects appear as normally distributed (p = 0.150).
- verum_sham OK: random effects appear as normally distributed (p = 0.195).
+(Intercept) OK: random effects appear as normally distributed (p = 0.197).
+ verum_sham OK: random effects appear as normally distributed (p = 0.280).
 
 Could not compute standard errors from random effects for diagnostic plot.</code></pre>
 <ul>
@@ -3567,6 +5329,741 @@ Could not compute standard errors from random effects for diagnostic plot.</code
 </ul></li>
 </ul>
 </div>
+<div id="check-covariates-1" class="section level4">
+<h4>Check covariates</h4>
+<p>The purpose for including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models are reported.</p>
+<pre class="r"><code># PES check covariate session
+LMM_pes_session &lt;- lmer(pes ~ verum_sham * OCD_HC * session + incongruent_congruent +
+  (1 + verum_sham  || participant_id),
+data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+REML = TRUE,
+control = lmerControl(optimizer = &quot;bobyqa&quot;)
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_pes_session,
+  dv.labels = &quot;PES (ms), covariate session&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
+)
+
+
+# PES check covariate number of errors (predictor was z standardized)
+LMM_pes_number_errors &lt;- lmer(pes ~ verum_sham * OCD_HC * number_errors_standardized + incongruent_congruent +
+  (1 + verum_sham  || participant_id),
+data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+REML = TRUE,
+control = lmerControl(optimizer = &quot;bobyqa&quot;)
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_pes_number_errors,
+  dv.labels = &quot;PES (ms), covariate number of errors&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
+)
+
+
+# PES check covariate number of feedback faster (predictor was z standardized)
+LMM_pes_number_feedback_faster &lt;- lmer(pes ~ verum_sham * OCD_HC * number_feedback_faster_standardized + incongruent_congruent +
+  (1 + verum_sham  || participant_id),
+data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+REML = TRUE,
+control = lmerControl(optimizer = &quot;bobyqa&quot;)
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_pes_number_feedback_faster,
+  dv.labels = &quot;PES (ms), covariate number of feedback faster&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;t value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;,  p.val = &quot;satterthwaite&quot;, wrap.labels = 80, digits.re = 3
+)</code></pre>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+PES (ms), covariate session
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+t value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+38.45
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+30.53 – 46.36
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+9.52
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.27
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-6.10 – 10.64
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.53
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.598
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+9.58
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-3.09 – 22.24
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.48
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.144
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+session2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-19.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-27.39 – -10.62
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-4.44
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-6.73
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-18.94 – 5.49
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.08
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.280
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.08
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-18.82 – 14.66
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.24
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.808
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:session2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-7.27
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-32.59 – 18.05
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.56
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.576
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC:session2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.12
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-16.87 – 16.62
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.989
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:OCD_HC:session2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-18.32
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-68.96 – 32.31
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.71
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.481
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+9186.521
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+370.409
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id.1</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+197.262
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.039
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+2622
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.013 / 0.052
+</td>
+</tr>
+</table>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+PES (ms), covariate number of errors
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+t value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+38.90
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+30.88 – 46.92
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+9.51
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-9.72 – 9.64
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.993
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+6.09
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-6.84 – 19.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.92
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.360
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+number_errors_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-8.38
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-15.03 – -1.73
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.47
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.015</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-7.35
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-19.58 – 4.87
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.18
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.239
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+3.16
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-16.21 – 22.52
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.32
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.751
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * number_errors_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+7.50
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-3.50 – 18.49
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.34
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.186
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * number_errors_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-6.32
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-19.62 – 6.98
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.93
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.354
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * number_errors_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-3.84
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-25.82 – 18.15
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.34
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.733
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+9184.318
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+365.953
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id.1</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+426.224
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.038
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+2622
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.010 / 0.048
+</td>
+</tr>
+</table>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+PES (ms), covariate number of feedback faster
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+t value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+38.23
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+30.17 – 46.28
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+9.31
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.78
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-9.24 – 10.81
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.15
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.879
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+8.37
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-4.64 – 21.38
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.26
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.212
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+number_feedback_faster_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+4.79
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.41 – 10.98
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.51
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.133
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-7.24
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-19.49 – 5.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.16
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.246
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.26
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-18.79 – 21.32
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.12
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.902
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * number_feedback_faster_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-4.38
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-15.40 – 6.64
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.78
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.438
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * number_feedback_faster_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+8.32
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-4.07 – 20.71
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.32
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.191
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * number_feedback_faster_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+4.72
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-17.34 – 26.77
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.42
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.676
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+9183.111
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+374.951
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id.1</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+506.808
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.039
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+2622
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.007 / 0.046
+</td>
+</tr>
+</table>
+<p><br><br></p>
+</div>
 </div>
 <div id="accuracy" class="section level3 tabset">
 <h3>Accuracy</h3>
@@ -3574,8 +6071,8 @@ Could not compute standard errors from random effects for diagnostic plot.</code
 <h4>GLMM</h4>
 <p>I included the factor <em>accuracy of previous trial</em> in the model, to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered. (If preferred, I could also first run the preregistered model with only stimulation, group and stimulus type as fixed factors and then a second model, including additionally the factor <em>accuracy of previous trial</em>. This approach would also allow using all trials for the basic accuracy model, as when including the factor , I automatically lose all trials from the calculation at the start of a new task block, that have NA for the variable <em>accuracy of previous trial</em>. But the results remain the same, independent of whether I run the model with all trials or the subset). I did not add <em>accuracy of previous trial</em> as random effect here.Doing so would require specifying the model matrix separately for the subset of data where <em>accuracy of previous trial</em> is not NA.When not having this factor as random effect, the model allows having correlated random effect terms. This model also shows a trend for an interaction between stimulation and group, which before was not present. But following up this interaction does not yield an effect of stimulation in any of the groups (also not specifically in the incongruent condition, which seems (according to the plot) that the OCD group has lower accuracy to incongruent trials in the verum than in the sham condition).</p>
 <pre class="r"><code># Run model with maximal random-effects structure
-GLMM_accuracy &lt;- glmer(accuracy_numeric ~ verum_sham * (OCD_HC + incongruent_congruent + accuracy_prev_trial) +
-  (1 + incongruent_congruent + verum_sham + verum_sham:incongruent_congruent  | participant_id),
+GLMM_accuracy &lt;- glmer(accuracy_numeric ~ verum_sham * OCD_HC * (incongruent_congruent + accuracy_prev_trial) +
+  (1 + verum_sham * incongruent_congruent | participant_id),
 data = single_trial_data_clean,
 family = binomial,
 control = glmerControl(optimizer = &quot;bobyqa&quot;)
@@ -3628,13 +6125,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-34.19
+33.18
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-29.32 – 39.88
+28.52 – 38.60
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-45.01
+45.35
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -3645,16 +6142,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.06
+1.10
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.86 – 1.30
+0.90 – 1.36
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.52
+0.94
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.601
+0.349
 </td>
 </tr>
 <tr>
@@ -3662,16 +6159,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.15
+0.92
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.92 – 1.44
+0.69 – 1.24
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.20
+-0.54
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.228
+0.589
 </td>
 </tr>
 <tr>
@@ -3685,7 +6182,7 @@ incongruent_congruent
 0.08 – 0.12
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--19.05
+-19.33
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -3696,13 +6193,13 @@ incongruent_congruent
 accuracy_prev_trial2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.44
+1.43
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.23 – 1.69
+1.22 – 1.69
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.49
+4.36
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -3713,16 +6210,16 @@ accuracy_prev_trial2-1
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.83
+1.12
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.67 – 1.02
+0.76 – 1.66
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.75
+0.58
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.080
+0.560
 </td>
 </tr>
 <tr>
@@ -3730,16 +6227,16 @@ verum_sham * OCD_HC
 verum_sham * incongruent_congruent
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.01
+1.00
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.75 – 1.36
+0.74 – 1.34
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.08
+-0.03
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.936
+0.979
 </td>
 </tr>
 <tr>
@@ -3747,16 +6244,84 @@ verum_sham * incongruent_congruent
 verum_sham:accuracy_prev_trial2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.25
+1.33
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.91 – 1.71
+0.96 – 1.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.36
+1.74
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.175
+0.082
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.70
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.08 – 2.68
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.30
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.021</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC:accuracy_prev_trial2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.91
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.66 – 1.26
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.56
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.575
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.87
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.51 – 1.48
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.50
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.616
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:OCD_HC:accuracy_prev_trial2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.70
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.89 – 3.24
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.62
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.105
 </td>
 </tr>
 <tr>
@@ -3776,61 +6341,61 @@ Random Effects
 τ<sub>00</sub> <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.209
-</td>
-<tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
-τ<sub>11</sub> <sub>participant_id.incongruent_congruent</sub>
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.602
+0.189
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.058
+0.052
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
-τ<sub>11</sub> <sub>participant_id.incongruent_congruent:verum_sham</sub>
+τ<sub>11</sub> <sub>participant_id.incongruent_congruent</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.235
+0.539
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham:incongruent_congruent</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.247
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ρ<sub>01</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
--0.519
+0.078
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
--0.022
+-0.483
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
--0.332
+-0.365
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.102
+0.097
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-54350
+52469
 </td>
 </tr>
 <tr>
@@ -3838,7 +6403,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.276 / 0.350
+0.275 / 0.345
 </td>
 </tr>
 </table>
@@ -3864,14 +6429,14 @@ overdisp_fun &lt;- function(model) {
 overdisp_fun(GLMM_accuracy) # If the p-value is &lt; 0.05, the data are overdispersed. Here p &gt; 0.05. Overdispersion is not a problem here. </code></pre>
 <pre><code>[1] &quot;Check for normal distributed random effects&quot;
 Group: participant_id
-                     (Intercept) OK: random effects appear as normally distributed (p = 0.437).
-           incongruent_congruent OK: random effects appear as normally distributed (p = 0.611).
-                      verum_sham OK: random effects appear as normally distributed (p = 0.539).
-incongruent_congruent:verum_sham OK: random effects appear as normally distributed (p = 0.578).
+                     (Intercept) OK: random effects appear as normally distributed (p = 0.530).
+                      verum_sham OK: random effects appear as normally distributed (p = 0.835).
+           incongruent_congruent OK: random effects appear as normally distributed (p = 0.228).
+verum_sham:incongruent_congruent OK: random effects appear as normally distributed (p = 0.441).
 
 [1] &quot;Check for overdispersion&quot;
         chisq         ratio           rdf             p 
-50532.5907190     0.9300705 54332.0000000     1.0000000 </code></pre>
+48834.8529080     0.9311277 52447.0000000     1.0000000 </code></pre>
 <ul>
 <li><p><strong>Assumption 1: Chosen Link Function is Appropriate -&gt; Is OK</strong></p></li>
 <li><p><strong>Assumption 2: Normality of Random Effects -&gt; Is OK???</strong></p>
@@ -3884,6 +6449,775 @@ incongruent_congruent:verum_sham OK: random effects appear as normally distribut
 <li>Overdispersion is not a problem here. The empirical variance in data does not exceed the nominal variance under the presumed model. The chi-square test of the ratio of the empirical variance in data and the nominal variance under the presumed model is not significant. <br><br></li>
 </ul></li>
 </ul>
+</div>
+<div id="check-covariates-2" class="section level4">
+<h4>Check covariates</h4>
+<p>The purpose for including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models are reported.</p>
+<pre class="r"><code># Accuracy check covariate session (not included in all interactions for reasons of convergence)
+GLMM_accuracy_session &lt;- glmer(accuracy_numeric ~ verum_sham * OCD_HC * (incongruent_congruent + accuracy_prev_trial + session) +
+  (1 + verum_sham * incongruent_congruent | participant_id),
+data = single_trial_data_clean,
+family = binomial,
+control = glmerControl(optimizer = &quot;bobyqa&quot;)
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(GLMM_accuracy_session,
+  dv.labels = &quot;Accuracy, covariate session&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;z value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;, wrap.labels = 80, digits.re = 3
+)
+
+
+# Accuracy check covariate number of feedback faster (predictor was z standardized) (not included in all interactions for reasons of convergence)
+GLMM_accuracy_number_feedback_faster &lt;- glmer(accuracy_numeric ~ verum_sham * OCD_HC * (incongruent_congruent + accuracy_prev_trial + number_feedback_faster_standardized) +
+  (1 + verum_sham * incongruent_congruent || participant_id),
+data = single_trial_data_clean,
+family = binomial,
+control = glmerControl(optimizer = &quot;bobyqa&quot;)
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(GLMM_accuracy_number_feedback_faster,
+  dv.labels = &quot;Accuracy, covariate number of feedback faster&quot;, show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = &quot;b&quot;, string.stat = &quot;z value&quot;, 
+  string.ci = &quot;95 % CI&quot;, string.p = &quot;p value&quot;, wrap.labels = 80, digits.re = 3
+)</code></pre>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+Accuracy, covariate session
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+z value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+33.13
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+28.44 – 38.59
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+44.98
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.11
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.91 – 1.37
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.307
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.93
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.69 – 1.25
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.48
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.634
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.10
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.08 – 0.12
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-19.47
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+accuracy_prev_trial2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.43
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.22 – 1.68
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+4.37
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+session2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.95
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.86 – 1.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.85
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.397
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.12
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.76 – 1.64
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.56
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.575
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.98
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.73 – 1.31
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.16
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.872
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:accuracy_prev_trial2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.33
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.96 – 1.83
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.73
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.083
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:session2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.68
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.44 – 1.05
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.75
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.080
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.71
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.09 – 2.69
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.33
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.020</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC:accuracy_prev_trial2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.91
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.66 – 1.26
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.57
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.568
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC:session2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.97
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.79 – 1.17
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.35
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.723
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.89
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.53 – 1.50
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.44
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.657
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:OCD_HC:accuracy_prev_trial2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.70
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.90 – 3.19
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.64
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.101
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:OCD_HC:session2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.57
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.71 – 3.49
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.12
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.264
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+3.290
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.194
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.059
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.incongruent_congruent</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.535
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>11</sub> <sub>participant_id.verum_sham:incongruent_congruent</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.238
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ρ<sub>01</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.162
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+-0.530
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+-0.496
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+ICC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.098
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+52469
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.278 / 0.349
+</td>
+</tr>
+</table>
+<table style="border-collapse:collapse; border:none;">
+<tr>
+<th style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm;  text-align:left; ">
+ 
+</th>
+<th colspan="4" style="border-top: double; text-align:center; font-style:normal; font-weight:bold; padding:0.2cm; ">
+Accuracy, covariate number of feedback faster
+</th>
+</tr>
+<tr>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  text-align:left; ">
+Predictors
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+b
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+95 % CI
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+z value
+</td>
+<td style=" text-align:center; border-bottom:1px solid; font-style:italic; font-weight:normal;  ">
+p value
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(Intercept)
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+31.34
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+28.18 – 34.85
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+63.49
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.13
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.94 – 1.36
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.27
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.203
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.83
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.68 – 1.03
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.72
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.085
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.11
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.09 – 0.13
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-24.22
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+accuracy_prev_trial2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.45
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.23 – 1.71
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+4.49
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+number_feedback_faster_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.42
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.34 – 1.51
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+11.74
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>&lt;0.001
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.17
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.81 – 1.69
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.82
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.414
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.83 – 1.30
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.32
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.751
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:accuracy_prev_trial2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.32
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.95 – 1.82
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.67
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.096
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham * number_feedback_faster_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.97
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.88 – 1.06
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.70
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.484
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.59
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.12 – 2.25
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.61
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.009</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC:accuracy_prev_trial2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.91
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.66 – 1.26
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.54
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.588
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC * number_feedback_faster_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.00
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.89 – 1.12
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.02
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.987
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * incongruent_congruent
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.93
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.60 – 1.45
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.32
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.751
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham:OCD_HC:accuracy_prev_trial2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.63
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.85 – 3.10
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.48
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.140
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+(verum_sham * OCD_HC) * number_feedback_faster_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.93
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.77 – 1.12
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.76
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.449
+</td>
+</tr>
+<tr>
+<td colspan="5" style="font-weight:bold; text-align:left; padding-top:.8em;">
+Random Effects
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+σ<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+3.290
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.030
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id.1</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.000
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id.2</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.250
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+τ<sub>00</sub> <sub>participant_id.3</sub>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.014
+</td>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
+Observations
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
+52469
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
+Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
+0.289 / NA
+</td>
+</tr>
+</table>
+<p><br><br></p>
 </div>
 </div>
 </div>
@@ -4010,16 +7344,16 @@ p.value
 group
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-1.16
+1.06
 </td>
 <td style="text-align:left;">
-.014
+.013
 </td>
 <td style="text-align:left;">
-.286
+.308
 </td>
 </tr>
 <tr>
@@ -4027,7 +7361,7 @@ group
 stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
 0.22
@@ -4044,16 +7378,16 @@ stimulation
 group:stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.04
+0.13
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.847
+.715
 </td>
 </tr>
 <tr>
@@ -4061,13 +7395,13 @@ group:stimulation
 condition
 </td>
 <td style="text-align:left;">
-1.31, 73.18
+1.31, 70.73
 </td>
 <td style="text-align:left;">
-403.64 ***
+377.33 ***
 </td>
 <td style="text-align:left;">
-.545
+.539
 </td>
 <td style="text-align:left;">
 &lt;.001
@@ -4078,16 +7412,16 @@ condition
 group:condition
 </td>
 <td style="text-align:left;">
-1.31, 73.18
+1.31, 70.73
 </td>
 <td style="text-align:left;">
-1.02
+1.12
 </td>
 <td style="text-align:left;">
 .003
 </td>
 <td style="text-align:left;">
-.337
+.310
 </td>
 </tr>
 <tr>
@@ -4095,16 +7429,16 @@ group:condition
 stimulation:condition
 </td>
 <td style="text-align:left;">
-1.26, 70.51
+1.26, 68.05
 </td>
 <td style="text-align:left;">
-0.38
+0.31
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.589
+.632
 </td>
 </tr>
 <tr>
@@ -4112,16 +7446,16 @@ stimulation:condition
 group:stimulation:condition
 </td>
 <td style="text-align:left;">
-1.26, 70.51
+1.26, 68.05
 </td>
 <td style="text-align:left;">
-1.84
+2.25
 </td>
 <td style="text-align:left;">
-.001
+.002
 </td>
 <td style="text-align:left;">
-.178
+.132
 </td>
 </tr>
 </tbody>
@@ -4155,16 +7489,16 @@ p.value
 group
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-2.74
+2.84 +
 </td>
 <td style="text-align:left;">
-.028
+.030
 </td>
 <td style="text-align:left;">
-.104
+.098
 </td>
 </tr>
 <tr>
@@ -4172,16 +7506,16 @@ group
 stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.05
+0.02
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.829
+.901
 </td>
 </tr>
 <tr>
@@ -4189,16 +7523,16 @@ stimulation
 group:stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.16
+0.12
 </td>
 <td style="text-align:left;">
-.001
+&lt;.001
 </td>
 <td style="text-align:left;">
-.688
+.727
 </td>
 </tr>
 </tbody>
@@ -4232,16 +7566,16 @@ p.value
 group
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-1.57
+1.26
 </td>
 <td style="text-align:left;">
-.007
+.006
 </td>
 <td style="text-align:left;">
-.215
+.266
 </td>
 </tr>
 <tr>
@@ -4249,16 +7583,16 @@ group
 stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.17
+0.42
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.686
+.520
 </td>
 </tr>
 <tr>
@@ -4266,16 +7600,16 @@ stimulation
 group:stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.06
+0.00
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.812
+.984
 </td>
 </tr>
 <tr>
@@ -4283,13 +7617,13 @@ group:stimulation
 stimulus_type
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-181.74 ***
+177.13 ***
 </td>
 <td style="text-align:left;">
-.401
+.406
 </td>
 <td style="text-align:left;">
 &lt;.001
@@ -4300,16 +7634,16 @@ stimulus_type
 group:stimulus_type
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-3.16 +
+2.61
 </td>
 <td style="text-align:left;">
-.012
+.010
 </td>
 <td style="text-align:left;">
-.081
+.112
 </td>
 </tr>
 <tr>
@@ -4317,10 +7651,10 @@ group:stimulus_type
 accuracy_prev_trial
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-18.82 ***
+17.74 ***
 </td>
 <td style="text-align:left;">
 .034
@@ -4334,16 +7668,16 @@ accuracy_prev_trial
 group:accuracy_prev_trial
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.45
+0.57
 </td>
 <td style="text-align:left;">
-&lt;.001
+.001
 </td>
 <td style="text-align:left;">
-.504
+.454
 </td>
 </tr>
 <tr>
@@ -4351,16 +7685,16 @@ group:accuracy_prev_trial
 stimulation:stimulus_type
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.16
+0.40
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.692
+.529
 </td>
 </tr>
 <tr>
@@ -4368,16 +7702,16 @@ stimulation:stimulus_type
 group:stimulation:stimulus_type
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.47
+0.94
 </td>
 <td style="text-align:left;">
-&lt;.001
+.001
 </td>
 <td style="text-align:left;">
-.497
+.337
 </td>
 </tr>
 <tr>
@@ -4385,16 +7719,16 @@ group:stimulation:stimulus_type
 stimulation:accuracy_prev_trial
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-1.23
+1.60
 </td>
 <td style="text-align:left;">
 .002
 </td>
 <td style="text-align:left;">
-.272
+.212
 </td>
 </tr>
 <tr>
@@ -4402,16 +7736,16 @@ stimulation:accuracy_prev_trial
 group:stimulation:accuracy_prev_trial
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-1.83
+1.59
 </td>
 <td style="text-align:left;">
-.003
+.002
 </td>
 <td style="text-align:left;">
-.181
+.213
 </td>
 </tr>
 <tr>
@@ -4419,13 +7753,13 @@ group:stimulation:accuracy_prev_trial
 stimulus_type:accuracy_prev_trial
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-13.57 ***
+12.83 ***
 </td>
 <td style="text-align:left;">
-.024
+.025
 </td>
 <td style="text-align:left;">
 &lt;.001
@@ -4436,16 +7770,16 @@ stimulus_type:accuracy_prev_trial
 group:stimulus_type:accuracy_prev_trial
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.65
+0.77
 </td>
 <td style="text-align:left;">
-.001
+.002
 </td>
 <td style="text-align:left;">
-.424
+.383
 </td>
 </tr>
 <tr>
@@ -4453,16 +7787,16 @@ group:stimulus_type:accuracy_prev_trial
 stimulation:stimulus_type:accuracy_prev_trial
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.78
+1.12
 </td>
 <td style="text-align:left;">
-&lt;.001
+.001
 </td>
 <td style="text-align:left;">
-.382
+.295
 </td>
 </tr>
 <tr>
@@ -4470,16 +7804,16 @@ stimulation:stimulus_type:accuracy_prev_trial
 group:stimulation:stimulus_type:accuracy_prev_trial
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.03
+0.00
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.867
+.962
 </td>
 </tr>
 </tbody>
@@ -4513,16 +7847,16 @@ p.value
 group
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-1.46
+1.39
 </td>
 <td style="text-align:left;">
-.022
+.021
 </td>
 <td style="text-align:left;">
-.232
+.244
 </td>
 </tr>
 <tr>
@@ -4530,16 +7864,16 @@ group
 stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-1.53
+1.48
 </td>
 <td style="text-align:left;">
 .004
 </td>
 <td style="text-align:left;">
-.221
+.229
 </td>
 </tr>
 <tr>
@@ -4547,16 +7881,16 @@ stimulation
 group:stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-1.82
+2.43
 </td>
 <td style="text-align:left;">
-.005
+.007
 </td>
 <td style="text-align:left;">
-.182
+.124
 </td>
 </tr>
 </tbody>
@@ -4632,16 +7966,16 @@ congruent_correct - incongruent_correct
 0.00
 </td>
 <td style="text-align:right;">
-56
+54
 </td>
 <td style="text-align:right;">
--31.68
+-30.67
 </td>
 <td style="text-align:right;">
 0
 </td>
 <td style="text-align:left;">
--4.23
+-4.17
 </td>
 </tr>
 <tr>
@@ -4655,16 +7989,16 @@ congruent_correct - incongruent_incorrect
 0.01
 </td>
 <td style="text-align:right;">
-56
+54
 </td>
 <td style="text-align:right;">
-10.11
+9.70
 </td>
 <td style="text-align:right;">
 0
 </td>
 <td style="text-align:left;">
-1.35
+1.32
 </td>
 </tr>
 <tr>
@@ -4678,16 +8012,16 @@ incongruent_correct - incongruent_incorrect
 0.01
 </td>
 <td style="text-align:right;">
-56
+54
 </td>
 <td style="text-align:right;">
-24.13
+23.30
 </td>
 <td style="text-align:right;">
 0
 </td>
 <td style="text-align:left;">
-3.23
+3.17
 </td>
 </tr>
 </tbody>
@@ -4748,16 +8082,16 @@ congruent
 -0.28
 </td>
 <td style="text-align:right;">
-0.25
+0.26
 </td>
 <td style="text-align:right;">
-56
+54
 </td>
 <td style="text-align:right;">
--1.14
+-1.10
 </td>
 <td style="text-align:right;">
-0.258
+0.278
 </td>
 <td style="text-align:left;">
 -0.15
@@ -4771,22 +8105,22 @@ correct - incorrect
 incongruent
 </td>
 <td style="text-align:right;">
--3.40
+-3.41
 </td>
 <td style="text-align:right;">
-0.81
+0.84
 </td>
 <td style="text-align:right;">
-56
+54
 </td>
 <td style="text-align:right;">
--4.19
+-4.08
 </td>
 <td style="text-align:right;">
 0.000
 </td>
 <td style="text-align:left;">
--0.56
+-0.55
 </td>
 </tr>
 </tbody>
@@ -4848,27 +8182,27 @@ do.call(rbind, lapply(residuals_anova_pes[,], function(x) shapiro.test(x)[&quot;
 print(&quot;# ANOVA Accuracy: Check Normality of Residuals with Shapiro Wilk Test&quot;)
 do.call(rbind, lapply(residuals_anova_accuracy[,], function(x) shapiro.test(x)[&quot;p.value&quot;]))</code></pre>
 <pre><code>[1] &quot;# ANOVA RT: Normality of Residuals with Shapiro Wilk Test&quot;
-                            p.value    
-sham_congruent_correct      0.04009404 
-sham_incongruent_correct    0.06875615 
-sham_incongruent_incorrect  0.01441937 
-verum_congruent_correct     0.02480235 
-verum_incongruent_correct   0.2868825  
-verum_incongruent_incorrect 0.000177579
+                            p.value     
+sham_congruent_correct      0.06346468  
+sham_incongruent_correct    0.1146635   
+sham_incongruent_incorrect  0.02241631  
+verum_congruent_correct     0.03942617  
+verum_incongruent_correct   0.3768424   
+verum_incongruent_incorrect 0.0002567089
 [1] &quot;# ANOVA PES: Check Normality of Residuals with Shapiro Wilk Test&quot;
       p.value   
-sham  0.5768425 
-verum 0.02451397
+sham  0.3557889 
+verum 0.02741302
 [1] &quot;# ANOVA Accuracy: Check Normality of Residuals with Shapiro Wilk Test&quot;
-                            p.value              
-sham_congruent_correct      0.000004893728       
-sham_congruent_incorrect    0.0000000000005649073
-sham_incongruent_correct    0.05022147           
-sham_incongruent_incorrect  0.000299746          
-verum_congruent_correct     0.0000001437877      
-verum_congruent_incorrect   0.00000000001041669  
-verum_incongruent_correct   0.02284975           
-verum_incongruent_incorrect 0.00000658609        </code></pre>
+                            p.value             
+sham_congruent_correct      0.000009249098      
+sham_congruent_incorrect    0.000000000001317517
+sham_incongruent_correct    0.09136501          
+sham_incongruent_incorrect  0.0008509327        
+verum_congruent_correct     0.0000002736651     
+verum_congruent_incorrect   0.00000000002480392 
+verum_incongruent_correct   0.02228644          
+verum_incongruent_incorrect 0.000005329601      </code></pre>
 <ul>
 <li><p><strong>Assumption #1: Dependent variable interval or ratio variable -&gt; Is OK</strong></p></li>
 <li><p><strong>Assumption #2: Balanced design</strong> (each subject has to have a value in each condition) <strong>-&gt; Is OK</strong></p></li>

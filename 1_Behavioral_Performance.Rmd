@@ -75,6 +75,11 @@ load(file = "./data/Single_Trial_Data.rda")
 load(file = "./data/Feedback_Infos.rda")
 
 
+# Exclude P_02 (due to retainer) and C_02 (as preregistered: patients are excluded with their match)
+single_trial_data <- single_trial_data[single_trial_data$participant_id != "P_02" & single_trial_data$participant_id != "C_02",]
+feedback_infos    <- feedback_infos[feedback_infos$participant_id != "P_02" & feedback_infos$participant_id != "C_02",]
+
+
 # Create some variables: numeric word accuracy, correctness of previous response, post-error accuracy (pea), and post-correct accuracy (pca)
 # Important to do this before trial exclusion! Otherwise the previous trial in the table might not have been the previous trial in the task!
 single_trial_data <- single_trial_data %>%
@@ -136,6 +141,29 @@ single_trial_data_clean[single_trial_data_clean$trial == 80  | single_trial_data
                         single_trial_data_clean$trial == 320 | single_trial_data_clean$trial == 321|
                         single_trial_data_clean$trial == 400 | single_trial_data_clean$trial == 401| 
                         single_trial_data_clean$trial == 480, "pes"] <- NA
+
+
+# Add column for number of errors (needed as covariate later) - this variable contains total number of errors, not only those entering analysis (preferred according to JK)
+single_trial_data_clean <- single_trial_data %>% 
+  dplyr::group_by(participant_id, session) %>% 
+  dplyr::summarize(number_errors = sum(response_type == "incorrect")) %>%
+  dplyr::ungroup(.) %>%
+  dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session"))
+# Standardize this variable
+single_trial_data_clean$number_errors_standardized <- scale(single_trial_data_clean$number_errors, center = TRUE, scale = TRUE)
+
+
+# Add column for number of speeding (needed as covariate later) 
+single_trial_data_clean <- feedback_infos[feedback_infos$block != 6,] %>% 
+  dplyr::group_by(participant_id, session, feedback) %>%
+  dplyr::count(feedback, .drop = FALSE) %>%
+  dplyr::filter(feedback == " schneller") %>%
+  dplyr::rename(number_feedback_faster = n) %>%
+  dplyr::ungroup(.) %>%  
+  dplyr::select(-feedback) %>%
+  dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session"))
+# Standardize this variable
+single_trial_data_clean$number_feedback_faster_standardized <- scale(single_trial_data_clean$number_feedback_faster, center = TRUE, scale = TRUE)
 
 
 # Make categorical variables factors
@@ -898,9 +926,9 @@ RT, PES, and accuracy were modeled using two linear mixed-effects models (LMM) a
 
 *Stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), and, where applicable (= for RT), response type (correct, incorrect)* were specified as fixed factors.Fixed effects were coded using effect coding (this equals sliding difference contrasts for two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. Fixed effects were not eliminated using model comparison techniques because they correspond to the original experimental design and a priori hypotheses. <br><br>
 
-I decided to specify models that only predict all main effects and interactions only with the factor stimulation. This is the most sparse model for testing the effect of stimulation. Other models could also be specified, additionally testing interactions with the factor group or testing  all possible interactions. For example, these models additionally test the following effects: group:response_type, group:stimulus_type, group:response_type:stimulation, and group:stimulus_type:stimulation. But to me, these effects are of no prior interest, and/or difficult to interpret. Thus, I chose the simple models that only tests interactions with the factor stimulation. <br><br>
+I decided to specify models that only predict all main effects and interactions only with the factor stimulation and group. This is the most sparse model for testing the effects of interest.<br><br>
 
-I thought about including session as fixed effect. But this was not stated in preregistration and is of no real interest. I checked the effect of session once. For RT, there is a main effect, but no interaction with stimulation (there is a trend though, but I do not find this effect to be meaningfully interpretable). <br><br>
+I thought about including session as fixed effect. But this was not stated in preregistration and is of no real interest. I checked the effect of session as a covariate. For RT, there is a main effect, but no interaction with stimulation (there is a trend though, but I do not find this effect to be meaningfully interpretable). <br><br>
 
 **Random effects**
 
@@ -918,15 +946,15 @@ contrasts(single_trial_data_clean$session)             <- contr.sdif(2)
 
 
 # Add contrasts as numerical covariates via model matrix* (specify all possible contasts for now)
-model_matrix <- model.matrix(~ stimulation * (group + response_type + stimulus_type), single_trial_data_clean)
+model_matrix <- model.matrix(~ stimulation * group * (response_type + stimulus_type), single_trial_data_clean)
 
 
 # Attach the model matrix (8 columns) to the dataframe
-single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 8)] <- model_matrix
+single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 12)] <- model_matrix
 
 
 # Assign descriptive names to the contrasts
-names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 7):ncol(single_trial_data_clean)] <- c("Grand Mean", "verum_sham", "OCD_HC", "incorrect_correct", "incongruent_congruent", "verum_sham:OCD_HC", "verum_sham:incorrect_correct", "verum_sham:incongruent_congruent")
+names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 11):ncol(single_trial_data_clean)] <- c("Grand Mean", "verum_sham", "OCD_HC", "incorrect_correct", "incongruent_congruent", "verum_sham:OCD_HC", "verum_sham:incorrect_correct", "verum_sham:incongruent_congruent", "OCD_HC:incorrect_correct" , "OCD_HC:incongruent_congruent", "verum_sham:OCD_HC:incorrect_correct", "verum_sham:OCD_HC:incongruent_congruent")
 
 
 # *Note: For the random effects, we needed to enter the separate random effect terms in the models to enable
@@ -951,7 +979,7 @@ For the aggregation-based ANOVA on RT, I will excluded congruent errors.
 ```{r LMM-RT, cache = knitr_cache_enabled}
 
 # Run model with maximal random-effects structure
-LMM_rt <- lmer(rt_log ~ verum_sham * (OCD_HC + incorrect_correct + incongruent_congruent) +
+LMM_rt <- lmer(rt_log ~ verum_sham * OCD_HC * (incorrect_correct + incongruent_congruent) +
   (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
 data = single_trial_data_clean,
 REML = TRUE,
@@ -960,12 +988,12 @@ control = lmerControl(optimizer = "bobyqa")
 
 
 # Check model output
-# summary(LMM_rt) # Model does converge
+# summary(LMM_rt) # Model does converge 
 # isSingular(LMM_rt) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
 
 
 # Check PCA of random-effects variance-covariance estimates
-# summary(rePCA(LMM_rt)) # All terms explain variance
+# summary(rePCA(LMM_rt)) # All terms explain variance 
 
 
 # Display results (fixed effects)
@@ -1020,7 +1048,59 @@ performance::check_normality(LMM_rt, effects = "random")
 
 * **Assumption 6: Normality of Random Effects -> Is OK**
     + Are random effects approximately normally distributed?
-    + Plots look fine; written output says this is (mostly) ok 
+    + Plots look fine; written output says this is (mostly) ok
+<br><br>
+
+#### Check covariates
+
+The purpose for including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models are reported.
+
+```{r LMM-RT-covariates, cache = knitr_cache_enabled}
+
+# RT check covariate session
+LMM_rt_session <- lmer(rt_log ~ verum_sham * OCD_HC * session * (incorrect_correct + incongruent_congruent) +
+  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_rt_session,
+  dv.labels = "log(RT), covariate session", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# RT check covariate number of errors (predictor was z standardized)
+LMM_rt_number_errors <- lmer(rt_log ~ verum_sham * OCD_HC * number_errors_standardized * (incorrect_correct + incongruent_congruent) +
+  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_rt_number_errors,
+  dv.labels = "log(RT), covariate number of errors", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# RT check covariate number of feedback faster (predictor was z standardized)
+LMM_rt_number_feedback_faster <- lmer(rt_log ~ verum_sham * OCD_HC * number_feedback_faster_standardized * (incorrect_correct + incongruent_congruent) +
+  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_rt_number_feedback_faster,
+  dv.labels = "log(RT), covariate number of feedback faster", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+```
 <br><br>
 
 ### PES {.tabset}
@@ -1054,7 +1134,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 # Display results (fixed effects)
 tab_model(LMM_pes,
-  dv.labels = "PES", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  dv.labels = "PES (ms)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
@@ -1107,6 +1187,57 @@ performance::check_normality(LMM_pes, effects = "random")
     + Written output says this is ok (but: standard errors and hence also plot not available due to || syntax) 
 <br><br>
 
+#### Check covariates
+
+The purpose for including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models are reported.
+
+```{r LMM-PES-covariates, cache = knitr_cache_enabled}
+
+# PES check covariate session
+LMM_pes_session <- lmer(pes ~ verum_sham * OCD_HC * session + incongruent_congruent +
+  (1 + verum_sham  || participant_id),
+data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_pes_session,
+  dv.labels = "PES (ms), covariate session", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# PES check covariate number of errors (predictor was z standardized)
+LMM_pes_number_errors <- lmer(pes ~ verum_sham * OCD_HC * number_errors_standardized + incongruent_congruent +
+  (1 + verum_sham  || participant_id),
+data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_pes_number_errors,
+  dv.labels = "PES (ms), covariate number of errors", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# PES check covariate number of feedback faster (predictor was z standardized)
+LMM_pes_number_feedback_faster <- lmer(pes ~ verum_sham * OCD_HC * number_feedback_faster_standardized + incongruent_congruent +
+  (1 + verum_sham  || participant_id),
+data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_pes_number_feedback_faster,
+  dv.labels = "PES (ms), covariate number of feedback faster", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
 
 ### Accuracy {.tabset}
 
@@ -1117,8 +1248,8 @@ I included the factor *accuracy of previous trial* in the model, to directly tes
 ```{r GLMM-accuracy, cache = knitr_cache_enabled}
 
 # Run model with maximal random-effects structure
-GLMM_accuracy <- glmer(accuracy_numeric ~ verum_sham * (OCD_HC + incongruent_congruent + accuracy_prev_trial) +
-  (1 + incongruent_congruent + verum_sham + verum_sham:incongruent_congruent  | participant_id),
+GLMM_accuracy <- glmer(accuracy_numeric ~ verum_sham * OCD_HC * (incongruent_congruent + accuracy_prev_trial) +
+  (1 + verum_sham * incongruent_congruent | participant_id),
 data = single_trial_data_clean,
 family = binomial,
 control = glmerControl(optimizer = "bobyqa")
@@ -1177,6 +1308,42 @@ overdisp_fun(GLMM_accuracy) # If the p-value is < 0.05, the data are overdispers
     + Overdispersion is not a problem here. The empirical variance in data does not exceed the nominal variance under the presumed model. The chi-square test of the ratio of the empirical variance in data and the nominal variance under the presumed model is not significant.
 <br><br>
 
+#### Check covariates
+
+The purpose for including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models are reported.
+
+```{r LMM-accuracy-covariates, cache = knitr_cache_enabled}
+
+# Accuracy check covariate session (not included in all interactions for reasons of convergence)
+GLMM_accuracy_session <- glmer(accuracy_numeric ~ verum_sham * OCD_HC * (incongruent_congruent + accuracy_prev_trial + session) +
+  (1 + verum_sham * incongruent_congruent | participant_id),
+data = single_trial_data_clean,
+family = binomial,
+control = glmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(GLMM_accuracy_session,
+  dv.labels = "Accuracy, covariate session", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
+  string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
+)
+
+
+# Accuracy check covariate number of feedback faster (predictor was z standardized) (not included in all interactions for reasons of convergence)
+GLMM_accuracy_number_feedback_faster <- glmer(accuracy_numeric ~ verum_sham * OCD_HC * (incongruent_congruent + accuracy_prev_trial + number_feedback_faster_standardized) +
+  (1 + verum_sham * incongruent_congruent || participant_id),
+data = single_trial_data_clean,
+family = binomial,
+control = glmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(GLMM_accuracy_number_feedback_faster,
+  dv.labels = "Accuracy, covariate number of feedback faster", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
+  string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
 
 ## ANOVAs {.tabset}
 ***
