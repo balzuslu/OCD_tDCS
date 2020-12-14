@@ -76,6 +76,12 @@ my_figure_colors <- c("#8ea6b4", "#465369")
 
 # Load data
 load(file = "./data/Single_Trial_Data.rda")
+load(file = "./data/Feedback_Infos.rda")
+
+
+# Exclude P_02 (due to retainer) and C_02 (as preregistered: patients are excluded with their match)
+single_trial_data <- single_trial_data[single_trial_data$participant_id != "P_02" & single_trial_data$participant_id != "C_02",]
+feedback_infos    <- feedback_infos[feedback_infos$participant_id != "P_02" & feedback_infos$participant_id != "C_02",]
 
 
 # Exclude missing responses, RT outliers and trials with ERP artifacts
@@ -98,7 +104,6 @@ single_trial_data_clean$number_errors_standardized <- scale(single_trial_data_cl
 
 
 # Add column for number of speeding (needed as covariate later) 
-load(file = "./data/Feedback_Infos.rda")
 single_trial_data_clean <- feedback_infos[feedback_infos$block != 6,] %>% 
   dplyr::group_by(participant_id, session, feedback) %>%
   dplyr::count(feedback, .drop = FALSE) %>%

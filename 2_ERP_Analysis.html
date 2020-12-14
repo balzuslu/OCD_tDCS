@@ -444,6 +444,12 @@ div.tocify {
 <hr />
 <pre class="r"><code># Load data
 load(file = &quot;./data/Single_Trial_Data.rda&quot;)
+load(file = &quot;./data/Feedback_Infos.rda&quot;)
+
+
+# Exclude P_02 (due to retainer) and C_02 (as preregistered: patients are excluded with their match)
+single_trial_data &lt;- single_trial_data[single_trial_data$participant_id != &quot;P_02&quot; &amp; single_trial_data$participant_id != &quot;C_02&quot;,]
+feedback_infos    &lt;- feedback_infos[feedback_infos$participant_id != &quot;P_02&quot; &amp; feedback_infos$participant_id != &quot;C_02&quot;,]
 
 
 # Exclude missing responses, RT outliers and trials with ERP artifacts
@@ -466,7 +472,6 @@ single_trial_data_clean$number_errors_standardized &lt;- scale(single_trial_data
 
 
 # Add column for number of speeding (needed as covariate later) 
-load(file = &quot;./data/Feedback_Infos.rda&quot;)
 single_trial_data_clean &lt;- feedback_infos[feedback_infos$block != 6,] %&gt;% 
   dplyr::group_by(participant_id, session, feedback) %&gt;%
   dplyr::count(feedback, .drop = FALSE) %&gt;%
@@ -639,7 +644,7 @@ HC
 0.66
 </td>
 <td style="text-align:right;">
-1.07
+1.09
 </td>
 <td style="text-align:right;">
 0
@@ -648,10 +653,10 @@ HC
 5.00
 </td>
 <td style="text-align:right;">
-0.29
+0.30
 </td>
 <td style="text-align:right;">
-0.50
+0.51
 </td>
 <td style="text-align:right;">
 0
@@ -677,10 +682,10 @@ OCD
 0.62
 </td>
 <td style="text-align:right;">
-0.60
+0.61
 </td>
 <td style="text-align:right;">
-0.75
+0.76
 </td>
 <td style="text-align:right;">
 0
@@ -692,7 +697,7 @@ OCD
 0.84
 </td>
 <td style="text-align:right;">
-1.18
+1.20
 </td>
 <td style="text-align:right;">
 0
@@ -726,7 +731,7 @@ EEG_artifact
 0.04
 </td>
 <td style="text-align:right;">
-0.63
+0.64
 </td>
 <td style="text-align:right;">
 0.57
@@ -855,38 +860,6 @@ T1
 </td>
 <td style="text-align:right;">
 -19.57
-</td>
-<td style="text-align:left;">
-TRUE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-<td style="text-align:left;">
-FALSE
-</td>
-</tr>
-<tr>
-<td style="text-align:left;">
-P_02
-</td>
-<td style="text-align:left;">
-OCD
-</td>
-<td style="text-align:left;">
-incorrect
-</td>
-<td style="text-align:left;">
-verum
-</td>
-<td style="text-align:left;">
-T1
-</td>
-<td style="text-align:right;">
--22.26
 </td>
 <td style="text-align:left;">
 TRUE
@@ -1125,7 +1098,7 @@ bc_CRN &lt;- boxcox(MFN_0_100_FCz + 100 ~ 1, data = single_trial_data_clean[sing
 
 # Reset plot layout
 par(mfrow = c(1, 1)) </code></pre>
-<p>For MFN (left plot), the optimal lambda is 1.07, suggesting that no transformation (for lambda = 1) is needed. For ERN (middle plot), the optimal lambda is 1.23, suggesting that no transformation (for lambda = 1) is needed. For CRN (right plot), the optimal lambda is 0.91, suggesting that no transformation (for lambda = 1) is needed. <br><br></p>
+<p>For MFN (left plot), the optimal lambda is 1.07, suggesting that no transformation (for lambda = 1) is needed. For ERN (middle plot), the optimal lambda is 1.23, suggesting that no transformation (for lambda = 1) is needed. For CRN (right plot), the optimal lambda is 0.95, suggesting that no transformation (for lambda = 1) is needed. <br><br></p>
 </div>
 <div id="split-half-reliability" class="section level3">
 <h3>Split-half reliability</h3>
@@ -1183,7 +1156,7 @@ SB_high
 correct
 </td>
 <td style="text-align:right;">
-58
+56
 </td>
 <td style="text-align:right;">
 0.99
@@ -1209,7 +1182,7 @@ correct
 incorrect
 </td>
 <td style="text-align:right;">
-58
+56
 </td>
 <td style="text-align:right;">
 0.91
@@ -1218,7 +1191,7 @@ incorrect
 0.87
 </td>
 <td style="text-align:right;">
-0.94
+0.95
 </td>
 <td style="text-align:right;">
 0.95
@@ -1313,16 +1286,16 @@ CRN
 ERN
 </td>
 <td style="text-align:right;">
-0.80
+0.79
 </td>
 <td style="text-align:right;">
-0.72
+0.71
 </td>
 <td style="text-align:right;">
-0.86
+0.85
 </td>
 <td style="text-align:right;">
-0.89
+0.88
 </td>
 </tr>
 </tbody>
@@ -1434,10 +1407,10 @@ sham
 T1
 </td>
 <td style="text-align:right;">
-7.15
+7.57
 </td>
 <td style="text-align:left;">
-[6.9, 7.4]
+[7.31, 7.83]
 </td>
 <td style="text-align:right;">
 4.30
@@ -1463,10 +1436,10 @@ T2
 [6.32, 6.82]
 </td>
 <td style="text-align:right;">
-3.98
+4.45
 </td>
 <td style="text-align:left;">
-[3.72, 4.23]
+[4.18, 4.72]
 </td>
 </tr>
 <tr>
@@ -1486,10 +1459,10 @@ T1
 [5.72, 6.21]
 </td>
 <td style="text-align:right;">
-4.36
+4.65
 </td>
 <td style="text-align:left;">
-[4.09, 4.63]
+[4.37, 4.93]
 </td>
 </tr>
 <tr>
@@ -1503,10 +1476,10 @@ verum
 T2
 </td>
 <td style="text-align:right;">
-8.25
+8.57
 </td>
 <td style="text-align:left;">
-[7.98, 8.52]
+[8.29, 8.86]
 </td>
 <td style="text-align:right;">
 6.22
@@ -1529,7 +1502,7 @@ T1
 -2.05
 </td>
 <td style="text-align:left;">
-[-3.06, -1.05]
+[-3.08, -1.02]
 </td>
 <td style="text-align:right;">
 -3.93
@@ -1555,10 +1528,10 @@ T2
 [-1.74, 0.58]
 </td>
 <td style="text-align:right;">
--3.96
+-3.69
 </td>
 <td style="text-align:left;">
-[-5.2, -2.71]
+[-4.96, -2.42]
 </td>
 </tr>
 <tr>
@@ -1578,10 +1551,10 @@ T1
 [-1.31, 0.95]
 </td>
 <td style="text-align:right;">
--4.80
+-4.31
 </td>
 <td style="text-align:left;">
-[-6.09, -3.52]
+[-5.59, -3.02]
 </td>
 </tr>
 <tr>
@@ -1595,10 +1568,10 @@ verum
 T2
 </td>
 <td style="text-align:right;">
--0.49
+-0.25
 </td>
 <td style="text-align:left;">
-[-1.57, 0.6]
+[-1.4, 0.89]
 </td>
 <td style="text-align:right;">
 -2.96
@@ -1825,16 +1798,16 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.37
+1.57
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.07 – 2.68
+0.25 – 2.88
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.06
+2.33
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.044</strong>
+<strong>0.023</strong>
 </td>
 </tr>
 <tr>
@@ -1842,16 +1815,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.65
+0.70
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.08 – 1.22
+0.12 – 1.28
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.23
+2.37
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.031</strong>
+<strong>0.022</strong>
 </td>
 </tr>
 <tr>
@@ -1859,16 +1832,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.81
+-2.64
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--5.42 – -0.20
+-5.27 – -0.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.11
+-1.97
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.039</strong>
+0.054
 </td>
 </tr>
 <tr>
@@ -1876,13 +1849,13 @@ OCD_HC
 incorrect_correct
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--9.01
+-8.96
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--10.34 – -7.68
+-10.32 – -7.60
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--13.30
+-12.90
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -1893,16 +1866,16 @@ incorrect_correct
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.44
+0.52
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.71 – 1.58
+-0.64 – 1.68
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.75
+0.88
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.458
+0.383
 </td>
 </tr>
 <tr>
@@ -1910,16 +1883,16 @@ verum_sham * OCD_HC
 verum_sham * incorrect_correct
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.12
+0.10
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.06 – 0.82
+-0.81 – 1.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.25
+0.22
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.800
+0.830
 </td>
 </tr>
 <tr>
@@ -1927,16 +1900,16 @@ verum_sham * incorrect_correct
 OCD_HC * incorrect_correct
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.11
+-0.88
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.77 – 1.54
+-3.60 – 1.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.82
+-0.63
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.415
+0.528
 </td>
 </tr>
 <tr>
@@ -1944,16 +1917,16 @@ OCD_HC * incorrect_correct
 (verum_sham * OCD_HC) * incorrect_correct
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.01
+-0.88
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.89 – 0.86
+-2.69 – 0.94
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.06
+-0.95
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.296
+0.349
 </td>
 </tr>
 <tr>
@@ -1966,75 +1939,75 @@ Random Effects
 σ<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-91.461
+92.127
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>00</sub> <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-25.200
+24.759
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-3.080
+3.079
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>11</sub> <sub>participant_id.incorrect_correct</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-24.666
+25.082
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>11</sub> <sub>participant_id.verum_sham:incorrect_correct</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-5.928
+4.770
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ρ<sub>01</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.169
+0.129
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.411
+0.401
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.168
+0.058
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.204
+0.203
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-54998
+53093
 </td>
 </tr>
 <tr>
@@ -2042,7 +2015,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.049 / 0.244
+0.049 / 0.241
 </td>
 </tr>
 </table>
@@ -2068,10 +2041,10 @@ Warning: Heteroscedasticity (non-constant error variance) detected (p = 0.000).
 OK: No outliers detected.
 [1] &quot;# Check for normal distributed random effects&quot;
 Group: participant_id
-                 (Intercept) OK: random effects appear as normally distributed (p = 0.238).
-                  verum_sham OK: random effects appear as normally distributed (p = 0.514).
+                 (Intercept) OK: random effects appear as normally distributed (p = 0.162).
+                  verum_sham OK: random effects appear as normally distributed (p = 0.591).
            incorrect_correct Warning: Non-normality of random effects detected (p = 0.002).
-verum_sham:incorrect_correct Warning: Non-normality of random effects detected (p = 0.026).</code></pre>
+verum_sham:incorrect_correct Warning: Non-normality of random effects detected (p = 0.009).</code></pre>
 <ul>
 <li><strong>Assumption 1: Independence of Data Points / Absence of collinearity -&gt; Is OK</strong>
 <ul>
@@ -2190,16 +2163,16 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.11
+-2.88
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.81 – -1.40
+-4.60 – -1.16
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.58
+-3.29
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.001</strong>
+<strong>0.002</strong>
 </td>
 </tr>
 <tr>
@@ -2207,16 +2180,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.68
+0.86
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.18 – 1.54
+0.02 – 1.70
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.55
+2.00
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.128
+0.052
 </td>
 </tr>
 <tr>
@@ -2224,16 +2197,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.42
+-3.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.83 – -0.02
+-6.58 – 0.30
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.97
+-1.79
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.054
+0.079
 </td>
 </tr>
 <tr>
@@ -2241,16 +2214,16 @@ OCD_HC
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.25
+-0.10
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.97 – 1.47
+-1.78 – 1.59
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.28
+-0.11
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.778
+0.911
 </td>
 </tr>
 <tr>
@@ -2263,49 +2236,49 @@ Random Effects
 σ<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-98.064
+98.589
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>00</sub> <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-41.746
+41.142
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-3.683
+2.955
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ρ<sub>01</sub> <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.032
+-0.102
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.303
+0.298
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3312
+3244
 </td>
 </tr>
 <tr>
@@ -2313,7 +2286,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.021 / 0.318
+0.018 / 0.311
 </td>
 </tr>
 </table>
@@ -2348,13 +2321,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.88
+6.05
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.69 – 7.06
+4.84 – 7.25
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.71
+9.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -2365,16 +2338,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.71
+0.65
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.14 – 1.28
+0.06 – 1.24
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.43
+2.18
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.018</strong>
+<strong>0.034</strong>
 </td>
 </tr>
 <tr>
@@ -2382,16 +2355,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.25
+-2.20
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.62 – 0.12
+-4.61 – 0.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.86
+-1.79
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.068
+0.079
 </td>
 </tr>
 <tr>
@@ -2399,16 +2372,16 @@ OCD_HC
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.94
+0.96
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.20 – 2.08
+-0.21 – 2.13
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.62
+1.60
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.112
+0.114
 </td>
 </tr>
 <tr>
@@ -2421,49 +2394,49 @@ Random Effects
 σ<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-91.055
+91.725
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>00</sub> <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-21.130
+21.048
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-4.515
+4.587
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ρ<sub>01</sub> <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.013
+0.043
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.196
+0.195
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-51686
+49849
 </td>
 </tr>
 <tr>
@@ -2471,7 +2444,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.013 / 0.207
+0.012 / 0.204
 </td>
 </tr>
 </table>
@@ -2497,8 +2470,8 @@ Warning: Heteroscedasticity (non-constant error variance) detected (p = 0.000).
 OK: No outliers detected.
 [1] &quot;# Check for normal distributed random effects&quot;
 Group: participant_id
-(Intercept) OK: random effects appear as normally distributed (p = 0.063).
- verum_sham OK: random effects appear as normally distributed (p = 0.390).</code></pre>
+(Intercept) Warning: Non-normality of random effects detected (p = 0.037).
+ verum_sham OK: random effects appear as normally distributed (p = 0.628).</code></pre>
 <p>Notes for assumption check would be the same as written for the MFN model. <br><br></p>
 </div>
 <div id="assumption-checks-crn-model" class="section level4">
@@ -2521,8 +2494,8 @@ Warning: Heteroscedasticity (non-constant error variance) detected (p = 0.000).
 OK: No outliers detected.
 [1] &quot;# Check for normal distributed random effects&quot;
 Group: participant_id
-(Intercept) OK: random effects appear as normally distributed (p = 0.266).
- verum_sham OK: random effects appear as normally distributed (p = 0.995).</code></pre>
+(Intercept) OK: random effects appear as normally distributed (p = 0.180).
+ verum_sham OK: random effects appear as normally distributed (p = 0.997).</code></pre>
 <p>Notes for assumption check would be the same as written for the MFN model. <br><br></p>
 </div>
 <div id="check-covariates" class="section level4">
@@ -2768,16 +2741,16 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.14
+-2.94
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.86 – -1.43
+-4.68 – -1.19
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.59
+-3.30
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.001</strong>
+<strong>0.002</strong>
 </td>
 </tr>
 <tr>
@@ -2785,16 +2758,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.66
+0.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.21 – 1.54
+-0.01 – 1.70
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.49
+1.93
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.145
+0.061
 </td>
 </tr>
 <tr>
@@ -2802,16 +2775,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.47
+-3.18
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.90 – -0.03
+-6.68 – 0.31
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.98
+-1.79
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.053
+0.080
 </td>
 </tr>
 <tr>
@@ -2819,16 +2792,16 @@ OCD_HC
 session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.32
+0.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.56 – 1.19
+-0.65 – 1.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.71
+0.49
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.481
+0.629
 </td>
 </tr>
 <tr>
@@ -2836,16 +2809,16 @@ session2-1
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.29
+-0.12
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.04 – 1.46
+-1.84 – 1.59
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.32
+-0.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.749
+0.890
 </td>
 </tr>
 <tr>
@@ -2853,16 +2826,16 @@ verum_sham * OCD_HC
 verum_sham:session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.46
+0.89
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--5.40 – 8.33
+-6.10 – 7.87
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.42
+0.25
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.678
+0.804
 </td>
 </tr>
 <tr>
@@ -2870,16 +2843,16 @@ verum_sham:session2-1
 OCD_HC:session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.74
+0.41
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.01 – 2.48
+-1.31 – 2.13
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.83
+0.47
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.414
+0.643
 </td>
 </tr>
 <tr>
@@ -2887,16 +2860,16 @@ OCD_HC:session2-1
 verum_sham:OCD_HC:session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-7.07
+5.46
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.65 – 20.80
+-8.50 – 19.43
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.01
+0.77
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.317
+0.447
 </td>
 </tr>
 <tr>
@@ -2904,21 +2877,21 @@ verum_sham:OCD_HC:session2-1
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.307
+0.304
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3312
+3244
 </td>
 </tr>
 <tr>
@@ -2926,7 +2899,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.026 / 0.325
+0.021 / 0.319
 </td>
 </tr>
 </table>
@@ -2961,13 +2934,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.88
+6.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.68 – 7.08
+4.85 – 7.28
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.63
+9.77
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -2978,16 +2951,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.71
+0.65
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.17 – 1.25
+0.09 – 1.20
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.57
+2.29
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.013</strong>
+<strong>0.026</strong>
 </td>
 </tr>
 <tr>
@@ -2998,13 +2971,13 @@ OCD_HC
 -2.29
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.69 – 0.10
+-4.72 – 0.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.88
+-1.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.066
+0.071
 </td>
 </tr>
 <tr>
@@ -3012,16 +2985,16 @@ OCD_HC
 session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.80
+0.82
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.26 – 1.34
+0.27 – 1.38
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.89
+2.90
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.006</strong>
+<strong>0.005</strong>
 </td>
 </tr>
 <tr>
@@ -3029,16 +3002,16 @@ session2-1
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.89
+0.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.20 – 1.97
+-0.27 – 1.95
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.60
+1.49
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.114
+0.143
 </td>
 </tr>
 <tr>
@@ -3046,16 +3019,16 @@ verum_sham * OCD_HC
 verum_sham:session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.48
+2.47
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.31 – 7.27
+-2.40 – 7.34
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.02
+0.99
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.315
+0.324
 </td>
 </tr>
 <tr>
@@ -3063,16 +3036,16 @@ verum_sham:session2-1
 OCD_HC:session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.05
+0.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.14 – 1.03
+-1.04 – 1.18
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.10
+0.13
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.922
+0.901
 </td>
 </tr>
 <tr>
@@ -3080,16 +3053,16 @@ OCD_HC:session2-1
 verum_sham:OCD_HC:session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.75
+-2.23
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--10.32 – 8.83
+-11.96 – 7.51
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.15
+-0.45
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.879
+0.656
 </td>
 </tr>
 <tr>
@@ -3097,21 +3070,21 @@ verum_sham:OCD_HC:session2-1
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.198
+0.196
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-51686
+49849
 </td>
 </tr>
 <tr>
@@ -3119,7 +3092,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.017 / 0.212
+0.017 / 0.210
 </td>
 </tr>
 </table>
@@ -3154,64 +3127,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.97
+-2.78
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.60 – -1.33
+-4.45 – -1.11
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.56
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.001</strong>
-</td>
-</tr>
-<tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-verum_sham
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.39
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.52 – 1.30
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.83
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.408
-</td>
-</tr>
-<tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-OCD_HC
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.91
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.17 – 0.36
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.75
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.086
-</td>
-</tr>
-<tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-number_errors_standardized
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.64
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.63 – 2.66
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-3.18
+-3.27
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>0.002</strong>
@@ -3219,19 +3141,70 @@ number_errors_standardized
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+verum_sham
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.61
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.29 – 1.50
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.33
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.190
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+OCD_HC
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.67
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-6.01 – 0.66
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.57
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.122
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+number_errors_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.43
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.43 – 2.43
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.79
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.007</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.52
+-0.37
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.34 – 1.31
+-2.16 – 1.42
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.55
+-0.41
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.582
+0.684
 </td>
 </tr>
 <tr>
@@ -3239,16 +3212,16 @@ verum_sham * OCD_HC
 verum_sham * number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.25
+-0.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.80 – 1.29
+-1.17 – 0.89
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.46
+-0.27
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.646
+0.789
 </td>
 </tr>
 <tr>
@@ -3256,16 +3229,16 @@ verum_sham * number_errors_standardized
 OCD_HC * number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.38
+1.82
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.36 – 4.41
+-0.19 – 3.82
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.31
+1.77
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.024</strong>
+0.080
 </td>
 </tr>
 <tr>
@@ -3273,16 +3246,16 @@ OCD_HC * number_errors_standardized
 (verum_sham * OCD_HC) * number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.24
+-0.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.32 – 1.84
+-2.90 – 1.22
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.23
+-0.80
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.822
+0.430
 </td>
 </tr>
 <tr>
@@ -3297,14 +3270,14 @@ ICC
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3312
+3244
 </td>
 </tr>
 <tr>
@@ -3312,7 +3285,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.033 / 0.306
+0.027 / 0.302
 </td>
 </tr>
 </table>
@@ -3347,13 +3320,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.85
+6.02
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.73 – 6.97
+4.87 – 7.17
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-10.21
+10.28
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -3364,16 +3337,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.67
+0.63
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.05 – 1.28
+0.00 – 1.26
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.14
+1.97
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.037</strong>
+0.054
 </td>
 </tr>
 <tr>
@@ -3381,16 +3354,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.92
+-1.91
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.17 – 0.32
+-4.21 – 0.38
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.68
+-1.63
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.099
+0.108
 </td>
 </tr>
 <tr>
@@ -3398,16 +3371,16 @@ OCD_HC
 number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.86
+0.82
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.19 – 1.53
+0.12 – 1.51
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.50
+2.31
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.014</strong>
+<strong>0.024</strong>
 </td>
 </tr>
 <tr>
@@ -3418,13 +3391,13 @@ verum_sham * OCD_HC
 0.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.38 – 2.06
+-0.41 – 2.10
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.35
+1.32
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.184
+0.194
 </td>
 </tr>
 <tr>
@@ -3432,16 +3405,16 @@ verum_sham * OCD_HC
 verum_sham * number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.25
+0.34
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.44 – 0.95
+-0.39 – 1.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.71
+0.92
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.478
+0.363
 </td>
 </tr>
 <tr>
@@ -3449,16 +3422,16 @@ verum_sham * number_errors_standardized
 OCD_HC * number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.25
+-0.20
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.60 – 1.09
+-1.58 – 1.19
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.37
+-0.28
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.713
+0.781
 </td>
 </tr>
 <tr>
@@ -3466,16 +3439,16 @@ OCD_HC * number_errors_standardized
 (verum_sham * OCD_HC) * number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.05
+0.06
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.44 – 1.34
+-1.39 – 1.51
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.07
+0.08
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.942
+0.938
 </td>
 </tr>
 <tr>
@@ -3490,14 +3463,14 @@ ICC
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-51686
+49849
 </td>
 </tr>
 <tr>
@@ -3505,7 +3478,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.020 / 0.195
+0.018 / 0.194
 </td>
 </tr>
 </table>
@@ -3540,16 +3513,16 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.04
+-2.85
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.71 – -1.36
+-4.55 – -1.15
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.56
+-3.29
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.001</strong>
+<strong>0.002</strong>
 </td>
 </tr>
 <tr>
@@ -3557,16 +3530,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.42
+0.66
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.53 – 1.38
+-0.26 – 1.58
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.87
+1.40
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.387
+0.168
 </td>
 </tr>
 <tr>
@@ -3574,16 +3547,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.22
+-2.95
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.57 – 0.13
+-6.35 – 0.45
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.89
+-1.70
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.065
+0.095
 </td>
 </tr>
 <tr>
@@ -3591,16 +3564,16 @@ OCD_HC
 number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.57
+-0.47
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.42 – 0.29
+-1.30 – 0.36
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.30
+-1.11
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.197
+0.272
 </td>
 </tr>
 <tr>
@@ -3608,16 +3581,16 @@ number_feedback_faster_standardized
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.21
+-0.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.12 – 1.70
+-1.85 – 1.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.21
+-0.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.831
+0.994
 </td>
 </tr>
 <tr>
@@ -3625,16 +3598,16 @@ verum_sham * OCD_HC
 verum_sham * number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.15
+0.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.27 – 0.96
+-0.88 – 1.29
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.27
+0.37
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.790
+0.711
 </td>
 </tr>
 <tr>
@@ -3642,16 +3615,16 @@ verum_sham * number_feedback_faster_standardized
 OCD_HC * number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.00
+-0.45
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.71 – 0.70
+-2.12 – 1.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.15
+-0.53
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.253
+0.595
 </td>
 </tr>
 <tr>
@@ -3659,16 +3632,16 @@ OCD_HC * number_feedback_faster_standardized
 (verum_sham * OCD_HC) * number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.02
+1.56
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.22 – 3.25
+-0.60 – 3.72
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.89
+1.42
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.376
+0.163
 </td>
 </tr>
 <tr>
@@ -3676,21 +3649,21 @@ OCD_HC * number_feedback_faster_standardized
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.295
+0.292
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3312
+3244
 </td>
 </tr>
 <tr>
@@ -3698,7 +3671,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.022 / 0.310
+0.020 / 0.306
 </td>
 </tr>
 </table>
@@ -3733,13 +3706,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.90
+6.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.72 – 7.08
+4.87 – 7.28
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.80
+9.88
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -3750,16 +3723,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.62
+0.57
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.01 – 1.23
+-0.05 – 1.19
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.98
+1.82
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.053
+0.075
 </td>
 </tr>
 <tr>
@@ -3770,13 +3743,13 @@ OCD_HC
 -2.17
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.53 – 0.19
+-4.58 – 0.24
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.80
+-1.77
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.077
+0.083
 </td>
 </tr>
 <tr>
@@ -3784,16 +3757,16 @@ OCD_HC
 number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.22
+-0.15
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.78 – 0.33
+-0.71 – 0.42
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.79
+-0.50
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.433
+0.616
 </td>
 </tr>
 <tr>
@@ -3801,16 +3774,16 @@ number_feedback_faster_standardized
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.03
+1.06
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.19 – 2.25
+-0.18 – 2.30
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.65
+1.68
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.105
+0.100
 </td>
 </tr>
 <tr>
@@ -3818,16 +3791,16 @@ verum_sham * OCD_HC
 verum_sham * number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.42
+-0.49
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.13 – 0.29
+-1.21 – 0.24
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.16
+-1.32
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.253
+0.193
 </td>
 </tr>
 <tr>
@@ -3835,16 +3808,16 @@ verum_sham * number_feedback_faster_standardized
 OCD_HC * number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.27
+-0.35
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.38 – 0.84
+-1.48 – 0.78
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.48
+-0.60
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.631
+0.550
 </td>
 </tr>
 <tr>
@@ -3852,16 +3825,16 @@ OCD_HC * number_feedback_faster_standardized
 (verum_sham * OCD_HC) * number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.48
+0.40
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.95 – 1.90
+-1.05 – 1.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.66
+0.54
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.515
+0.594
 </td>
 </tr>
 <tr>
@@ -3876,14 +3849,14 @@ ICC
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-51686
+49849
 </td>
 </tr>
 <tr>
@@ -3891,7 +3864,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.014 / 0.205
+0.013 / 0.204
 </td>
 </tr>
 </table>
@@ -3926,16 +3899,16 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.51
+-3.27
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--5.27 – -1.75
+-5.05 – -1.50
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.91
+-3.61
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>&lt;0.001
+<strong>0.001</strong>
 </td>
 </tr>
 <tr>
@@ -3943,16 +3916,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.79
+0.87
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.43 – 2.01
+-0.34 – 2.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.27
+1.41
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.205
+0.159
 </td>
 </tr>
 <tr>
@@ -3960,16 +3933,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.30
+-3.00
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.82 – 0.22
+-6.56 – 0.55
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.84
+-1.66
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.071
+0.102
 </td>
 </tr>
 <tr>
@@ -3977,16 +3950,16 @@ OCD_HC
 stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.03
+1.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.09 – 2.15
+-0.11 – 2.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.81
+1.77
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.070
+0.078
 </td>
 </tr>
 <tr>
@@ -3994,16 +3967,16 @@ stimulus_type2-1
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.69
+-0.68
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.12 – 1.74
+-3.08 – 1.73
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.56
+-0.55
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.579
+0.583
 </td>
 </tr>
 <tr>
@@ -4011,16 +3984,16 @@ verum_sham * OCD_HC
 verum_sham:stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.24
+0.03
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.44 – 1.96
+-2.19 – 2.25
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.21
+0.03
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.831
+0.978
 </td>
 </tr>
 <tr>
@@ -4028,16 +4001,16 @@ verum_sham:stimulus_type2-1
 OCD_HC:stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.21
+-0.25
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.45 – 2.02
+-2.50 – 2.00
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.18
+-0.22
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.853
+0.828
 </td>
 </tr>
 <tr>
@@ -4045,16 +4018,16 @@ OCD_HC:stimulus_type2-1
 verum_sham:OCD_HC:stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.14
+1.54
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.27 – 5.55
+-2.90 – 5.97
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.51
+0.68
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.612
+0.497
 </td>
 </tr>
 <tr>
@@ -4062,21 +4035,21 @@ verum_sham:OCD_HC:stimulus_type2-1
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.304
+0.299
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3312
+3244
 </td>
 </tr>
 <tr>
@@ -4084,7 +4057,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.022 / 0.319
+0.019 / 0.312
 </td>
 </tr>
 </table>
@@ -4119,13 +4092,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.88
+6.05
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.70 – 7.07
+4.84 – 7.25
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.72
+9.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -4136,16 +4109,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.71
+0.65
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.14 – 1.28
+0.06 – 1.23
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.43
+2.16
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.018</strong>
+<strong>0.035</strong>
 </td>
 </tr>
 <tr>
@@ -4153,16 +4126,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.27
+-2.22
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.64 – 0.10
+-4.63 – 0.19
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.88
+-1.81
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.066
+0.077
 </td>
 </tr>
 <tr>
@@ -4170,16 +4143,16 @@ OCD_HC
 stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.14
+0.06
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.03 – 0.30
+-0.11 – 0.23
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.61
+0.73
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.108
+0.467
 </td>
 </tr>
 <tr>
@@ -4187,16 +4160,16 @@ stimulus_type2-1
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.95
+0.96
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.19 – 2.09
+-0.21 – 2.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.63
+1.61
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.109
+0.112
 </td>
 </tr>
 <tr>
@@ -4204,16 +4177,16 @@ verum_sham * OCD_HC
 verum_sham:stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.04
+-0.10
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.37 – 0.29
+-0.43 – 0.24
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.23
+-0.55
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.815
+0.579
 </td>
 </tr>
 <tr>
@@ -4221,13 +4194,13 @@ verum_sham:stimulus_type2-1
 OCD_HC:stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.69
+-0.70
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.02 – -0.36
+-1.04 – -0.36
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.11
+-4.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -4238,16 +4211,16 @@ OCD_HC:stimulus_type2-1
 verum_sham:OCD_HC:stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.30
+0.17
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.36 – 0.96
+-0.51 – 0.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.89
+0.49
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.376
+0.624
 </td>
 </tr>
 <tr>
@@ -4255,21 +4228,21 @@ verum_sham:OCD_HC:stimulus_type2-1
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.197
+0.195
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-51686
+49849
 </td>
 </tr>
 <tr>
@@ -4277,7 +4250,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.013 / 0.207
+0.012 / 0.205
 </td>
 </tr>
 </table>
@@ -4312,16 +4285,16 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.31
+-3.97
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.37 – -2.25
+-6.09 – -1.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.09
+-3.66
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>&lt;0.001
+<strong>0.001</strong>
 </td>
 </tr>
 <tr>
@@ -4329,16 +4302,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.78
+1.10
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.31 – 1.87
+0.02 – 2.17
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.40
+2.00
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.169
+0.052
 </td>
 </tr>
 <tr>
@@ -4346,16 +4319,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.18
+-1.26
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--5.21 – 2.85
+-5.32 – 2.79
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.57
+-0.61
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.568
+0.544
 </td>
 </tr>
 <tr>
@@ -4363,16 +4336,16 @@ OCD_HC
 medication2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.65
+-4.05
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--9.36 – 0.07
+-8.85 – 0.76
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.93
+-1.65
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.059
+0.105
 </td>
 </tr>
 <tr>
@@ -4380,16 +4353,16 @@ medication2-1
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.43
+-0.51
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.55 – 1.69
+-2.56 – 1.54
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.40
+-0.49
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.694
+0.629
 </td>
 </tr>
 <tr>
@@ -4397,16 +4370,16 @@ verum_sham * OCD_HC
 verum_sham:medication2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.38
+0.90
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.15 – 2.91
+-1.57 – 3.37
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.30
+0.71
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.767
+0.480
 </td>
 </tr>
 <tr>
@@ -4414,21 +4387,21 @@ verum_sham:medication2-1
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.293
+0.292
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3312
+3244
 </td>
 </tr>
 <tr>
@@ -4436,7 +4409,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.037 / 0.320
+0.031 / 0.313
 </td>
 </tr>
 </table>
@@ -4471,13 +4444,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.49
+5.74
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.02 – 6.96
+4.22 – 7.26
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-7.31
+7.40
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -4488,16 +4461,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.93
+0.86
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.22 – 1.64
+0.12 – 1.59
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.57
+2.28
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.013</strong>
+<strong>0.026</strong>
 </td>
 </tr>
 <tr>
@@ -4505,16 +4478,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.53
+-1.67
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.40 – 1.35
+-4.57 – 1.23
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.04
+-1.13
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.303
+0.264
 </td>
 </tr>
 <tr>
@@ -4522,16 +4495,16 @@ OCD_HC
 medication2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.50
+-1.15
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.86 – 1.86
+-4.58 – 2.29
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.88
+-0.65
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.385
+0.516
 </td>
 </tr>
 <tr>
@@ -4539,16 +4512,16 @@ medication2-1
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.53
+0.60
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.85 – 1.91
+-0.81 – 2.00
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.75
+0.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.455
+0.407
 </td>
 </tr>
 <tr>
@@ -4556,16 +4529,16 @@ verum_sham * OCD_HC
 verum_sham:medication2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.85
+0.78
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.76 – 2.47
+-0.89 – 2.44
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.03
+0.91
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.307
+0.365
 </td>
 </tr>
 <tr>
@@ -4573,21 +4546,21 @@ verum_sham:medication2-1
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.197
+0.196
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-51686
+49849
 </td>
 </tr>
 <tr>
@@ -4595,7 +4568,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.015 / 0.209
+0.013 / 0.207
 </td>
 </tr>
 </table>
@@ -4630,16 +4603,16 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.99
+-1.95
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.04 – 0.07
+-4.03 – 0.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.90
+-1.83
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.065
+0.075
 </td>
 </tr>
 <tr>
@@ -4647,16 +4620,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.59
+0.63
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.45 – 1.64
+-0.42 – 1.68
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.11
+1.18
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.274
+0.245
 </td>
 </tr>
 <tr>
@@ -4664,16 +4637,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.18
+-1.26
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--5.29 – 2.92
+-5.43 – 2.91
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.56
+-0.59
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.576
+0.557
 </td>
 </tr>
 <tr>
@@ -4681,16 +4654,16 @@ OCD_HC
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.43
+-0.51
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.51 – 1.66
+-2.61 – 1.59
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.40
+-0.47
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.690
+0.639
 </td>
 </tr>
 <tr>
@@ -4698,21 +4671,21 @@ verum_sham * OCD_HC
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.301
+0.303
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-44
+43
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-2601
+2557
 </td>
 </tr>
 <tr>
@@ -4720,7 +4693,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.003 / 0.303
+0.003 / 0.305
 </td>
 </tr>
 </table>
@@ -4755,13 +4728,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-6.24
+6.31
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.66 – 7.82
+4.72 – 7.90
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-7.76
+7.77
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -4772,16 +4745,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.50
+0.47
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.18 – 1.19
+-0.22 – 1.16
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.44
+1.33
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.158
+0.191
 </td>
 </tr>
 <tr>
@@ -4789,16 +4762,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.53
+-1.67
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.68 – 1.63
+-4.85 – 1.51
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.95
+-1.03
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.348
+0.310
 </td>
 </tr>
 <tr>
@@ -4806,16 +4779,16 @@ OCD_HC
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.53
+0.60
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.84 – 1.91
+-0.79 – 1.99
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.76
+0.85
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.453
+0.402
 </td>
 </tr>
 <tr>
@@ -4830,14 +4803,14 @@ ICC
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-44
+43
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-39189
+38279
 </td>
 </tr>
 <tr>
@@ -4845,7 +4818,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.005 / 0.233
+0.006 / 0.233
 </td>
 </tr>
 </table>
@@ -4880,13 +4853,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.93
+-2.89
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.65 – -1.21
+-4.64 – -1.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.34
+-3.24
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>0.002</strong>
@@ -4897,16 +4870,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.69
+0.72
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.11 – 1.49
+-0.08 – 1.53
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.69
+1.77
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.098
+0.084
 </td>
 </tr>
 <tr>
@@ -4914,16 +4887,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.03
+-3.11
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.47 – 0.41
+-6.61 – 0.39
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.72
+-1.74
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.090
+0.088
 </td>
 </tr>
 <tr>
@@ -4931,16 +4904,16 @@ OCD_HC
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.22
+0.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.38 – 1.81
+-1.46 – 1.75
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.26
+0.17
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.793
+0.862
 </td>
 </tr>
 <tr>
@@ -4948,21 +4921,21 @@ verum_sham * OCD_HC
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.299
+0.300
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-56
+55
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3228
+3184
 </td>
 </tr>
 <tr>
@@ -4970,7 +4943,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.017 / 0.311
+0.017 / 0.313
 </td>
 </tr>
 </table>
@@ -5005,13 +4978,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-6.03
+6.11
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.82 – 7.24
+4.89 – 7.33
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.79
+9.80
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -5022,16 +4995,16 @@ p value
 verum_sham
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.61
+0.58
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.04 – 1.18
+-0.00 – 1.15
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.10
+1.95
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.040</strong>
+0.056
 </td>
 </tr>
 <tr>
@@ -5039,16 +5012,16 @@ verum_sham
 OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.17
+-2.32
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.59 – 0.24
+-4.77 – 0.12
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.76
+-1.87
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.084
+0.068
 </td>
 </tr>
 <tr>
@@ -5056,16 +5029,16 @@ OCD_HC
 verum_sham * OCD_HC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.03
+1.11
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.11 – 2.18
+-0.05 – 2.26
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.77
+1.88
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.082
+0.065
 </td>
 </tr>
 <tr>
@@ -5080,14 +5053,14 @@ ICC
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-56
+55
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-49873
+48963
 </td>
 </tr>
 <tr>
@@ -5095,7 +5068,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.012 / 0.206
+0.013 / 0.206
 </td>
 </tr>
 </table>
@@ -5193,16 +5166,16 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.11
+-2.88
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.81 – -1.40
+-4.60 – -1.16
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.58
+-3.29
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.001</strong>
+<strong>0.002</strong>
 </td>
 </tr>
 <tr>
@@ -5210,16 +5183,16 @@ p value
 group2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.42
+-3.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.83 – -0.02
+-6.58 – 0.30
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.97
+-1.79
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.054
+0.079
 </td>
 </tr>
 <tr>
@@ -5227,16 +5200,16 @@ group2-1
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.80
+0.91
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.38 – 1.99
+-0.25 – 2.06
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.34
+1.54
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.190
+0.132
 </td>
 </tr>
 <tr>
@@ -5244,16 +5217,16 @@ groupHC:stimulation2-1
 groupOCD:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.56
+0.81
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.70 – 1.81
+-0.41 – 2.03
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.87
+1.30
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.388
+0.201
 </td>
 </tr>
 <tr>
@@ -5266,49 +5239,49 @@ Random Effects
 σ<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-98.064
+98.589
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>00</sub> <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-41.746
+41.142
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-3.683
+2.955
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ρ<sub>01</sub> <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.032
+-0.102
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.299
+0.294
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3312
+3244
 </td>
 </tr>
 <tr>
@@ -5316,7 +5289,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.021 / 0.313
+0.018 / 0.307
 </td>
 </tr>
 </table>
@@ -5351,13 +5324,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.88
+6.05
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.69 – 7.06
+4.84 – 7.25
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.71
+9.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -5368,16 +5341,16 @@ p value
 group2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.25
+-2.20
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.62 – 0.12
+-4.61 – 0.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.86
+-1.79
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.068
+0.079
 </td>
 </tr>
 <tr>
@@ -5385,16 +5358,16 @@ group2-1
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.24
+0.17
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.57 – 1.05
+-0.66 – 1.00
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.58
+0.40
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.565
+0.688
 </td>
 </tr>
 <tr>
@@ -5402,16 +5375,16 @@ groupHC:stimulation2-1
 groupOCD:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.18
+1.13
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.37 – 1.99
+0.30 – 1.96
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.86
+2.67
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.006</strong>
+<strong>0.010</strong>
 </td>
 </tr>
 <tr>
@@ -5424,49 +5397,49 @@ Random Effects
 σ<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-91.055
+91.725
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>00</sub> <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-21.130
+21.048
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 τ<sub>11</sub> <sub>participant_id.verum_sham</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-4.515
+4.587
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ρ<sub>01</sub> <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.013
+0.043
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.188
+0.187
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-51686
+49849
 </td>
 </tr>
 <tr>
@@ -5474,7 +5447,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.013 / 0.199
+0.012 / 0.196
 </td>
 </tr>
 </table>
@@ -5727,16 +5700,16 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.14
+-2.94
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.86 – -1.43
+-4.68 – -1.19
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.59
+-3.30
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.001</strong>
+<strong>0.002</strong>
 </td>
 </tr>
 <tr>
@@ -5744,16 +5717,16 @@ p value
 group2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.47
+-3.18
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.90 – -0.03
+-6.68 – 0.31
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.98
+-1.79
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.053
+0.080
 </td>
 </tr>
 <tr>
@@ -5761,16 +5734,16 @@ group2-1
 session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.32
+0.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.56 – 1.19
+-0.65 – 1.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.71
+0.49
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.481
+0.629
 </td>
 </tr>
 <tr>
@@ -5778,16 +5751,16 @@ session2-1
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.81
+0.91
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.39 – 2.01
+-0.27 – 2.08
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.32
+1.51
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.196
+0.140
 </td>
 </tr>
 <tr>
@@ -5795,16 +5768,16 @@ groupHC:stimulation2-1
 groupOCD:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.52
+0.78
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.75 – 1.79
+-0.47 – 2.03
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.80
+1.23
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.427
+0.225
 </td>
 </tr>
 <tr>
@@ -5812,16 +5785,16 @@ groupOCD:stimulation2-1
 group2-1:session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.74
+0.41
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.01 – 2.48
+-1.31 – 2.13
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.83
+0.47
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.414
+0.643
 </td>
 </tr>
 <tr>
@@ -5829,16 +5802,16 @@ group2-1:session2-1
 groupHC:stimulation2-1:session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.07
+-1.85
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--11.76 – 7.61
+-11.70 – 8.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.42
+-0.37
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.677
+0.715
 </td>
 </tr>
 <tr>
@@ -5846,16 +5819,16 @@ groupHC:stimulation2-1:session2-1
 groupOCD:stimulation2-1:session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.00
+3.62
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.72 – 14.73
+-6.27 – 13.51
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.01
+0.72
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.318
+0.477
 </td>
 </tr>
 <tr>
@@ -5863,21 +5836,21 @@ groupOCD:stimulation2-1:session2-1
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.302
+0.300
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3312
+3244
 </td>
 </tr>
 <tr>
@@ -5885,7 +5858,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.027 / 0.320
+0.021 / 0.315
 </td>
 </tr>
 </table>
@@ -5920,13 +5893,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.88
+6.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.68 – 7.08
+4.85 – 7.28
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.63
+9.77
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -5940,13 +5913,13 @@ group2-1
 -2.29
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.69 – 0.10
+-4.72 – 0.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.88
+-1.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.066
+0.071
 </td>
 </tr>
 <tr>
@@ -5954,47 +5927,13 @@ group2-1
 session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.80
+0.82
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.26 – 1.34
+0.27 – 1.38
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.89
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.006</strong>
-</td>
-</tr>
-<tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-groupHC:stimulation2-1
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.27
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.50 – 1.03
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.68
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.497
-</td>
-</tr>
-<tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-groupOCD:stimulation2-1
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.15
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.39 – 1.92
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.95
+2.90
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>0.005</strong>
@@ -6002,19 +5941,53 @@ groupOCD:stimulation2-1
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+groupHC:stimulation2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.23
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.56 – 1.01
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.57
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.574
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+groupOCD:stimulation2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.07
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.28 – 1.85
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.67
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.010</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
 group2-1:session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.05
+0.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.14 – 1.03
+-1.04 – 1.18
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.10
+0.13
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.922
+0.901
 </td>
 </tr>
 <tr>
@@ -6022,16 +5995,16 @@ group2-1:session2-1
 groupHC:stimulation2-1:session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.85
+3.58
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.92 – 9.62
+-3.30 – 10.47
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.83
+1.02
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.412
+0.312
 </td>
 </tr>
 <tr>
@@ -6039,16 +6012,16 @@ groupHC:stimulation2-1:session2-1
 groupOCD:stimulation2-1:session2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.10
+1.36
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.66 – 8.87
+-5.53 – 8.24
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.61
+0.39
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.545
+0.701
 </td>
 </tr>
 <tr>
@@ -6056,21 +6029,21 @@ groupOCD:stimulation2-1:session2-1
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.191
+0.189
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-51686
+49849
 </td>
 </tr>
 <tr>
@@ -6078,7 +6051,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.017 / 0.205
+0.017 / 0.203
 </td>
 </tr>
 </table>
@@ -6113,47 +6086,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.97
+-2.78
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.60 – -1.33
+-4.45 – -1.11
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.56
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.001</strong>
-</td>
-</tr>
-<tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-group2-1
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.91
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.17 – 0.36
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.75
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.086
-</td>
-</tr>
-<tr>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
-number_errors_standardized
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.64
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.63 – 2.66
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-3.18
+-3.27
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>0.002</strong>
@@ -6161,19 +6100,53 @@ number_errors_standardized
 </tr>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+group2-1
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-2.67
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-6.01 – 0.66
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-1.57
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.122
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
+number_errors_standardized
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+1.43
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.43 – 2.43
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+2.79
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+<strong>0.007</strong>
+</td>
+</tr>
+<tr>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; ">
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.65
+0.79
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.65 – 1.95
+-0.49 – 2.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.97
+1.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.334
+0.230
 </td>
 </tr>
 <tr>
@@ -6181,16 +6154,16 @@ groupHC:stimulation2-1
 groupOCD:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.13
+0.42
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.15 – 1.41
+-0.83 – 1.67
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.20
+0.66
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.843
+0.515
 </td>
 </tr>
 <tr>
@@ -6198,16 +6171,16 @@ groupOCD:stimulation2-1
 group2-1:number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.38
+1.82
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.36 – 4.41
+-0.19 – 3.82
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.31
+1.77
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.024</strong>
+0.080
 </td>
 </tr>
 <tr>
@@ -6215,16 +6188,16 @@ group2-1:number_errors_standardized
 groupHC:stimulation2-1:number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.37
+0.28
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.77 – 1.50
+-0.83 – 1.39
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.63
+0.49
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.533
+0.627
 </td>
 </tr>
 <tr>
@@ -6232,16 +6205,16 @@ groupHC:stimulation2-1:number_errors_standardized
 groupOCD:stimulation2-1:number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.13
+-0.56
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.62 – 1.87
+-2.30 – 1.18
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.14
+-0.63
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.889
+0.530
 </td>
 </tr>
 <tr>
@@ -6249,21 +6222,21 @@ groupOCD:stimulation2-1:number_errors_standardized
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.278
+0.279
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3312
+3244
 </td>
 </tr>
 <tr>
@@ -6271,7 +6244,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.033 / 0.301
+0.027 / 0.299
 </td>
 </tr>
 </table>
@@ -6306,13 +6279,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.85
+6.02
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.73 – 6.97
+4.87 – 7.17
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-10.21
+10.28
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -6323,16 +6296,16 @@ p value
 group2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.92
+-1.91
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.17 – 0.32
+-4.21 – 0.38
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.68
+-1.63
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.099
+0.108
 </td>
 </tr>
 <tr>
@@ -6340,16 +6313,16 @@ group2-1
 number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.86
+0.82
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.19 – 1.53
+0.12 – 1.51
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.50
+2.31
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.014</strong>
+<strong>0.024</strong>
 </td>
 </tr>
 <tr>
@@ -6357,16 +6330,16 @@ number_errors_standardized
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.25
+0.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.60 – 1.09
+-0.66 – 1.08
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.57
+0.47
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.573
+0.640
 </td>
 </tr>
 <tr>
@@ -6374,16 +6347,16 @@ groupHC:stimulation2-1
 groupOCD:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.08
+1.05
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.21 – 1.96
+0.15 – 1.95
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.42
+2.29
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.019</strong>
+<strong>0.026</strong>
 </td>
 </tr>
 <tr>
@@ -6391,16 +6364,16 @@ groupOCD:stimulation2-1
 group2-1:number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.25
+-0.20
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.60 – 1.09
+-1.58 – 1.19
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.37
+-0.28
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.713
+0.781
 </td>
 </tr>
 <tr>
@@ -6408,16 +6381,16 @@ group2-1:number_errors_standardized
 groupHC:stimulation2-1:number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.28
+0.31
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.53 – 1.09
+-0.52 – 1.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.67
+0.74
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.504
+0.466
 </td>
 </tr>
 <tr>
@@ -6425,16 +6398,16 @@ groupHC:stimulation2-1:number_errors_standardized
 groupOCD:stimulation2-1:number_errors_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.23
+0.37
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.90 – 1.35
+-0.82 – 1.56
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.40
+0.61
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.694
+0.547
 </td>
 </tr>
 <tr>
@@ -6449,14 +6422,14 @@ ICC
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-51686
+49849
 </td>
 </tr>
 <tr>
@@ -6464,7 +6437,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.020 / 0.186
+0.018 / 0.186
 </td>
 </tr>
 </table>
@@ -6499,16 +6472,16 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.04
+-2.85
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.71 – -1.36
+-4.55 – -1.15
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.56
+-3.29
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.001</strong>
+<strong>0.002</strong>
 </td>
 </tr>
 <tr>
@@ -6516,16 +6489,16 @@ p value
 group2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.22
+-2.95
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.57 – 0.13
+-6.35 – 0.45
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.89
+-1.70
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.065
+0.095
 </td>
 </tr>
 <tr>
@@ -6533,16 +6506,16 @@ group2-1
 number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.57
+-0.47
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.42 – 0.29
+-1.30 – 0.36
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.30
+-1.11
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.197
+0.272
 </td>
 </tr>
 <tr>
@@ -6550,16 +6523,16 @@ number_feedback_faster_standardized
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.53
+0.66
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.84 – 1.90
+-0.66 – 1.99
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.76
+0.98
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.453
+0.332
 </td>
 </tr>
 <tr>
@@ -6567,16 +6540,16 @@ groupHC:stimulation2-1
 groupOCD:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.32
+0.65
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.01 – 1.65
+-0.63 – 1.94
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.47
+1.00
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.638
+0.323
 </td>
 </tr>
 <tr>
@@ -6584,16 +6557,16 @@ groupOCD:stimulation2-1
 group2-1:number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.00
+-0.45
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.71 – 0.70
+-2.12 – 1.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.15
+-0.53
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.253
+0.595
 </td>
 </tr>
 <tr>
@@ -6601,16 +6574,16 @@ group2-1:number_feedback_faster_standardized
 groupHC:stimulation2-1:number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.66
+-0.58
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.23 – 0.91
+-2.08 – 0.93
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.82
+-0.75
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.414
+0.458
 </td>
 </tr>
 <tr>
@@ -6618,16 +6591,16 @@ groupHC:stimulation2-1:number_feedback_faster_standardized
 groupOCD:stimulation2-1:number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.36
+0.99
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.23 – 1.94
+-0.56 – 2.54
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.44
+1.25
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.662
+0.218
 </td>
 </tr>
 <tr>
@@ -6635,21 +6608,21 @@ groupOCD:stimulation2-1:number_feedback_faster_standardized
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.289
+0.288
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3312
+3244
 </td>
 </tr>
 <tr>
@@ -6657,7 +6630,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.022 / 0.305
+0.020 / 0.302
 </td>
 </tr>
 </table>
@@ -6692,13 +6665,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.90
+6.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.72 – 7.08
+4.87 – 7.28
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.80
+9.88
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -6712,13 +6685,13 @@ group2-1
 -2.17
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.53 – 0.19
+-4.58 – 0.24
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.80
+-1.77
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.077
+0.083
 </td>
 </tr>
 <tr>
@@ -6726,16 +6699,16 @@ group2-1
 number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.22
+-0.15
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.78 – 0.33
+-0.71 – 0.42
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.79
+-0.50
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.433
+0.616
 </td>
 </tr>
 <tr>
@@ -6743,16 +6716,16 @@ number_feedback_faster_standardized
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.04
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+-0.82 – 0.91
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 0.10
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.75 – 0.96
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.24
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.814
+0.921
 </td>
 </tr>
 <tr>
@@ -6760,16 +6733,16 @@ groupHC:stimulation2-1
 groupOCD:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.13
+1.10
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.26 – 2.01
+0.22 – 1.99
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.54
+2.44
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.014</strong>
+<strong>0.018</strong>
 </td>
 </tr>
 <tr>
@@ -6777,16 +6750,16 @@ groupOCD:stimulation2-1
 group2-1:number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.27
+-0.35
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.38 – 0.84
+-1.48 – 0.78
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.48
+-0.60
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.631
+0.550
 </td>
 </tr>
 <tr>
@@ -6794,16 +6767,16 @@ group2-1:number_feedback_faster_standardized
 groupHC:stimulation2-1:number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.66
+-0.69
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.67 – 0.36
+-1.69 – 0.32
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.27
+-1.33
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.210
+0.188
 </td>
 </tr>
 <tr>
@@ -6811,16 +6784,16 @@ groupHC:stimulation2-1:number_feedback_faster_standardized
 groupOCD:stimulation2-1:number_feedback_faster_standardized
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.18
+-0.29
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.18 – 0.82
+-1.33 – 0.75
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.36
+-0.55
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.723
+0.588
 </td>
 </tr>
 <tr>
@@ -6835,14 +6808,14 @@ ICC
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-51686
+49849
 </td>
 </tr>
 <tr>
@@ -6850,7 +6823,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.014 / 0.197
+0.013 / 0.196
 </td>
 </tr>
 </table>
@@ -6885,16 +6858,16 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.51
+-3.27
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--5.27 – -1.75
+-5.05 – -1.50
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.91
+-3.61
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>&lt;0.001
+<strong>0.001</strong>
 </td>
 </tr>
 <tr>
@@ -6902,16 +6875,16 @@ p value
 group2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.30
+-3.00
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.82 – 0.22
+-6.56 – 0.55
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.84
+-1.66
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.071
+0.102
 </td>
 </tr>
 <tr>
@@ -6919,16 +6892,16 @@ group2-1
 stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.03
+1.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.09 – 2.15
+-0.11 – 2.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.81
+1.77
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.070
+0.078
 </td>
 </tr>
 <tr>
@@ -6936,16 +6909,16 @@ stimulus_type2-1
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.14
+1.21
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.65 – 2.92
+-0.56 – 2.97
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.25
+1.34
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.213
+0.182
 </td>
 </tr>
 <tr>
@@ -6953,16 +6926,16 @@ groupHC:stimulation2-1
 groupOCD:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.44
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.21 – 2.10
-</td>
-<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 0.53
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.600
+-1.11 – 2.17
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.63
+</td>
+<td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
+0.527
 </td>
 </tr>
 <tr>
@@ -6970,16 +6943,16 @@ groupOCD:stimulation2-1
 group2-1:stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.21
+-0.25
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.45 – 2.02
+-2.50 – 2.00
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.18
+-0.22
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.853
+0.828
 </td>
 </tr>
 <tr>
@@ -6987,16 +6960,16 @@ group2-1:stimulus_type2-1
 groupHC:stimulation2-1:stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.81
+-0.74
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.07 – 2.45
+-4.01 – 2.53
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.49
+-0.44
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.626
+0.659
 </td>
 </tr>
 <tr>
@@ -7004,16 +6977,16 @@ groupHC:stimulation2-1:stimulus_type2-1
 groupOCD:stimulation2-1:stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.33
+0.80
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.64 – 3.30
+-2.19 – 3.79
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.22
+0.52
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.827
+0.600
 </td>
 </tr>
 <tr>
@@ -7021,21 +6994,21 @@ groupOCD:stimulation2-1:stimulus_type2-1
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.299
+0.295
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3312
+3244
 </td>
 </tr>
 <tr>
@@ -7043,7 +7016,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.022 / 0.314
+0.019 / 0.308
 </td>
 </tr>
 </table>
@@ -7078,13 +7051,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.88
+6.05
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.70 – 7.07
+4.84 – 7.25
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.72
+9.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -7095,16 +7068,16 @@ p value
 group2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.27
+-2.22
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.64 – 0.10
+-4.63 – 0.19
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.88
+-1.81
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.066
+0.077
 </td>
 </tr>
 <tr>
@@ -7112,16 +7085,16 @@ group2-1
 stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.14
+0.06
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.03 – 0.30
+-0.11 – 0.23
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.61
+0.73
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.108
+0.467
 </td>
 </tr>
 <tr>
@@ -7129,16 +7102,16 @@ stimulus_type2-1
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.23
+0.16
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.58 – 1.04
+-0.66 – 0.99
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.56
+0.39
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.575
+0.699
 </td>
 </tr>
 <tr>
@@ -7146,16 +7119,16 @@ groupHC:stimulation2-1
 groupOCD:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.18
+1.13
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.37 – 1.99
+0.30 – 1.96
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.87
+2.67
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.006</strong>
+<strong>0.010</strong>
 </td>
 </tr>
 <tr>
@@ -7163,13 +7136,13 @@ groupOCD:stimulation2-1
 group2-1:stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.69
+-0.70
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.02 – -0.36
+-1.04 – -0.36
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.11
+-4.07
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -7180,16 +7153,16 @@ group2-1:stimulus_type2-1
 groupHC:stimulation2-1:stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.19
+-0.18
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.66 – 0.28
+-0.66 – 0.30
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.79
+-0.74
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.430
+0.461
 </td>
 </tr>
 <tr>
@@ -7197,16 +7170,16 @@ groupHC:stimulation2-1:stimulus_type2-1
 groupOCD:stimulation2-1:stimulus_type2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.11
+-0.01
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.36 – 0.57
+-0.49 – 0.46
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.46
+-0.05
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.644
+0.963
 </td>
 </tr>
 <tr>
@@ -7214,21 +7187,21 @@ groupOCD:stimulation2-1:stimulus_type2-1
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.189
+0.187
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-51686
+49849
 </td>
 </tr>
 <tr>
@@ -7236,7 +7209,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.013 / 0.199
+0.012 / 0.197
 </td>
 </tr>
 </table>
@@ -7271,16 +7244,16 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.31
+-3.97
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.37 – -2.25
+-6.09 – -1.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.09
+-3.66
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>&lt;0.001
+<strong>0.001</strong>
 </td>
 </tr>
 <tr>
@@ -7288,16 +7261,16 @@ p value
 group2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.18
+-1.26
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--5.21 – 2.85
+-5.32 – 2.79
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.57
+-0.61
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.568
+0.544
 </td>
 </tr>
 <tr>
@@ -7305,16 +7278,16 @@ group2-1
 medication2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.65
+-4.05
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--9.36 – 0.07
+-8.85 – 0.76
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.93
+-1.65
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.059
+0.105
 </td>
 </tr>
 <tr>
@@ -7322,16 +7295,16 @@ medication2-1
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.80
+0.90
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.39 – 2.00
+-0.26 – 2.06
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.31
+1.52
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.197
+0.138
 </td>
 </tr>
 <tr>
@@ -7339,16 +7312,16 @@ groupHC:stimulation2-1
 groupOCD:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.56
+0.84
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.70 – 1.83
+-0.39 – 2.08
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.87
+1.33
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.386
+0.188
 </td>
 </tr>
 <tr>
@@ -7356,16 +7329,16 @@ groupOCD:stimulation2-1
 groupOCD:stimulation2-1:medication2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.38
+0.90
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.15 – 2.91
+-1.57 – 3.37
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.30
+0.71
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.767
+0.480
 </td>
 </tr>
 <tr>
@@ -7380,14 +7353,14 @@ ICC
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3312
+3244
 </td>
 </tr>
 <tr>
@@ -7395,7 +7368,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.037 / 0.315
+0.031 / 0.310
 </td>
 </tr>
 </table>
@@ -7430,13 +7403,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-5.49
+5.74
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.02 – 6.96
+4.22 – 7.26
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-7.31
+7.40
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -7447,16 +7420,16 @@ p value
 group2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.53
+-1.67
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.40 – 1.35
+-4.57 – 1.23
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.04
+-1.13
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.303
+0.264
 </td>
 </tr>
 <tr>
@@ -7464,16 +7437,16 @@ group2-1
 medication2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.50
+-1.15
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.86 – 1.86
+-4.58 – 2.29
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.88
+-0.65
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.385
+0.516
 </td>
 </tr>
 <tr>
@@ -7481,16 +7454,16 @@ medication2-1
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.24
+0.17
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.57 – 1.05
+-0.66 – 1.00
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.58
+0.40
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.565
+0.689
 </td>
 </tr>
 <tr>
@@ -7498,16 +7471,16 @@ groupHC:stimulation2-1
 groupOCD:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.19
+1.16
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.39 – 2.00
+0.33 – 1.99
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-2.90
+2.73
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-<strong>0.005</strong>
+<strong>0.009</strong>
 </td>
 </tr>
 <tr>
@@ -7515,16 +7488,16 @@ groupOCD:stimulation2-1
 groupOCD:stimulation2-1:medication2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.85
+0.78
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.76 – 2.47
+-0.89 – 2.44
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.03
+0.91
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.307
+0.365
 </td>
 </tr>
 <tr>
@@ -7532,21 +7505,21 @@ groupOCD:stimulation2-1:medication2-1
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.189
+0.188
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-58
+56
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-51686
+49849
 </td>
 </tr>
 <tr>
@@ -7554,7 +7527,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.015 / 0.201
+0.014 / 0.199
 </td>
 </tr>
 </table>
@@ -7589,16 +7562,16 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.99
+-1.95
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.04 – 0.07
+-4.03 – 0.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.90
+-1.83
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.065
+0.075
 </td>
 </tr>
 <tr>
@@ -7606,16 +7579,16 @@ p value
 group2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.18
+-1.26
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--5.29 – 2.92
+-5.43 – 2.91
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.56
+-0.59
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.576
+0.557
 </td>
 </tr>
 <tr>
@@ -7623,16 +7596,16 @@ group2-1
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.81
+0.89
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.37 – 1.98
+-0.31 – 2.08
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.34
+1.46
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.189
+0.156
 </td>
 </tr>
 <tr>
@@ -7643,13 +7616,13 @@ groupOCD:stimulation2-1
 0.38
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.35 – 2.10
+-1.35 – 2.11
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 0.43
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.670
+0.669
 </td>
 </tr>
 <tr>
@@ -7657,21 +7630,21 @@ groupOCD:stimulation2-1
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.296
+0.298
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-44
+43
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-2601
+2557
 </td>
 </tr>
 <tr>
@@ -7679,7 +7652,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.003 / 0.298
+0.003 / 0.301
 </td>
 </tr>
 </table>
@@ -7714,13 +7687,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-6.24
+6.31
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.66 – 7.82
+4.72 – 7.90
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-7.76
+7.77
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -7731,16 +7704,16 @@ p value
 group2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.53
+-1.67
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.68 – 1.63
+-4.85 – 1.51
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.95
+-1.03
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.348
+0.310
 </td>
 </tr>
 <tr>
@@ -7748,16 +7721,16 @@ group2-1
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.24
+0.17
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.56 – 1.04
+-0.65 – 0.99
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.58
+0.41
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.563
+0.685
 </td>
 </tr>
 <tr>
@@ -7774,7 +7747,7 @@ groupOCD:stimulation2-1
 1.35
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.184
+0.185
 </td>
 </tr>
 <tr>
@@ -7789,14 +7762,14 @@ ICC
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-44
+43
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-39189
+38279
 </td>
 </tr>
 <tr>
@@ -7804,7 +7777,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.005 / 0.225
+0.006 / 0.226
 </td>
 </tr>
 </table>
@@ -7839,13 +7812,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.93
+-2.89
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.65 – -1.21
+-4.64 – -1.14
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.34
+-3.24
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>0.002</strong>
@@ -7856,16 +7829,16 @@ p value
 group2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--3.03
+-3.11
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--6.47 – 0.41
+-6.61 – 0.39
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.72
+-1.74
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.090
+0.088
 </td>
 </tr>
 <tr>
@@ -7873,16 +7846,16 @@ group2-1
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.58
+0.65
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.51 – 1.67
+-0.46 – 1.76
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-1.04
+1.15
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.305
+0.256
 </td>
 </tr>
 <tr>
@@ -7907,21 +7880,21 @@ groupOCD:stimulation2-1
 ICC
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.296
+0.298
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm;">
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-56
+55
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-3228
+3184
 </td>
 </tr>
 <tr>
@@ -7929,7 +7902,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.017 / 0.308
+0.017 / 0.310
 </td>
 </tr>
 </table>
@@ -7964,13 +7937,13 @@ p value
 (Intercept)
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-6.03
+6.11
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-4.82 – 7.24
+4.89 – 7.33
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-9.79
+9.80
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
 <strong>&lt;0.001
@@ -7981,16 +7954,16 @@ p value
 group2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--2.17
+-2.32
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--4.59 – 0.24
+-4.77 – 0.12
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--1.76
+-1.87
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.084
+0.068
 </td>
 </tr>
 <tr>
@@ -7998,16 +7971,16 @@ group2-1
 groupHC:stimulation2-1
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.10
+0.02
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
--0.71 – 0.91
+-0.80 – 0.85
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.23
+0.05
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:center;  ">
-0.816
+0.961
 </td>
 </tr>
 <tr>
@@ -8039,14 +8012,14 @@ ICC
 N <sub>participant_id</sub>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-56
+55
 </td>
 <tr>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; text-align:left; padding-top:0.1cm; padding-bottom:0.1cm; border-top:1px solid;">
 Observations
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left; border-top:1px solid;" colspan="4">
-49873
+48963
 </td>
 </tr>
 <tr>
@@ -8054,7 +8027,7 @@ Observations
 Marginal R<sup>2</sup> / Conditional R<sup>2</sup>
 </td>
 <td style=" padding:0.2cm; text-align:left; vertical-align:top; padding-top:0.1cm; padding-bottom:0.1cm; text-align:left;" colspan="4">
-0.012 / 0.198
+0.013 / 0.199
 </td>
 </tr>
 </table>
@@ -8149,16 +8122,16 @@ p.value
 group
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-4.67 *
+4.00 +
 </td>
 <td style="text-align:left;">
-.058
+.052
 </td>
 <td style="text-align:left;">
-.035
+.050
 </td>
 </tr>
 <tr>
@@ -8166,16 +8139,16 @@ group
 stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-4.39 *
+6.06 *
 </td>
 <td style="text-align:left;">
-.003
+.004
 </td>
 <td style="text-align:left;">
-.041
+.017
 </td>
 </tr>
 <tr>
@@ -8183,16 +8156,16 @@ stimulation
 group:stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.44
+0.94
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.508
+.337
 </td>
 </tr>
 <tr>
@@ -8200,13 +8173,13 @@ group:stimulation
 response_type
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-175.28 ***
+165.37 ***
 </td>
 <td style="text-align:left;">
-.361
+.365
 </td>
 <td style="text-align:left;">
 &lt;.001
@@ -8217,16 +8190,16 @@ response_type
 group:response_type
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.92
+0.53
 </td>
 <td style="text-align:left;">
-.003
+.002
 </td>
 <td style="text-align:left;">
-.341
+.469
 </td>
 </tr>
 <tr>
@@ -8234,16 +8207,16 @@ group:response_type
 stimulation:response_type
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.05
+0.17
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.829
+.685
 </td>
 </tr>
 <tr>
@@ -8251,16 +8224,16 @@ stimulation:response_type
 group:stimulation:response_type
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.92
+0.53
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.341
+.471
 </td>
 </tr>
 </tbody>
@@ -8294,16 +8267,16 @@ p.value
 group
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-4.10 *
+3.30 +
 </td>
 <td style="text-align:left;">
-.063
+.054
 </td>
 <td style="text-align:left;">
-.048
+.075
 </td>
 </tr>
 <tr>
@@ -8311,16 +8284,16 @@ group
 stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-1.35
+3.26 +
 </td>
 <td style="text-align:left;">
-.002
+.004
 </td>
 <td style="text-align:left;">
-.250
+.076
 </td>
 </tr>
 <tr>
@@ -8328,16 +8301,16 @@ stimulation
 group:stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-0.01
+0.06
 </td>
 <td style="text-align:left;">
 &lt;.001
 </td>
 <td style="text-align:left;">
-.912
+.811
 </td>
 </tr>
 </tbody>
@@ -8371,16 +8344,16 @@ p.value
 group
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-3.46 +
+3.21 +
 </td>
 <td style="text-align:left;">
-.055
+.053
 </td>
 <td style="text-align:left;">
-.068
+.079
 </td>
 </tr>
 <tr>
@@ -8388,16 +8361,16 @@ group
 stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-5.94 *
+4.75 *
 </td>
 <td style="text-align:left;">
 .005
 </td>
 <td style="text-align:left;">
-.018
+.034
 </td>
 </tr>
 <tr>
@@ -8405,16 +8378,16 @@ stimulation
 group:stimulation
 </td>
 <td style="text-align:left;">
-1, 56
+1, 54
 </td>
 <td style="text-align:left;">
-2.61
+2.58
 </td>
 <td style="text-align:left;">
-.002
+.003
 </td>
 <td style="text-align:left;">
-.112
+.114
 </td>
 </tr>
 </tbody>
@@ -8498,22 +8471,22 @@ sham - verum
 HC
 </td>
 <td style="text-align:right;">
--0.65
+-0.74
 </td>
 <td style="text-align:right;">
-0.72
+0.67
 </td>
 <td style="text-align:right;">
-56
+54
 </td>
 <td style="text-align:right;">
--0.90
+-1.11
 </td>
 <td style="text-align:right;">
-0.372
+0.273
 </td>
 <td style="text-align:left;">
--0.12
+-0.15
 </td>
 </tr>
 <tr>
@@ -8524,22 +8497,22 @@ sham - verum
 OCD
 </td>
 <td style="text-align:right;">
--0.53
+-0.97
 </td>
 <td style="text-align:right;">
-0.72
+0.67
 </td>
 <td style="text-align:right;">
-56
+54
 </td>
 <td style="text-align:right;">
--0.74
+-1.45
 </td>
 <td style="text-align:right;">
-0.461
+0.154
 </td>
 <td style="text-align:left;">
--0.10
+-0.20
 </td>
 </tr>
 </tbody>
@@ -8597,22 +8570,22 @@ sham - verum
 HC
 </td>
 <td style="text-align:right;">
--0.24
+-0.17
 </td>
 <td style="text-align:right;">
-0.41
+0.42
 </td>
 <td style="text-align:right;">
-56
+54
 </td>
 <td style="text-align:right;">
--0.58
+-0.41
 </td>
 <td style="text-align:right;">
-0.564
+0.687
 </td>
 <td style="text-align:left;">
--0.08
+-0.06
 </td>
 </tr>
 <tr>
@@ -8623,22 +8596,22 @@ sham - verum
 OCD
 </td>
 <td style="text-align:right;">
--1.18
+-1.13
 </td>
 <td style="text-align:right;">
-0.41
+0.42
 </td>
 <td style="text-align:right;">
-56
+54
 </td>
 <td style="text-align:right;">
--2.87
+-2.68
 </td>
 <td style="text-align:right;">
-0.006
+0.010
 </td>
 <td style="text-align:left;">
--0.38
+-0.36
 </td>
 </tr>
 </tbody>
@@ -8696,19 +8669,19 @@ HC - OCD
 sham
 </td>
 <td style="text-align:right;">
-2.72
+2.68
 </td>
 <td style="text-align:right;">
-1.24
+1.25
 </td>
 <td style="text-align:right;">
-56
+54
 </td>
 <td style="text-align:right;">
-2.19
+2.14
 </td>
 <td style="text-align:right;">
-0.032
+0.037
 </td>
 <td style="text-align:left;">
 0.29
@@ -8722,22 +8695,22 @@ HC - OCD
 verum
 </td>
 <td style="text-align:right;">
-1.78
+1.72
 </td>
 <td style="text-align:right;">
-1.25
+1.28
 </td>
 <td style="text-align:right;">
-56
+54
 </td>
 <td style="text-align:right;">
-1.43
+1.35
 </td>
 <td style="text-align:right;">
-0.159
+0.183
 </td>
 <td style="text-align:left;">
-0.19
+0.18
 </td>
 </tr>
 </tbody>
@@ -8816,13 +8789,13 @@ p.value
 OCD ERN: sham-verum
 </td>
 <td style="text-align:right;">
--0.53
+-0.97
 </td>
 <td style="text-align:right;">
--0.72
+-1.56
 </td>
 <td style="text-align:right;">
-0.48
+0.13
 </td>
 </tr>
 <tr>
@@ -8830,13 +8803,13 @@ OCD ERN: sham-verum
 HC ERN: sham-verum
 </td>
 <td style="text-align:right;">
--0.65
+-0.74
 </td>
 <td style="text-align:right;">
--0.93
+-1.04
 </td>
 <td style="text-align:right;">
-0.36
+0.31
 </td>
 </tr>
 <tr>
@@ -8844,13 +8817,13 @@ HC ERN: sham-verum
 OCD CRN: sham-verum
 </td>
 <td style="text-align:right;">
--1.18
+-1.13
 </td>
 <td style="text-align:right;">
--2.78
+-2.59
 </td>
 <td style="text-align:right;">
-0.01
+0.02
 </td>
 </tr>
 <tr>
@@ -8858,13 +8831,13 @@ OCD CRN: sham-verum
 HC CRN: sham-verum
 </td>
 <td style="text-align:right;">
--0.24
+-0.17
 </td>
 <td style="text-align:right;">
--0.60
+-0.42
 </td>
 <td style="text-align:right;">
-0.55
+0.68
 </td>
 </tr>
 </tbody>
@@ -8922,19 +8895,19 @@ do.call(rbind, lapply(residuals_anova_ERN[,], function(x) shapiro.test(x)[&quot;
 print(&quot;# ANOVA CRN: Check Normality of Residuals with Shapiro Wilk Test&quot;)
 do.call(rbind, lapply(residuals_anova_CRN[,], function(x) shapiro.test(x)[&quot;p.value&quot;]))</code></pre>
 <pre><code>[1] &quot;# ANOVA MFN: Normality of Residuals with Shapiro Wilk Test&quot;
-                p.value  
-sham_correct    0.4204871
-sham_incorrect  0.1814896
-verum_correct   0.1444263
-verum_incorrect 0.0149632
+                p.value   
+sham_correct    0.3769718 
+sham_incorrect  0.1879337 
+verum_correct   0.111157  
+verum_incorrect 0.03874265
 [1] &quot;# ANOVA ERN: Check Normality of Residuals with Shapiro Wilk Test&quot;
-      p.value  
-sham  0.1814896
-verum 0.0149632
+      p.value   
+sham  0.1879337 
+verum 0.03874265
 [1] &quot;# ANOVA CRN: Check Normality of Residuals with Shapiro Wilk Test&quot;
       p.value  
-sham  0.4204871
-verum 0.1444263</code></pre>
+sham  0.3769718
+verum 0.111157 </code></pre>
 <ul>
 <li><p><strong>Assumption #1: Dependent variable interval or ratio variable -&gt; Is OK</strong></p></li>
 <li><p><strong>Assumption #2: Balanced design</strong> (each subject has to have a value in each condition) <strong>-&gt; Is OK</strong></p></li>
