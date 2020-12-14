@@ -113,6 +113,7 @@ resp_locked_data[
   resp_locked_data$participant_id =="P_30_T2",]$stimulation <- "verum"
 
 
+
 # Add group and session variables and remove string '_T1/T2' from participant ID (to get correct number of factor levels later); make all factors
 resp_locked_data <- resp_locked_data  %>% 
   dplyr::mutate(
@@ -122,6 +123,11 @@ resp_locked_data <- resp_locked_data  %>%
     condition      = as.factor(condition),
     stimulation    = as.factor(stimulation)
     )
+
+
+# Exclude P_02 (due to retainer) and C_02 (as preregistered: patients are excluded with their match)
+resp_locked_data <- resp_locked_data[resp_locked_data$participant_id != "P_02" & resp_locked_data$participant_id != "C_02",]
+resp_locked_data$participant_id = as.factor(resp_locked_data$participant_id)
 ```
 
 ## ERP Trajectories {.tabset}
