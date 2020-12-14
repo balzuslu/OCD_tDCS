@@ -68,6 +68,10 @@ questionnaires <- questionnaires[,c("CODE", "BD2SUMT0", "BASO00T0", "BASO01T0", 
 colnames(questionnaires) <- c("participant_id", "BDI_Total", "BIS_Total", "BAS_Total", "BAS_Drive", "BAS_Fun_Seeking", "BAS_Reward_Responsiven.", "FMPS_CMD", "FMPS_PEC", "FMPS_PST", "FMPS_ORG", "FMPS_PER/Total", "NEO_Neuroticism", "NEO_Conscientiousness", "OCI_Total", "OCI_Washing", "OCI_Checking", "OCI_Ordering", "OCI_Obsessions", "OCI_Hoarding", "OCI_Neutralising", "PANAS_Pos", "PANAS_Neg", "PSWQ_Total", "STAI_State", "STAI_Trait", "TCI_Harm_Avoidance_Total", "TCI_Anticipatory_Worry", "TCI_Fear_of_Uncertainty", "TCI_Shyness", "TCI_Fatigability", "WST_Total")   
 
 
+# Exclude P_02 (due to retainer) and C_02 (as preregistered: patients are excluded with their match)
+questionnaires <- questionnaires[questionnaires$participant_id != "ModERN_tDCS_P02" & questionnaires$participant_id != "ModERN_tDCS_C02",]
+
+
 # C_12 repeated the WST at T2, because score at T1 was very low (22); score achieved at T2 was 25; we will use this score 
 questionnaires[questionnaires$participant_id == "ModERN_tDCS_C12",]$WST_Total <- 25
 

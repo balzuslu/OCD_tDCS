@@ -450,6 +450,10 @@ questionnaires &lt;- questionnaires[,c(&quot;CODE&quot;, &quot;BD2SUMT0&quot;, &
 colnames(questionnaires) &lt;- c(&quot;participant_id&quot;, &quot;BDI_Total&quot;, &quot;BIS_Total&quot;, &quot;BAS_Total&quot;, &quot;BAS_Drive&quot;, &quot;BAS_Fun_Seeking&quot;, &quot;BAS_Reward_Responsiven.&quot;, &quot;FMPS_CMD&quot;, &quot;FMPS_PEC&quot;, &quot;FMPS_PST&quot;, &quot;FMPS_ORG&quot;, &quot;FMPS_PER/Total&quot;, &quot;NEO_Neuroticism&quot;, &quot;NEO_Conscientiousness&quot;, &quot;OCI_Total&quot;, &quot;OCI_Washing&quot;, &quot;OCI_Checking&quot;, &quot;OCI_Ordering&quot;, &quot;OCI_Obsessions&quot;, &quot;OCI_Hoarding&quot;, &quot;OCI_Neutralising&quot;, &quot;PANAS_Pos&quot;, &quot;PANAS_Neg&quot;, &quot;PSWQ_Total&quot;, &quot;STAI_State&quot;, &quot;STAI_Trait&quot;, &quot;TCI_Harm_Avoidance_Total&quot;, &quot;TCI_Anticipatory_Worry&quot;, &quot;TCI_Fear_of_Uncertainty&quot;, &quot;TCI_Shyness&quot;, &quot;TCI_Fatigability&quot;, &quot;WST_Total&quot;)   
 
 
+# Exclude P_02 (due to retainer) and C_02 (as preregistered: patients are excluded with their match)
+questionnaires &lt;- questionnaires[questionnaires$participant_id != &quot;ModERN_tDCS_P02&quot; &amp; questionnaires$participant_id != &quot;ModERN_tDCS_C02&quot;,]
+
+
 # C_12 repeated the WST at T2, because score at T1 was very low (22); score achieved at T2 was 25; we will use this score 
 questionnaires[questionnaires$participant_id == &quot;ModERN_tDCS_C12&quot;,]$WST_Total &lt;- 25
 
