@@ -34,6 +34,7 @@ output:
      toc_float:           # floating toc on the left
          collapsed: false # all header levels always visible
      theme: united        # style of html
+     code_download: true  # embed code download button in html
 
   
 # for icons use homepage: https://getbootstrap.com/docs/3.3/components/
