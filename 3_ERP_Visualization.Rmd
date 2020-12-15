@@ -127,7 +127,7 @@ resp_locked_data <- resp_locked_data  %>%
 
 # Exclude P_02 (due to retainer) and C_02 (as preregistered: patients are excluded with their match)
 resp_locked_data <- resp_locked_data[resp_locked_data$participant_id != "P_02" & resp_locked_data$participant_id != "C_02",]
-resp_locked_data$participant_id = as.factor(resp_locked_data$participant_id)
+resp_locked_data$participant_id <- droplevels(resp_locked_data$participant_id)
 ```
 
 ## ERP Trajectories {.tabset}
@@ -136,7 +136,6 @@ resp_locked_data$participant_id = as.factor(resp_locked_data$participant_id)
 ### Per participant
 
 ```{r plot-per-participant, fig.height = 9, fig.width = 10, cache = knitr_cache_enabled}
-
 # Plot ERPs per participant for HC
 plot_per_participant_HC <- ggplot(resp_locked_data[resp_locked_data$group == "HC",],aes(time, FCz)) +
   stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour = stimulation:condition)) +
@@ -204,8 +203,8 @@ running_CIs_group_stim <- resp_locked_data %>%
 
 # Calculate running within-subject CIs 
 CIs_group_stim <- purrr::map_df(running_CIs_group_stim,magrittr::extract) %>%
-  mutate(
-    time = rep(unique(resp_locked_data$time), each = 8) #Note, you'll have to change 3 to match the number of conditions
+  dplyr::mutate(
+    time = rep(unique(resp_locked_data$time), each = 8) #Note, 8 refers to the number of conditions
     )
 
 
