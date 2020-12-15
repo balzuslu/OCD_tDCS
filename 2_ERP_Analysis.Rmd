@@ -182,14 +182,11 @@ my_table_template(excluded_trials_in_total,
 
 
 # Detect ERP outliers (ERP deviates more than 2/3 SD below/above group mean per condition)
-library(plyr)
 ERP_outliers <- df_aggregated_per_subject_MFN %>% 
-  dplyr::group_by(participant_id, stimulation, group, response_type) %>%
-  plyr::mutate(outlier_2_sd_above = ifelse(abs(MFN)>mean(MFN)+2*sd(MFN), TRUE, FALSE),
-               outlier_3_sd_above = ifelse(abs(MFN)>mean(MFN)+3*sd(MFN), TRUE, FALSE),
-               outlier_2_sd_below = ifelse(abs(MFN)<mean(MFN)-2*sd(MFN), TRUE, FALSE),
-               outlier_3_sd_below = ifelse(abs(MFN)<mean(MFN)-3*sd(MFN), TRUE, FALSE)) %>%
-  dplyr::filter(outlier_2_sd_above == TRUE | outlier_2_sd_below == TRUE)
+  dplyr::group_by(group, response_type, stimulation) %>%
+  dplyr::mutate(outlier_2_sd = case_when(abs(MFN - mean(MFN, na.rm = TRUE)) <=  2 * sd(MFN, na.rm = TRUE)~ FALSE, TRUE ~ TRUE),
+                outlier_3_sd = case_when(abs(MFN - mean(MFN, na.rm = TRUE)) <=  3 * sd(MFN, na.rm = TRUE)~ FALSE, TRUE ~ TRUE)) %>%
+  dplyr::filter(outlier_2_sd == TRUE) 
 
 
 # Display ERP outliers
@@ -449,7 +446,7 @@ descriptive_statistics_MFN_no_session <- summarySEwithinO(
 ```{r raincloud-plot, fig.width = 10, fig.height = 6, fig.cap = "Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of response type, stimulation condition, and group. Means and 95% confidence intervals (= lines at violin plot bottom) were calculated based on single-trial data. Boxplots and violin plots are based on data aggregated by subject. CIs are adjusted for within-participant designs as described by Morey (2008)."}
 
 
-# define facet labels
+# Define facet labels
 response_type.labs <- c("CRN", "ERN")
 names(response_type.labs) <- c("correct", "incorrect")
 
@@ -484,6 +481,35 @@ plot_MFN_raincloud <- ggplot() +
 
 # Display plot
 plot_MFN_raincloud
+```
+<br><br>
+
+### Line plot participant-wise
+
+```{r line-plot, fig.height = 9, fig.width = 6}
+
+# Define facet labels
+response_type.labs <- c("CRN", "ERN")
+names(response_type.labs) <- c("correct", "incorrect")
+
+
+# Create line plot MFN 
+plot_MFN_lines <- ggplot(df_aggregated_per_subject_MFN, aes(x=stimulation, y=MFN, group=participant_id)) +
+  geom_point(aes(colour=group), size=4.5, position=position_dodge(width=0.1)) +
+  geom_line(size=0.5, alpha=0.5, position=position_dodge(width=0.1)) +
+  # Add style
+  scale_colour_manual(values = my_figure_colors, guide=FALSE) +
+  facet_grid(cols = vars(response_type), rows = vars(group), scales = "free",labeller = labeller(response_type = response_type.labs))+
+  labs(x = "\nStimulation condition", y = "MFN (mean amplitude 0-100 ms at FCz [μV])") +
+  my_figure_theme 
+
+
+# Save plot
+ggsave("./figures/figure_MFN_lines.tiff", width = 13, height = 18, units = "cm", dpi=600, compression = "lzw")
+
+
+# Display plot
+plot_MFN_lines
 ```
 <br><br>
 
