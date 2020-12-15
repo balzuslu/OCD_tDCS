@@ -204,14 +204,12 @@ Trials were excluded from all analyses if RT was shorter than 100 ms or longer t
 ```{r performance-outliers}
 
 # Detect performance outliers (accuracy deviates more than 2/3 SD below/above group mean per condition)
-library(plyr)
 performance_outliers <- df_aggregated_per_subject_accuracy %>% 
-  dplyr::group_by(participant_id, stimulation, stimulus_type, group) %>%
-  plyr::mutate(outlier_2_sd_above = ifelse(abs(accuracy_numeric)>mean(accuracy_numeric)+2*sd(accuracy_numeric), TRUE, FALSE),
-               outlier_3_sd_above = ifelse(abs(accuracy_numeric)>mean(accuracy_numeric)+3*sd(accuracy_numeric), TRUE, FALSE),
-               outlier_2_sd_below = ifelse(abs(accuracy_numeric)<mean(accuracy_numeric)-2*sd(accuracy_numeric), TRUE, FALSE),
-               outlier_3_sd_below = ifelse(abs(accuracy_numeric)<mean(accuracy_numeric)-3*sd(accuracy_numeric), TRUE, FALSE)) %>%
-  dplyr::filter(outlier_2_sd_above == TRUE | outlier_2_sd_below == TRUE )
+  dplyr::group_by(group, stimulus_type, stimulation) %>%
+  dplyr::mutate(outlier_2_sd = case_when(abs(accuracy_numeric - mean(accuracy_numeric, na.rm = TRUE)) <=  2 * sd(accuracy_numeric, na.rm = TRUE)~ FALSE, TRUE ~ TRUE),
+                outlier_3_sd = case_when(abs(accuracy_numeric - mean(accuracy_numeric, na.rm = TRUE)) <=  3 * sd(accuracy_numeric, na.rm = TRUE)~ FALSE, TRUE ~ TRUE)
+                ) %>%
+  dplyr::filter(outlier_2_sd == TRUE) 
 
 
 # Display performance outliers
