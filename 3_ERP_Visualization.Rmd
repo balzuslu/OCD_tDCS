@@ -31,6 +31,8 @@ library(dplyr)      # for data manipulation
 library(ggplot2)    # for plotting
 library(cowplot)    # for arranging plots
 library(purrr)      # for calculate within-subject CIs for ERP trajectories
+library(eegUtils)   # for plotting topographies
+library(tidyr)      # for gather function 
 
 
 # Load functions
@@ -259,3 +261,88 @@ ggsave("./figures/figure_ERP_trajectories.tiff", width = 14, height = 18, units 
 figure_ERP_trajectories
 ```
 <br><br>
+
+## ERP Topographies
+***
+
+```{r topographies, fig.height = 10, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP topograhpies (from 0 to 100 ms) separately for both groups and response conditions."}
+
+# Convert to long format for electrodes
+data_topo <- resp_locked_data %>%
+  # Remove channels of no interest
+  dplyr::select(-IO1, -M1) %>%
+  # Change from wide to long format for electrodes
+  tidyr::gather(., electrode, amplitude, Fp1:O2, factor_key = TRUE)  %>%
+  # Select time windows
+  dplyr::filter(time >= 0 & time <= 100) %>%
+  # Add electrode information
+  electrode_locations(., electrode = "electrode", drop = FALSE, montage = NULL)
+
+
+# Calculate difference score incorrect-correct
+data_topo_correct  <- data_topo[data_topo$condition == "correct" ,]
+data_topo_incorrect <- data_topo[data_topo$condition == "incorrect",]
+
+data_topo_diff <- left_join(data_topo_correct, data_topo_incorrect, by = c("participant_id", "time", "group","session","stimulation","electrode")) %>%
+  # Calculate incorrect - correct
+  dplyr::mutate(amplitude = amplitude.y - amplitude.x) %>%
+  # Remove unncessary columns
+  dplyr::select(-c(condition.x, condition.y, amplitude.x, amplitude.y)) %>%
+  # Select time windows
+  dplyr::filter(time >= 0 & time <= 100) %>%
+  # Add electrode information
+  electrode_locations(., electrode = "electrode", drop = FALSE, montage = NULL)
+
+
+# Draw topographies
+plot_topo <- ggplot(data_topo, aes(x = x, y = y, fill = amplitude, label = electrode)) + 
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.9, groups = "group") + 
+    scale_fill_distiller(palette = "RdBu", limits = c(-5, 12)) + 
+    theme_void() + 
+    coord_equal() + 
+    labs(fill = expression(paste(" ", mu, "V"))) + 
+    theme(strip.text = element_text(size = 12, hjust = .5, face = "bold"),legend.position = "bottom") + 
+    facet_grid(cols = vars(condition), rows = vars(group), switch = "y") +
+    theme(strip.text.x = element_text(margin = margin(0, 0, 0, 0))) + # to achive same text size with label for diff plot 
+    theme(strip.text.y.left = element_text(angle = 0)) # and to show group labels horizontally
+
+
+plot_topo_diff <- ggplot(data_topo_diff, aes(x = x, y = y, fill = amplitude, label = electrode)) + 
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.9, groups = "group") + 
+    scale_fill_distiller(palette = "RdBu", limits = c(-12, 0)) + 
+    theme_void() + 
+    coord_equal() + 
+    ggtitle("incorrect-correct") +
+    labs(fill = expression(paste(" ", mu, "V"))) + 
+    theme(plot.title = element_text(size = 12, vjust = 3, hjust = .5, face = "bold"),legend.position = "bottom") + 
+    facet_grid(rows = vars(group)) +
+    theme(strip.text.y = element_blank())  # remove facet labels
+
+    
+
+# Place labels separately in order to center them correctly
+legend_topo      <- get_legend(plot_topo)
+legend_topo_diff <- get_legend(plot_topo_diff)
+
+
+# Remove previous legends from plots ( and some of the titles)
+plot_topo       <- plot_topo      + theme(legend.position = "none")
+plot_topo_diff  <- plot_topo_diff + theme(legend.position = "none")
+
+
+# Arrange plots
+figure_ERP_topographies <- ggdraw() +
+  draw_plot(plot_topo,        x =  0,  y =  0, width = .66, height = .95) +
+  draw_plot(plot_topo_diff,   x = .66, y =  0, width = .33, height = .9)  +
+  draw_plot(legend_topo,      x = .23, y =  0,  width = .2,  height = .05) + 
+  draw_plot(legend_topo_diff, x = .7,  y =  0,  width = .2,  height = .05)
+
+
+# Save plot
+ggsave("./figures/figure_ERP_topographies.tiff", width = 20, height = 14, units = "cm", dpi=600, compression = "lzw")
+
+
+# Display plot
+figure_ERP_topographies
+```
+
