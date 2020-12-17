@@ -234,7 +234,7 @@ my_table_template(number_of_errors,
                   header_above_config = c(" " = 1, "In total" = 4, "In analysis" = 4)
 )
 ```
-For some participants, accuracy in the task is more than 2 SD (N = 7) or even 3 SD (N = 2) below the group mean per condition (stimulus type x stimulation). But their accuracy is still quite good, so these will not be excluded. Being an outlier in task performance is also no exclusion criterion specified in the preregistration. No participant committed < 6 errors. Thus, no participant will be excluded based on this criterion.
+For some participants, in the task is more than 2 SD (N sessions = `r nrow(performance_outliers)`) or even 3 SD (N sessions = `r nrow(performance_outliers[performance_outliers$outlier_3_sd == TRUE,])`) below the group mean per condition (stimulus type x stimulation). But their accuracy is still quite good (> 70% in incongruent category), so these will not be excluded. Being an outlier in task performance is also no exclusion criterion specified in the preregistration. No participant committed < 6 errors. Thus, no participant will be excluded based on this criterion.
 <br><br>
 
 ```{r feedback}
@@ -250,7 +250,7 @@ my_table_template(feedback_contingency, caption = "Feedback in the task", row_na
 # Calculate Chi-squared test
 chisq.test(feedback_infos$feedback, feedback_infos$group)
 ```
-The groups differ in the feedback they received.The OCD group received more feedback emphasizing speed. 
+The groups differ in the feedback they received. The OCD group received more feedback emphasizing speed. This is ok and could be expected. 
 <br><br>
 
 
@@ -393,7 +393,7 @@ rt_per_participant
 
 ### Check RT Normality 
 
-For the single-trial data, Shapiro-Wilk is not suitable, as it always returns a significant result for such large samples (additionally, it can handle only samples up to 5000). Hence, we have to rely on visual inspection (see above) and values of skewness and kurtosis. Values for skewness and kurtosis between -2 and +2 are considered acceptable in order to prove normal univariate distribution (George & Mallery, 2010).
+For the single-trial data, Shapiro-Wilk is not suitable, as it always returns a significant result for such large samples (additionally, it can handle only samples up to 5000). Hence, we have to rely on visual inspection (see tab "Distribution") and values of skewness and kurtosis (see below). Values for skewness and kurtosis between -2 and +2 are considered acceptable in order to prove normal univariate distribution (George & Mallery, 2010).
 
 ```{r normality-single-trial-RTs}
 
@@ -413,7 +413,7 @@ my_table_template(normality_rt, row_names = TRUE)
 
 ### Determine RT transformation
 
-LMM analysis of RT will be conducted on log-transformed RT values to meet the assumption of normally distributed residuals. The appropriate transformation was validated (?) using the Box–Cox procedure (Box & Cox, 1964). 
+LMM analysis of RT will be conducted on log-transformed RT values to meet the assumption of normally distributed residuals. The appropriate transformation was determined (or rather "validaated", see notes below) using the Box–Cox procedure (Box & Cox, 1964). 
 
 ```{r RT-determine-transformation, fig.width = 8, fig.height = 3}
 
@@ -431,7 +431,7 @@ optlambda_pes <- bc_pes$x[which.max(bc_pes$y)]
 # Reset plot layout
 par(mfrow = c(1, 1)) 
 ```
-For RT (left plot), the optimal lambda is `r round(optlambda_rt, digits = 2)`, suggesting that log transformation (for lambda = 0) is appropriate. Actually, for lambda = -0.5, the most appropriate transformation would be Y^-0.5 = 1/(√(Y)), but this does not seem very common to me. As our lambda is not far from 0, I chose log transformation, which is more commonly used. 
+For RT (left plot), the optimal lambda is `r round(optlambda_rt, digits = 2)`, suggesting that log transformation (for lambda = 0) is appropriate. Actually, for lambda = -0.5, the most appropriate transformation would be Y^-0.5 = 1/(√(Y)), but this transformation does not seem very common to me. As our lambda is not far from 0, I chose log transformation, which is more commonly used. 
 For PES (right plot), the optimal lambda is `r round(optlambda_pes, digits = 2)`, suggesting that no transformation (for lambda = 1) is needed.
 <br><br>
 
@@ -674,7 +674,7 @@ descriptive_statistics_pca_no_session <- summarySEwithinO(
 
 ### Plot without session {.active}
 
-```{r descriptive-statistics-plot-rt-acc, fig.width = 8, fig.height = 7, fig.cap = "Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulus type, response type, stimulation condition, and group. Means and 95% confidence intervals (shown in orange/red; confidence intervals are adjusted for within-participant designs as described by Morey (2008)) were calculated based on single-trial data. Boxplots are boased on data aggregated by subject."}
+```{r descriptive-statistics-plot-rt-acc, fig.width = 8, fig.height = 7, fig.cap = "Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulus type, response type, stimulation condition, and group. Means and 95% confidence intervals (shown in orange/red) were calculated based on single-trial data. Boxplots are based on data aggregated by participant. CIs are adjusted for within-participant designs as described by Morey (2008)."}
 
 # Create plot RT 
 plot_rt <- ggplot() +
@@ -795,7 +795,7 @@ To quantify PES robust, we used the method proposed by Dutilh et al. (2012). See
 
 ### Plot with session
 
-```{r descriptive-statistics-plot-including-session, fig.width = 10, fig.height = 15, fig.cap = "Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulation condition, group, and session. Means and 95% confidence intervals (shown in orange/red; confidence intervals are adjusted for within-participant designs as described by Morey (2008)) were calculated based on single-trial data. Boxplots are boased on data aggregated by subject."}
+```{r descriptive-statistics-plot-including-session, fig.width = 10, fig.height = 15, fig.cap = "Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulation condition, group, and session. Means and 95% confidence intervals (shown in orange/red) were calculated based on single-trial data. Boxplots are based on data aggregated by participant. CIs are adjusted for within-participant designs as described by Morey (2008)."}
 
 # Create plot RT 
 plot_rt_session <- ggplot() +
@@ -913,6 +913,7 @@ figure_behav_session <- ggdraw() +
 # Display plot
 figure_behav_session
 ```  
+To quantify PES robust, we used the method proposed by Dutilh et al. (2012). See section LMM PES for details. We further quantified accuracy following incorrect and correct responses (post-error accuracy and post-correct accuracy).
 <br><br>
 
 ## (G)LMM Analyses
@@ -922,11 +923,9 @@ RT, PES, and accuracy were modeled using two linear mixed-effects models (LMM) a
 
 **Fixed effects**
 
-*Stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), and, where applicable (= for RT), response type (correct, incorrect)* were specified as fixed factors.Fixed effects were coded using effect coding (this equals sliding difference contrasts for two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. Fixed effects were not eliminated using model comparison techniques because they correspond to the original experimental design and a priori hypotheses. <br><br>
+*Stimulus type (congruent, incongruent), group (HC, OCD), stimulation (verum, sham), and, where applicable (= for RT), response type (correct, incorrect)* were specified as fixed factors. Fixed effects were coded using effect coding (this equals sliding difference contrasts for two levels for factors with two levels or sum coding/2), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. Fixed effects were not eliminated using model comparison techniques because they correspond to the original experimental design and a priori hypotheses. <br><br>
 
-I decided to specify models that only predict all main effects and interactions only with the factor stimulation and group. This is the most sparse model for testing the effects of interest.<br><br>
-
-I thought about including session as fixed effect. But this was not stated in preregistration and is of no real interest. I checked the effect of session as a covariate. For RT, there is a main effect, but no interaction with stimulation (there is a trend though, but I do not find this effect to be meaningfully interpretable). <br><br>
+I specified models that predict all main effects and interactions only with the factors stimulation and group. This is the most sparse model structure for testing the effects of interest.<br><br>
 
 **Random effects**
 
@@ -964,13 +963,13 @@ names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 11):ncol(single_
 
 #### LMM
 
-I thought about whether I should exclude congruent errors from this RT analysis (see Evernote note 2020_11_25), as there these were very rare (0.67% of all trials; N = 372 trials). I do not want to exclude congruent errors from analyses in general (e.g. EEG, accuracy), which is ok as I will not add stimulus type as factor there. For the following reasons I decided to not exclude congruent errors from LMM RT analysis for now:
+Even though congruent errors were very rare (`r round(nrow(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$stimulus_type == "congruent",])/nrow(single_trial_data_clean)*100, digits = 2)`% of all trials; N = `r nrow(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$stimulus_type == "congruent",])` trials), I did not exclude them from LMM RT analysis. In order to not loose power, I do not want to exclude congruent errors from analyses in general (e.g. EEG, accuracy), which is ok as I will not add stimulus type as factor there. For the following reasons it should also be ok to not exclude congruent errors from LMM RT analysis:
 
-* LMMs take into account this imbalance due to different number of observations per cell and thus different uncertainty. So, it might be not problematic that congruent errors are rare? 
+* LMMs take into account this imbalance due to different number of observations per cell and thus different uncertainty. So, it should be not problematic that congruent errors are rare.
 
-* Additionally, maybe it is ok that one cell only has few observation, as I do not put interaction response type * stimulus type in model but only main effects? 
+* Additionally, it should be ok that one cell only has few observations, as the interaction response type * stimulus type is not included in the model but only main effects. Not including this interaction in the model is ok, as it is of no interest to our research questions. 
 
-* I thought about whether the effect of stimulus type could confound effect of response type, as errors are mostly incongruent whereas correct responses are half/half? But actually, when factors are included, I control for the effect of stimulus type for the effect of response type, don't I?! 
+* I thought about whether the effect of stimulus type could confound effect of response type, as errors occur mostly in incongruent trials whereas correct responses are occur in both congruent and incongruent trials. But actually, when both factors are included, the respective main effects reflect the effect of each factor when controlling for the other. 
 
 For the aggregation-based ANOVA on RT, I will excluded congruent errors.
 
@@ -1002,7 +1001,7 @@ tab_model(LMM_rt,
 )
 ```
 <br><br>
-Responses are faster in the congruent than in the incongruent condition. Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation and no interaction of any factor with stimulation. 
+Responses are faster in the congruent than in the incongruent condition. Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation. Trends for the following interactions are present: group:stimulus_congruence and stimulation:group:response_type.
 <br><br>
 
 #### Assumption checks
@@ -1051,7 +1050,8 @@ performance::check_normality(LMM_rt, effects = "random")
 
 #### Check covariates
 
-The purpose for including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models are reported.
+The purpose of including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models including the interactions are presented below.
+Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses.
 
 ```{r LMM-RT-covariates, cache = knitr_cache_enabled}
 
@@ -1109,7 +1109,7 @@ To quantify PES robust, we used the method proposed by Dutilh et al. (2012). "A 
 
 I decided to test the stimulation effect on PES in a separate model instead of including the factor correctness of previous trial in the RT model. Otherwise, this would have led to an overly complex LMM on RTs. Additionally, all trials would have been included then, preventing to use the robust (and preregistered) PES quantification by Dutilh et al. (2012).
 
-I included stimulus type as covariate (hance, only as fixed, not as random effect) to avoid confounding the PES effect with stimulus congruency, as stimulus congruency of the respective trial might potentially interfere with PES. 
+I included stimulus type as covariate (hence, only as fixed, not as random effect) in this model to avoid confounding the PES effect with stimulus congruency, as stimulus congruency of the respective trial might potentially interfere with PES. The results do not change when the covariate is not included. The covariate was included only in the LMM, not in the parallel ANOVA calculated below.
 
 ```{r LMM-PES}
 # Run model with maximal random-effects structure (to avoid singularity / non-convergence and rePCA value of 0, correlations betw. random terms and radom slope of stimulus_type had to be removed)
@@ -1138,7 +1138,7 @@ tab_model(LMM_pes,
 )
 ```
 <br><br>
-There is PES. There is no effect of congruency in the respective on PES. There is no evidence for an effect of group or stimulation. 
+There is PES (intercept is significant). There is no effect of congruency in the respective on PES. There is no evidence for an effect of group or stimulation. 
 <br><br>
 
 #### Assumption checks
@@ -1165,7 +1165,7 @@ performance::check_normality(LMM_pes, effects = "random")
 
 * **Assumption 2: Normality of Residuals -> Is OK???** 
     + Are residuals approximately normally distributed?
-    + Q-Q plot and density plot look fine? **Q-Q plot quite a bit off at the extremes** 
+    + Q-Q plot and density plot look fine? Q-Q plot a bit off at the extremes
     + It is debated whether this is problematic at all; and violation does not seem so bad, so maybe not worry about it?  
 
 * **Assumption 3: Linearity -> Is OK** 
@@ -1174,7 +1174,7 @@ performance::check_normality(LMM_pes, effects = "random")
 
 * **Assumption 4: Homogeneity of Residual Variance (Heteroscedasticity)  -> Is OK???**
     + Have residuals constant variance across the range of the predicted values?
-    + Plot of the residuals against the fitted values shows an even spread around the centered line; but **written output says this is not ok** 
+    + Plot of the residuals against the fitted values shows an even spread around the centered line; but written output says this is not ok
 
 * **Assumption 5: Absence of Influential Data Points  -> Is OK** 
     + Are there are no influential values? 
@@ -1187,7 +1187,8 @@ performance::check_normality(LMM_pes, effects = "random")
 
 #### Check covariates
 
-The purpose for including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models are reported.
+For further infos on inclusion of covariates, see notes in section "(G)LMM Analyses -> RT", tab "Check covariates".
+
 
 ```{r LMM-PES-covariates, cache = knitr_cache_enabled}
 
@@ -1241,7 +1242,7 @@ tab_model(LMM_pes_number_feedback_faster,
 
 #### GLMM
 
-I included the factor *accuracy of previous trial* in the model, to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered. (If preferred, I could also first run the preregistered model with only stimulation, group and stimulus type as fixed factors and then a second model, including additionally the factor *accuracy of previous trial*. This approach would also allow using all trials for the basic accuracy model, as when including the factor , I automatically lose all trials from the calculation at the start of a new task block, that have NA for the variable *accuracy of previous trial*. But the results remain the same, independent of whether I run the model with all trials or the subset). I did not add *accuracy of previous trial* as random effect here.Doing so would require specifying the model matrix separately for the subset of data where *accuracy of previous trial* is not NA.When not having this factor as random effect, the model allows having correlated random effect terms. This model also shows a trend for an interaction between stimulation and group, which before was not present. But following up this interaction does not yield an effect of stimulation in any of the groups (also not specifically in the incongruent condition, which seems (according to the plot) that the OCD group has lower accuracy to incongruent trials in the verum than in the sham condition). 
+I included the factor *accuracy of previous trial* in the model, to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered. (If preferred, I could also first run the preregistered model with only stimulation, group and stimulus type as fixed factors and then a second model, including additionally the factor *accuracy of previous trial*. This approach would also allow using all trials for the basic accuracy model, as when including the factor , I automatically lose all trials from the calculation at the start of a new task block, that have NA for the variable *accuracy of previous trial*. But the results remain the same, independent of whether I run the model with all trials or the subset). I did not add *accuracy of previous trial* as random effect here. Doing so would require specifying the model matrix separately for the subset of data where *accuracy of previous trial* is not NA.  
 
 ```{r GLMM-accuracy, cache = knitr_cache_enabled}
 
@@ -1271,7 +1272,7 @@ tab_model(GLMM_accuracy,
 )
 ```
 <br><br>
-Accuracy is lower in the incongruent condition than in the congruent condition. Furthermore, accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy). There is no evidence for an effect of group or stimulation. 
+Accuracy is lower in the incongruent condition than in the congruent condition. Furthermore, accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy). There is no evidence for an effect of group or stimulation. There is a significant interaction group:stimulus_type and a trend for an interaction stimulation:accuracy_prev_trial.
 <br><br>
 
 #### Assumption checks
@@ -1308,7 +1309,7 @@ overdisp_fun(GLMM_accuracy) # If the p-value is < 0.05, the data are overdispers
 
 #### Check covariates
 
-The purpose for including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models are reported.
+For further infos on inclusion of covariates, see notes in section LMM Anylses RT, tab "Check covariates".
 
 ```{r LMM-accuracy-covariates, cache = knitr_cache_enabled}
 
@@ -1345,7 +1346,7 @@ tab_model(GLMM_accuracy_number_feedback_faster,
 
 ## ANOVAs {.tabset}
 ***
-To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), RT, PES, and accuracy were additionally analyzed with Greenhouse–Geisser corrected repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), response type (correct, incorrect)/condition (congruent correct, incongruent correct, incongruent incorrect), and accuracy previous trial (correct, incorrect). As can be seen below, the ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all main effects, interaction effects, and all pairwise comparisons. I additionally analyzed whether there is an stimulation effect on the number of corrective second responses (was erroneously written in preregistration). There is none. This analysis requires aggregated data, hence I only calculated an ANOVA, no LMM.
+To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), RT, PES, and accuracy were additionally analyzed with Greenhouse–Geisser corrected repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), response type (correct, incorrect)/condition (congruent correct, incongruent correct, incongruent incorrect), and accuracy previous trial (correct, incorrect). (GG correction only relevant for the ANOVA on RT, as factors in all other have only two levels, so that sphericity could not be violated). As can be seen below, the ANOVAs yielded similar results as obtained with mixed-effects modeling with respect to all main effects, interaction effects, and pairwise comparisons. I additionally analyzed whether there is an stimulation effect on the number of corrective second responses (because this was erroneously stated in the preregistration). There is none. This analysis requires aggregated data, hence I only calculated an ANOVA, no LMM.
 
 ```{r ANOVAs}
 
@@ -1444,7 +1445,7 @@ my_table_template(nice(anova_number_2nd_resp, MSE = FALSE), caption = "Number of
 
 ### Pairwise comparisons
 
-Significant main effects and interactions were followed up with two-tailed paired *t* tests with Holm–Bonferroni *p* value adjustments.
+Significant main effects and interactions were followed up with pairwise comparisons using the emmeans package with Holm–Bonferroni *p* value adjustments.
 
 ```{r ANOVAs-pairwise-tests}
 
@@ -1532,5 +1533,5 @@ do.call(rbind, lapply(residuals_anova_accuracy[,], function(x) shapiro.test(x)["
 
 * **Assumption #4: Residuals** of the dependent variable in each level of the within-subjects factor are approximately **normally distributed -> NOT OK** (see above; but for RT and PES only small deviation)**
 
-* **Assumption #5: Sphericity** (only relevant for withlin-subject factors with > 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is OK**
+* **Assumption #5: Sphericity** (only relevant for within-subject factors with > 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is OK**
 <br><br>
