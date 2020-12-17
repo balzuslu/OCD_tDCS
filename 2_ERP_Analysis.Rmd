@@ -161,7 +161,7 @@ excluded_trials_per_participant <- single_trial_data %>%
 
 # Display percentage of excluded trials per participant
 my_table_template(excluded_trials_per_participant,
-  caption = "Excluded Trials (M and SD in %) per Participant", 
+  caption = "Excluded Trials (M and SD in %) Mean per Group", 
   col_names = c("Group", "M", "SD", "min", "max", "M", "SD", "min", "max", "M", "SD", "min", "max"),
   header_above_config = c(" " = 1, "RT < 100 / > 800 ms" = 4, "Misses" = 4, "EEG artifact" = 4)
 )
@@ -192,7 +192,7 @@ ERP_outliers <- df_aggregated_per_subject_MFN %>%
 # Display ERP outliers
 my_table_template(ERP_outliers, caption = "ERP outliers (> 2/3 SD below/above group mean per condition (response type x stimulation))")
 ```
-There is one participant (P_28_T2) whose ERN deviates > 3 SD from the group mean per condition (response type x stimulation). This participant is also quite prominent in the raincloud plot (see below). There are a few participants whose ERN deviates > 2 SD. I think we should not exclude participants based on this criterion? Being an outlier in ERP magnitude is also no exclusion criterion specified in the preregistration. 
+There is one participant (P_28) whose ERN deviates > 3 SD from the group mean per condition (response type x stimulation). This participant is also quite prominent in the raincloud plot and line plot (see below). There are a few participants whose ERN deviates > 2 SD. I did not exclude participants based on this criterion. Being an outlier in ERP magnitude is also no exclusion criterion specified in the preregistration. 
 <br><br>
 
 ## Data Inspection {.tabset}
@@ -275,7 +275,7 @@ MFN_per_participant
 
 ### Check Normality 
 
-For the single-trial data, Shapiro-Wilk is not suitable, as it always returns a significant result for such large samples (additionally, it can handle only samples up to 5000). Hence, we have to rely on visual inspection (see above) and values of skewness and kurtosis. Values for skewness and kurtosis between -2 and +2 are considered acceptable in order to prove normal univariate distribution (George & Mallery, 2010).
+For the single-trial data, Shapiro-Wilk is not suitable, as it always returns a significant result for such large samples (additionally, it can handle only samples up to 5000). Hence, we have to rely on visual inspection (see tab "Distribution") and values of skewness and kurtosis (see below). Values for skewness and kurtosis between -2 and +2 are considered acceptable in order to prove normal univariate distribution (George & Mallery, 2010).
 
 ```{r normality-single-trial-MFN}
 
@@ -295,7 +295,7 @@ my_table_template(normality_MFN, row_names = TRUE)
 
 ### Determine transformation
 
-LMM analysis of MFN will be conducted on untransformed values, as it seems that the assumption of normally distributed residuals will be met. The appropriate transformation was determined using the Box–Cox procedure (Box & Cox, 1964). 
+LMM analysis of MFN/ERN/CRN will be conducted on untransformed values, as it seems that the assumption of normally distributed residuals will be met. The appropriate transformation was determined using the Box–Cox procedure (Box & Cox, 1964). 
 
 ```{r MFN-determine-transformation, fig.width = 8, fig.height = 3}
 
@@ -443,7 +443,7 @@ descriptive_statistics_MFN_no_session <- summarySEwithinO(
 
 ### Raincloud plot {.active}
 
-```{r raincloud-plot, fig.width = 10, fig.height = 6, fig.cap = "Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of response type, stimulation condition, and group. Means and 95% confidence intervals (= lines at violin plot bottom) were calculated based on single-trial data. Boxplots and violin plots are based on data aggregated by subject. CIs are adjusted for within-participant designs as described by Morey (2008)."}
+```{r raincloud-plot, fig.width = 10, fig.height = 6, fig.cap = "Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of response type, stimulation condition, and group. Means and 95% confidence intervals (= lines at violin plot bottom) were calculated based on single-trial data. Boxplots and violin plots are based on data aggregated by participant. CIs are adjusted for within-participant designs as described by Morey (2008)."}
 
 
 # Define facet labels
@@ -515,7 +515,7 @@ plot_MFN_lines
 
 ### Plot without session
 
-```{r descriptive-statistics-plot-rt-acc, fig.width = 8, fig.height = 7, fig.cap = "Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of response type, stimulation condition, and group. Means and 95% confidence intervals (shown in orange/red) were calculated based on single-trial data. Boxplots are based on data aggregated by subject. CIs are adjusted for within-participant designs as described by Morey (2008)."}
+```{r descriptive-statistics-plot-rt-acc, fig.width = 8, fig.height = 7, fig.cap = "Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of response type, stimulation condition, and group. Means and 95% confidence intervals (shown in orange/red) were calculated based on single-trial data. Boxplots are based on data aggregated by participant. CIs are adjusted for within-participant designs as described by Morey (2008)."}
 
 # Create plot MFN 
 plot_MFN <- ggplot() +
@@ -578,7 +578,7 @@ MFN/ERN/CRN were modeled using a linear mixed-effects models (LMMs). <br><br>
 
 **Fixed effects**
 
-*Group (HC, OCD), stimulation (verum, sham), and response type (correct, incorrect)* were specified as fixed factors. I thought about including also session as fixed effect. But this was not stated in preregistration and is of no real interest. Fixed effects were coded using effect coding (this equals sliding difference contrasts for two levels for factors with two levels), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. Fixed effects were not eliminated using model comparison techniques because they correspond to the original experimental design and a priori hypotheses. <br><br>
+*Group (HC, OCD), stimulation (verum, sham), and response type (correct, incorrect)* were specified as fixed factors. Fixed effects were coded using effect coding (this equals sliding difference contrasts for two levels for factors with two levels or sum coding/2), such that the intercept reflects the grand mean across all conditions and differences in means between factor levels are tested. Fixed effects were not eliminated using model comparison techniques because they correspond to the original experimental design and a priori hypotheses. <br><br>
 
 
 **Random effects**
@@ -617,7 +617,7 @@ names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 7):ncol(single_t
 
 #### Model
 
-This is the overall model, including error and correct trials. This model will be reported before reporting the separate models for ERN/CRN; as it also shows the overall group effect and stimulation effect. 
+This is the overall model, including error and correct trials. This model will be reported before reporting the separate models for ERN and CRN, because it also shows the overall group effect and stimulation effect. 
 
 ```{r LMM-MFN, cache = knitr_cache_enabled}
 
@@ -647,7 +647,7 @@ tab_model(LMM_MFN,
 )
 ```
 <br><br>
-There is a main effect of stimulation, group, and response type. 
+There is a main effect of stimulation and response type and a trend for group. 
 <br><br>
 
 #### Assumption checks 
@@ -750,7 +750,7 @@ tab_model(LMM_CRN,
 )
 ```
 <br><br>
-There is a trend for a higher ERN in OCD compared to HC (p = 0.54) [NOTE: with REML = FALSE in the model, p = 0.049862]. There also is a trend for a higher CRN in OCD compared to HC (p = 0.068). For CRN, there is an effect of stimulation, with smaller (i.e., less negative) CRN in the verum stimulation compared to the sham condition. There is no stimulation effect on ERN. However, *when excluding participants with metal on head, there is a trend or even a significant effect* (see section covariates).
+There is a trend for a higher ERN in OCD compared to HC. There also is a trend for a higher CRN in OCD compared to HC. For CRN, there is an effect of stimulation, with smaller (i.e., less negative) CRN in the verum stimulation compared to the sham condition. There is a trend for a stimulation effect on ERN (which turns significant when using maximum likelihood instead of REML estimation). 
 <br><br>
 
 #### Assumption checks ERN model
@@ -977,83 +977,27 @@ tab_model(LMM_CRN_unmedicated,
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
-
-
-# ERN include only participants with no metal on head (P_02 retainer, C_06 piercing left ear)
-LMM_ERN_no_metal <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC +  
-  (1 + verum_sham | participant_id),
-data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$participant_id != "P_02" &
-                               single_trial_data_clean$participant_id != "C_06",],
-REML = TRUE,
-control = lmerControl(optimizer = "bobyqa")
-)
-# Convergence, singulatrity, PCA checked, all ok
-tab_model(LMM_ERN_no_metal,
-  dv.labels = "ERN [μV], only participants with no metal on head", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
-  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
-  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
-)
-
-
-# CRN  include only participants with no metal on head (P_02 retainer, C_06 piercing left ear)
-LMM_CRN_no_metal <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC + 
-  (1 + verum_sham | participant_id),
-data = single_trial_data_clean[single_trial_data_clean$response_type == "correct" & single_trial_data_clean$participant_id != "P_02" &
-                               single_trial_data_clean$participant_id != "C_06",],
-REML = TRUE,
-control = lmerControl(optimizer = "bobyqa")
-)
-# Convergence, singulatrity, PCA checked, all ok
-tab_model(LMM_CRN_no_metal,
-  dv.labels = "CRN [μV], only  participants with no metal on head", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
-  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
-  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
-)
 ```
 <br><br>
 
 **Covariates**
 
-The purpose for including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models are reported above. 
+The purpose of including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models including the interactions are presented below.
+Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. 
 <br><br>
 
-* **ERN group difference**: Remains a trend when including the covariate session, number of errors, number of feedback faster, or stimulus type in the model. Turns non-significant when including the variable medication in the model. 
+* **ERN group difference**: Remains a trend when including the covariate session, number of feedback faster, or stimulus type in the model. Turns non-significant when including the variable number of errors or medication in the model. 
 
-* **CRN group difference**: Remains a trend when including the covariate session, number of errors, number of feedback faster, or stimulus type in the model. Turns non-significant when including the variable medication in the model. 
+* **CRN group difference**: Remains a trend when including the covariate session, number of feedback faster, or stimulus type in the model. Turns non-significant when including the variable number of errors or medication in the model. 
 
-* **ERN stimulation effect**: Remains non-significant in all models.
+* **ERN stimulation effect**: Remains a trend when including the covariate session or medication in the model. Turns non-significant when including the variable number of errors, number of feedback faster, or stimulus type in the model. 
 
-* **CRN stimulation effect**: Remains significant when including the covariate session, number of errors,  stimulus type, or medication in the model. Turns to a trend when including the variable number of feedback faster in the model (but only when allowing interactions with the covariate, not when only allowing its main effect). 
-
-<br>
-Update: Allowing the interactions compared to the model specifying only the main effect of the covariate does not change model results for the covariates session, stimulus type and medication. For the covariates number of errors and number of feedback faster, the only change is that the ERN stimulation effect changes much further away from a trend when allowing the interactions (from p = .18 to .41 and p = .18 to .39, respectively).
+* **CRN stimulation effect**: Remains significant when including the covariate session, number of errors (almost sign.),  stimulus type, or medication in the model. Turns to a trend when including the variable number of feedback faster in the model (but only when allowing interactions with the covariate, not when only allowing its main effect). 
 <br><br>
 
 **Subgroup analyses**
 
-When including only unmedicated patients, there is no ERN group difference anymore, no CRN group trend anymore and no CRN stimulation effect anymore (possibly due to reduced power). *When including only participants with no metal on head (P_06 had retainer, C_02 piercing left ear), the ERN group difference turns to a trend but ERN stimulation effect also turns to a trend or even significant* (see below). Excluding P_02 and C_02 would be closest to preregistration (exclude participant with their matchtes). Metal for C_06 is not likely to have had an influence. The CRN group difference trend and stimulation effect is not really affected by any of the metal-exclusion variations stated below. 
-<br><br>
-ERN group difference
-
-* without P_02                p = .082
-
-* without P_02+C_02           p = .079
-
-* without P_02+C_06           p = .090
-
-* without P_02+C_02+C_06+P_06 p = .086
-
-<br><br>
-ERN stimulation effect
-
-* without P_02                p = .061//.056 when REML=FALSE
-
-* without P_02+C_02           p = .052//.047 when REML=FALSE
-
-* without P_02+C_06           p = .098
-
-* without P_02+C_02+P_06+C_06 p = .063
-
+When including only unmedicated patients, there is no ERN group difference anymore, no CRN group trend anymore and no CRN stimulation effect anymore (possibly due to reduced power).
 <br><br>
 
 ### LMM for ERN / CRN (nested) {.tabset}
@@ -1095,8 +1039,8 @@ tab_model(LMM_CRN_group,
 )
 ```
 <br><br>
-Also for the separate groups, there is no evidence for an effect of stimulation on ERN. According to the plots above it seemed that at least in the HC group, there is a smaller (i.e., less negative) ERN in the verum than in the sham condition. But this is not reflected in the LMM.
-For the CRN, there was a main effect of stimulation (see above). When testing this effect separately in the groups, a stimulation effect on CRN is evident for the OCD but not for the HC group. The higher order interaction group * stimulation was not significant (p = .112).
+For the separate groups, there is no significant effect of stimulation on ERN. According to the plots above it seemed that at least in the HC group, there is a smaller (i.e., less negative) ERN in the verum than in the sham condition. But this is not significant in the LMM.
+For the CRN, there was a main effect of stimulation (see above). When testing this effect separately in the groups, a stimulation effect on CRN is evident for the OCD but not for the HC group. The higher order interaction group * stimulation was not significant (p = .114).
 <br><br>
 
 #### Assumption checks 
@@ -1286,38 +1230,6 @@ tab_model(LMM_CRN_group_unmedicated,
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
-
-
-# ERN include only participants with no metal on head (P_02 retainer, C_06 piercing left ear)
-LMM_ERN_group_no_metal <- lmer(MFN_0_100_FCz ~ group/stimulation +  
-  (1 + verum_sham | participant_id),
-data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$participant_id != "P_02" &
-                               single_trial_data_clean$participant_id != "C_06",],
-REML = TRUE,
-control = lmerControl(optimizer = "bobyqa")
-)
-# Convergence, singulatrity, PCA checked, all ok
-tab_model(LMM_ERN_group_no_metal,
-  dv.labels = "ERN [μV], only participants with no metal on head", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
-  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
-  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
-)
-
-
-# CRN  include only participants with no metal on head (P_02 retainer, C_06 piercing left ear)
-LMM_CRN_group_no_metal <- lmer(MFN_0_100_FCz ~ group/stimulation  + 
-  (1 + verum_sham | participant_id),
-data = single_trial_data_clean[single_trial_data_clean$response_type == "correct" & single_trial_data_clean$participant_id != "P_02" &
-                               single_trial_data_clean$participant_id != "C_06",],
-REML = TRUE,
-control = lmerControl(optimizer = "bobyqa")
-)
-# Convergence, singulatrity, PCA checked, all ok
-tab_model(LMM_CRN_group_no_metal,
-  dv.labels = "CRN [μV], only  participants with no metal on head", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
-  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
-  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
-)
 ```
 <br><br>
 **Covariates**
@@ -1325,21 +1237,19 @@ tab_model(LMM_CRN_group_no_metal,
 For further infos, see notes in section non-nested ERN-CRN models.
 <br><br>
 
-* **ERN group difference**: See notes in section  non-nested ERN-CRN models.
+* **ERN group difference**: See notes in section non-nested ERN-CRN models.
 
-* **CRN group difference**: See notes in section  non-nested ERN-CRN models.
+* **CRN group difference**: See notes in section non-nested ERN-CRN models.
 
 * **ERN stimulation effect in HC/OCD**: For HC and OCD remains non-significant in all models.
 
 * **CRN stimulation effect in HC/OCD**: For HC remains non-significant in all models. For OCD remains significant in all models. 
 
-<br>
-Update: Allowing the interactions compared to the model specifying only the main effect of the covariate does not change model results for the covariates session, stimulus type and medication. For the covariates number of errors and number of feedback faster, the only change is that the ERN stimulation effect in HC changes much further away from a trend when allowing the interactions (from p = .18 to .33 and p = .22 to .45, respectively).
 <br><br>
 
 **Subgroup analyses**
 
-When including only unmedicated patients, there is no ERN group difference anymore, no CRN group trend anymore and no CRN stimulation effect in OCD anymore (possibly due to reduced power). When including only participants with no metal on head (P_06 had retainer, C_02 piercing left ear), the ERN group difference turns to a trend; there still is no ERN stimulation effect separately for the groups (but overall; see non-nested model). Excluding P_02 and C_02 would be closest to preregistration (exclude participant with their matchtes). Metal for C_06 is not likely to have had an influence. The CRN group difference trend and stimulation effect is not affected by any of the metal-exclusion variations stated below. 
+When including only unmedicated patients, there is no ERN group difference anymore, no CRN group trend anymore and no CRN stimulation effect in OCD anymore (possibly due to reduced power). 
 <br><br>
 
 ## ANOVAs {.tabset}
@@ -1347,7 +1257,7 @@ When including only unmedicated patients, there is no ERN group difference anymo
 
 ### ANOVAs
 
-To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), MFN/ERN/CRN were additionally analyzed with repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), and (only for MRN) response type (correct, incorrect). No  Greenhouse–Geisser correction was applied, as no factor had more than two levels. As can be seen below, the ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all effects. The group difference in ERN magnitude emerged in the LMMs as a statistical trend only (p = .054), in the ANOVA it is significant (p = .048). 
+To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), MFN/ERN/CRN were additionally analyzed with repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), and (only for MRN) response type (correct, incorrect). No  Greenhouse–Geisser correction was applied, as no factor had more than two levels. As can be seen below, the ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all effects (trend for ERN and CRN group difference and stimulation effect on ERN, significant stimulation effect on CRN).
 
 ```{r ANOVAs}
 
@@ -1398,7 +1308,7 @@ my_table_template(nice(anova_CRN, MSE = FALSE), caption = "CRN")
 
 ### Pairwise comparisons
 
-As no significant main effect with > 2 levels or interaction effect was present, no post hoc pairwise comparisons would need to be conducted. However, the stimulation effect on ERN in the separate groups may be seen as pre-planned contrast that we want to test. For these effects, I calculated two-tailed paired *t* tests with Holm–Bonferroni *p* value adjustments. There is still no stimulation effect on ERN in the two groups. The effect on CRN is present in the OCD group. In the sham condition, the CRN is higher (more negative) in the OCD group; in the verum condition there is no evidence for such group difference anymore.
+As no significant main effect with > 2 levels or interaction effect was present, no post hoc pairwise comparisons would need to be conducted. However, the stimulation effect on ERN in the separate groups may be seen as pre-planned contrast that we want to test. For these effects, I calculated pairwise comparisons using the emmeans package with Holm–Bonferroni *p* value adjustments. There is still no stimulation effect on ERN in the two groups (but not too far away either). The effect on CRN is present in the OCD group. In the sham condition, the CRN is higher (more negative) in the OCD group; in the verum condition there is no significant group difference anymore.
 
 ```{r ANOVAs-pairwise-tests}
 
@@ -1541,7 +1451,7 @@ do.call(rbind, lapply(residuals_anova_CRN[,], function(x) shapiro.test(x)["p.val
 
 * **Assumption #3: No dependency in the scores between participants** (dependency can exist only across scores for individuals) **-> Is OK**
 
-* **Assumption #4: Residuals** of the dependent variable in each level of the within-subjects factor are approximately **normally distributed -> Is OK** (see above; for incorrect verum condition only small deviation)**
+* **Assumption #4: Residuals** of the dependent variable in each level of the within-subjects factor are approximately **normally distributed -> Is OK** (see above; for incorrect verum condition only small deviation)
 
 * **Assumption #5: Sphericity** (only relevant for withlin-subject factors with > 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is OK**
 
