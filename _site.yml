@@ -8,6 +8,9 @@ navbar:
     - text: "Task & Data"
       icon: glyphicon-info-sign
       href: index.html
+    - text: "Demographics"
+      icon: glyphicon-info-sign
+      href: 0_Demographics.html
     - text: "Behavioral Performance"
       icon: glyphicon glyphicon-hand-up
       href: 1_Behavioral_Performance.html
