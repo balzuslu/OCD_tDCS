@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Demographics</title>
+
+<script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/united.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<script src="site_libs/jqueryui-1.11.4/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
+<script src="site_libs/navigation-1.1/sourceembed.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.0/anchor-sections.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.0/anchor-sections.js"></script>
+<script src="site_libs/kePrint-0.0.1/kePrint.js"></script>
+<link href="site_libs/lightable-0.0.1/lightable.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/all.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-5.1.0/css/v4-shims.css" rel="stylesheet" />
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<style type="text/css">
+  pre:not([class]) {
+    background-color: white;
+  }
+</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+<style type="text/css">
+h1 {
+  font-size: 34px;
+}
+h1.title {
+  font-size: 38px;
+}
+h2 {
+  font-size: 30px;
+}
+h3 {
+  font-size: 24px;
+}
+h4 {
+  font-size: 18px;
+}
+h5 {
+  font-size: 16px;
+}
+h6 {
+  font-size: 12px;
+}
+.table th:not([align]) {
+  text-align: left;
+}
+#rmd-source-code {
+  display: none;
+}
+</style>
+
+<link rel="stylesheet" href="web_style.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+</style>
+
+
+<style type="text/css">
+/* padding for bootstrap navbar */
+body {
+  padding-top: 51px;
+  padding-bottom: 40px;
+}
+/* offset scroll position for anchor links (for fixed navbar)  */
+.section h1 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h2 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h3 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h4 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h5 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.section h6 {
+  padding-top: 56px;
+  margin-top: -56px;
+}
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #ffffff;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script>
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark it active
+  menuAnchor.parent().addClass('active');
+
+  // if it's got a parent navbar menu mark it active as well
+  menuAnchor.closest('li.dropdown').addClass('active');
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "&#xe258;";
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+.tocify-subheader {
+  display: inline;
+}
+.tocify-subheader .tocify-item {
+  font-size: 0.95em;
+}
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row-fluid">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">OCD & tDCS</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">
+    <span class="glyphicon glyphicon-info-sign"></span>
+     
+    Task &amp; Data
+  </a>
+</li>
+<li>
+  <a href="1_Behavioral_Performance.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-hand-up"></span>
+     
+    Behavioral Performance
+  </a>
+</li>
+<li>
+  <a href="2_ERP_Analysis.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-flash"></span>
+     
+    ERP Analysis
+  </a>
+</li>
+<li>
+  <a href="3_ERP_Visualization.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-flash"></span>
+     
+    ERP Visualization
+  </a>
+</li>
+<li>
+  <a href="4_Trait_Variables.html">
+    <span class="glyphicon glyphicon glyphicon glyphicon-user"></span>
+     
+    Trait Variables
+  </a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        <li>
+  <a href="mailto:luisa.balzus@hu-berlin.de">
+    <span class="fa fa-envelope fa-lg"></span>
+     
+  </a>
+</li>
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div class="fluid-row" id="header">
+
+<div class="btn-group pull-right">
+<button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+<li role="separator" class="divider"></li>
+<li><a id="rmd-download-source" href="#">Download Rmd</a></li>
+</ul>
+</div>
+
+
+
+<h1 class="title toc-ignore">Demographics</h1>
+
+</div>
+
+
+<!-- Set general settings -->
+<p><br><br></p>
+<div id="sample-overview" class="section level2">
+<h2>Sample Overview</h2>
+<hr />
+<ul>
+<li><p>N = 56 (N HC = 28, N OCD = 28)</p></li>
+<li><p>OCD and HC matched for gender, age, education level, and handedness</p></li>
+<li><p>Native German speakers with normal or corrected-to-normal vision</p></li>
+<li><p>Patients with OCD were recruited from the outpatient clinic at Humboldt-Universität zu Berlin. All patients were interviewed and diagnosed by trained psychologists using the Structured Clinical Interview for DSM-IV (SCID-I; Wittchen et al., 1997) and met the DSM-IV criteria for OCD as primary disorder.</p></li>
+<li><p>Exclusion criteria</p>
+<ul>
+<li>general: neurological diseases, intake of benzodiazepines within one week before participation or neuroleptics within three months before participation, and general exclusion criteria for EEG and transcranial direct current stimulation (tDCS), such as metallic implants, electrical devices, facial skin problems (e.g. neurodermitis), or current pregnancy</li>
+<li>OCD: current or past diagnosis of any schizophrenic disorder, or substance abuse disorder</li>
+<li>HC: any current or past mental disorder</li>
+</ul></li>
+</ul>
+<pre class="r"><code># Load data 
+participant_data &lt;- read.spss(&quot;./data/Probandendaten.sav&quot;, to.data.frame = TRUE)
+questionnaires   &lt;- read.spss(&quot;./data/psychoEQExport.sav&quot;, to.data.frame = TRUE, add.undeclared.levels = &quot;no&quot;) # add.undeclared.levels required to prevent irrelevant warning message
+
+
+# Select relevant variables
+participant_data &lt;- participant_data[,c(&quot;Code&quot;,&quot;Alter&quot;,&quot;Geschlecht&quot;,&quot;Schulabschluss&quot;,&quot;Händigkeit&quot;,&quot;Komorbidität_1&quot;,&quot;Komorbidität_2&quot;,
+                                        &quot;Komorbidität_3&quot;,&quot;Medikamente_JaNein&quot;,&quot;SSRI&quot;,&quot;SNRI&quot;,&quot;Trizykl_Antidepressiva&quot;,
+                                        &quot;Kombination_SSRI_Antidepressiva&quot;,&quot;YBOCS_gesamt&quot;,&quot;YBOCS_Gedanken&quot;,&quot;YBOCS_Handlungen&quot;,&quot;MADRS&quot;, &quot;WST&quot; )]
+questionnaires   &lt;- questionnaires[,c(&quot;CODE&quot;, &quot;BD2SUMT0&quot;, &quot;OCISUMT0&quot;, &quot;STSSUMT0&quot;, &quot;STTSUMT0&quot;)] 
+
+
+# Merge dataframes and rename columns
+participant_data$Code &lt;- gsub(&quot; &quot;, &quot;&quot;, participant_data$Code , fixed = TRUE) # delete empty spaces from string to enable merging
+demographics &lt;- left_join(participant_data, questionnaires, by = c(&quot;Code&quot; = &quot;CODE&quot;)) %&gt;%
+  # Rename some columns
+  dplyr::rename(participant_id = Code,
+                BDI_Total      = BD2SUMT0, 
+                OCI_Total      = OCISUMT0, 
+                STAI_State    = STSSUMT0, 
+                STAI_Trait     = STTSUMT0) %&gt;%
+  # Add group variable
+  dplyr::mutate(group = as.factor(ifelse(substr(participant_id,13,13) == &quot;C&quot;, &quot;HC&quot;, &quot;OCD&quot;)))   
+
+
+# Exclude P_02 (due to retainer) and C_02 (as preregistered: patients are excluded with their match)
+demographics &lt;- demographics[demographics$participant_id != &quot;ModERN_tDCS_P02&quot; &amp; demographics$participant_id != &quot;ModERN_tDCS_C02&quot;,]
+
+
+# C_12 repeated the WST at T2, because score at T1 was very low (22); score achieved at T2 was 25; we will use this score 
+demographics[demographics$participant_id == &quot;ModERN_tDCS_C12&quot;,]$WST &lt;- 25
+
+
+
+
+### Handle numeric variables
+
+# Calculate M and SD per group 
+demographics_per_group_M_SD &lt;- demographics %&gt;%
+  dplyr::group_by(group) %&gt;%
+  # Calculate M and SD of the variables
+  dplyr::summarize(across(c(Alter,WST,YBOCS_gesamt,YBOCS_Gedanken,YBOCS_Handlungen,MADRS,
+                            BDI_Total,OCI_Total,STAI_State,STAI_Trait), list(mean,sd), na.rm = TRUE)) %&gt;%
+  # Reshape table to have one column per group
+  gather(key = key, value = value, 2:ncol(.), factor_key = TRUE) %&gt;% 
+  spread(key = names(.)[1], value = &quot;value&quot;) %&gt;%
+  # Add variable column
+  dplyr::mutate(Variable = c(&quot;Alter&quot;, &quot;&quot;, &quot;WST&quot;, &quot;&quot;, &quot;YBOCS_Total&quot;, &quot;&quot;, &quot;YBOCS_Gedanken&quot;, &quot;&quot;, &quot;YBOCS_Handlungen&quot;, &quot;&quot;,  &quot;MADRS&quot;, &quot;&quot;, &quot;BDI_Total&quot;, &quot;&quot;, &quot;OCI_Total&quot;, &quot;&quot;, &quot;STAI_State&quot;, &quot;&quot;, &quot;STAI_Trait&quot;, &quot;&quot;)) %&gt;%
+  # Add M/SD column
+  dplyr::mutate(M_SD_or_n = c(&quot;M&quot;, &quot;SD&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;M&quot;, &quot;SD&quot;, &quot;M&quot;, &quot;SD&quot;)) %&gt;%
+  # Reorder columns
+  dplyr::select(Variable, M_SD_or_n, HC, OCD)
+
+
+# Calculate t tests
+demographics_per_group_t_test &lt;- demographics %&gt;% 
+  select(Alter,WST,BDI_Total,OCI_Total,STAI_State,STAI_Trait, group) %&gt;% 
+  gather(key = Variable, value = value, -group) %&gt;% 
+  group_by(group, Variable) %&gt;% 
+  dplyr::summarise(value = list(value)) %&gt;% 
+  spread(group, value) %&gt;% 
+  dplyr::group_by(Variable) %&gt;% 
+  dplyr::mutate(df = t.test(unlist(HC), unlist(OCD))$parameter,
+         t_or_chi_sq_value = t.test(unlist(HC), unlist(OCD))$statistic, 
+         p_value = t.test(unlist(HC), unlist(OCD))$p.value) %&gt;%
+  dplyr::select(-c(HC, OCD))
+
+
+
+# Merge M_SD and t test infos
+demographics_per_group &lt;- left_join(demographics_per_group_M_SD, demographics_per_group_t_test, by = &quot;Variable&quot;)
+
+
+
+
+### Handle cound variables
+
+# Calculate Chi-squared tests
+gender_test     &lt;- chisq.test(demographics$Geschlecht, demographics$group)
+education_test  &lt;- chisq.test(demographics$Schulabschluss, demographics$group)
+handedness_test &lt;- chisq.test(demographics$&quot;Händigkeit&quot;, demographics$group)
+
+
+# Extract counts for gender
+gender &lt;- demographics %&gt;% group_by(group) %&gt;% count(Geschlecht) %&gt;% 
+  # Reshape table to have one column per group
+  spread(key = names(.)[1], value = n) %&gt;%
+  # Add chi square results
+  dplyr::mutate(df = ifelse(row_number()==1, gender_test$parameter, NA),
+                t_or_chi_sq_value = ifelse(row_number()==1, gender_test$statistic, NA),
+                p_value = ifelse(row_number()==1, gender_test$p.value, NA)) %&gt;%
+  # Add first column
+  dplyr::mutate(Variable = c(&quot;Geschlecht&quot;, &quot;&quot;)) %&gt;%
+  # Select and reorder columns
+  dplyr::select(Variable, everything()) %&gt;%
+  # Rename one column to make rbind wirh columns above possible
+  dplyr::rename(M_SD_or_n = Geschlecht)
+
+
+# Extract counts for education
+education &lt;- demographics %&gt;% group_by(group) %&gt;% count(Schulabschluss, .drop = FALSE) %&gt;% 
+  # Reshape table to have one column per group
+  spread(key = names(.)[1], value = n) %&gt;%
+  # Add chi square results
+  dplyr::mutate(df = ifelse(row_number()==1, education_test$parameter, NA),
+                t_or_chi_sq_value = ifelse(row_number()==1, education_test$statistic, NA),
+                p_value = ifelse(row_number()==1, education_test$p.value, NA)) %&gt;%
+  # Add first column
+  dplyr::mutate(Variable = c(&quot;Schulabschluss&quot;, &quot;&quot;, &quot;&quot; , &quot;&quot;, &quot;&quot; , &quot;&quot;)) %&gt;%
+  # Select and reorder columns
+  dplyr::select(Variable, everything()) %&gt;%
+  # Rename one column to make rbind wirh columns above possible
+  dplyr::rename(M_SD_or_n = Schulabschluss)
+
+
+# Extract counts for handedness
+handedness &lt;- demographics %&gt;% group_by(group) %&gt;% count(Händigkeit, .drop = FALSE) %&gt;% 
+  # Reshape table to have one column per group
+  spread(key = names(.)[1], value = n) %&gt;%
+  # Add chi square results
+  dplyr::mutate(df = ifelse(row_number()==1, handedness_test$parameter, NA),
+                t_or_chi_sq_value = ifelse(row_number()==1, handedness_test$statistic, NA),
+                p_value = ifelse(row_number()==1, handedness_test$p.value, NA)) %&gt;%
+  # Add first column
+  dplyr::mutate(Variable = c(&quot;Händigkeit&quot;, &quot;&quot;, &quot;&quot;)) %&gt;%
+  # Select and reorder columns
+  dplyr::select(Variable, everything()) %&gt;%
+  # Rename one column to make rbind wirh columns above possible
+  dplyr::rename(M_SD_or_n = Händigkeit)
+
+
+
+# Display table
+my_table_template(rbind(demographics_per_group[c(1,2),], gender, education, handedness, demographics_per_group[c(3:nrow(demographics_per_group)),]), caption = &quot;Demographic and Clinical Variables&quot;)</code></pre>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Demographic and Clinical Variables
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Variable
+</th>
+<th style="text-align:left;">
+M_SD_or_n
+</th>
+<th style="text-align:right;">
+HC
+</th>
+<th style="text-align:right;">
+OCD
+</th>
+<th style="text-align:right;">
+df
+</th>
+<th style="text-align:right;">
+t_or_chi_sq_value
+</th>
+<th style="text-align:right;">
+p_value
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Alter
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+33.07
+</td>
+<td style="text-align:right;">
+33.29
+</td>
+<td style="text-align:right;">
+53.90
+</td>
+<td style="text-align:right;">
+-0.10
+</td>
+<td style="text-align:right;">
+0.92
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+SD
+</td>
+<td style="text-align:right;">
+8.20
+</td>
+<td style="text-align:right;">
+8.57
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Geschlecht
+</td>
+<td style="text-align:left;">
+männlich
+</td>
+<td style="text-align:right;">
+11.00
+</td>
+<td style="text-align:right;">
+11.00
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+weiblich
+</td>
+<td style="text-align:right;">
+17.00
+</td>
+<td style="text-align:right;">
+17.00
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Schulabschluss
+</td>
+<td style="text-align:left;">
+Abitur/Fachabitur
+</td>
+<td style="text-align:right;">
+22.00
+</td>
+<td style="text-align:right;">
+21.00
+</td>
+<td style="text-align:right;">
+3.00
+</td>
+<td style="text-align:right;">
+2.11
+</td>
+<td style="text-align:right;">
+0.55
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+Realschule/Mittlere Reife
+</td>
+<td style="text-align:right;">
+5.00
+</td>
+<td style="text-align:right;">
+6.00
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+Volks-/Hauptschule
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+Sonderschule
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+kein Schulabschluss
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+noch in Schule
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Händigkeit
+</td>
+<td style="text-align:left;">
+rechts
+</td>
+<td style="text-align:right;">
+27.00
+</td>
+<td style="text-align:right;">
+25.00
+</td>
+<td style="text-align:right;">
+2.00
+</td>
+<td style="text-align:right;">
+2.08
+</td>
+<td style="text-align:right;">
+0.35
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+links
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+1.00
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+beidhändig
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+2.00
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+WST
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+32.14
+</td>
+<td style="text-align:right;">
+32.00
+</td>
+<td style="text-align:right;">
+52.40
+</td>
+<td style="text-align:right;">
+0.18
+</td>
+<td style="text-align:right;">
+0.86
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+SD
+</td>
+<td style="text-align:right;">
+3.18
+</td>
+<td style="text-align:right;">
+2.67
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+YBOCS_Total
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+NaN
+</td>
+<td style="text-align:right;">
+23.36
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+SD
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+3.84
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+YBOCS_Gedanken
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+NaN
+</td>
+<td style="text-align:right;">
+11.43
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+SD
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+1.81
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+YBOCS_Handlungen
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+NaN
+</td>
+<td style="text-align:right;">
+11.86
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+SD
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+2.53
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+MADRS
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+NaN
+</td>
+<td style="text-align:right;">
+11.25
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+SD
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+7.60
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+BDI_Total
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+1.86
+</td>
+<td style="text-align:right;">
+14.14
+</td>
+<td style="text-align:right;">
+30.03
+</td>
+<td style="text-align:right;">
+-5.58
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+SD
+</td>
+<td style="text-align:right;">
+2.69
+</td>
+<td style="text-align:right;">
+11.34
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+OCI_Total
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+6.25
+</td>
+<td style="text-align:right;">
+25.75
+</td>
+<td style="text-align:right;">
+42.75
+</td>
+<td style="text-align:right;">
+-9.02
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+SD
+</td>
+<td style="text-align:right;">
+5.65
+</td>
+<td style="text-align:right;">
+9.95
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+STAI_State
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+30.64
+</td>
+<td style="text-align:right;">
+47.14
+</td>
+<td style="text-align:right;">
+42.56
+</td>
+<td style="text-align:right;">
+-8.24
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+SD
+</td>
+<td style="text-align:right;">
+5.20
+</td>
+<td style="text-align:right;">
+9.24
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+STAI_Trait
+</td>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:right;">
+32.29
+</td>
+<td style="text-align:right;">
+53.29
+</td>
+<td style="text-align:right;">
+48.92
+</td>
+<td style="text-align:right;">
+-8.96
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+</td>
+<td style="text-align:left;">
+SD
+</td>
+<td style="text-align:right;">
+7.22
+</td>
+<td style="text-align:right;">
+10.08
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+<td style="text-align:right;">
+NA
+</td>
+</tr>
+</tbody>
+</table>
+<p><br><br></p>
+</div>
+
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIkRlbW9ncmFwaGljcyINCm91dHB1dDogDQogIGh0bWxfZG9jdW1lbnQNCg0KLS0tDQoNCjwhLS0gU2V0IGdlbmVyYWwgc2V0dGluZ3MgLS0+DQoNCmBgYHtyIHNldHVwLCBpbmNsdWRlID0gRkFMU0V9DQoNCiMgU2V0IGdlbmVyYWwgc2V0dGluZ3MgZm9yIG1hcmtkb3duIGZpbGUNCmtuaXRyOjpvcHRzX2NodW5rJHNldCgNCiAgbWVzc2FnZSA9IEZBTFNFLA0KICB3YXJuaW5nID0gRkFMU0UsDQogIGNvbW1lbnQgPSAiIiwNCiAgcmVzdWx0cyA9ICJob2xkIg0KKQ0KDQoNCiMgQ2xlYXIgZW52aXJvbm1lbnQNCnJtKGxpc3QgPSBscygpKQ0KDQoNCiMgRW5hYmxlL2Rpc2FibGUgY2FjaGluZyBvZiB0aW1lLWNvbnN1bWluZyBjb2RlIGNodW5rcw0Ka25pdHJfY2FjaGVfZW5hYmxlZCA9IFRSVUUNCg0KDQojIExvYWQgcGFja2FnZXMNCmxpYnJhcnkoZHBseXIpICAgICAgIyBmb3IgZGF0YSBtYW5pcHVsYXRpb24NCmxpYnJhcnkoa25pdHIpICAgICAgIyBmb3IgaW50ZWdyYXRpbmcgY29tcHV0aW5nIGFuZCByZXBvcnRpbmcgaW4gbWFya2Rvd24NCmxpYnJhcnkoa2FibGVFeHRyYSkgIyBmb3IgY3VzdG9taXppbmcgYXBwZWFyYW5jZSBvZiB0YWJsZXMNCmxpYnJhcnkoZm9yZWlnbikgICAgIyBmb3IgcmVhZGluZyBpbiBTUFNTIGZpbGUNCmxpYnJhcnkodGlkeXIpICAgICAgIyBmb3IgZ2F0aGVyIGFuZCBzcHJlYWQgZnVuY3Rpb24NCg0KDQojIExvYWQgZnVuY3Rpb25zDQpzb3VyY2UoIi4vZnVuY3Rpb25zL215X3RhYmxlX3RlbXBsYXRlLlIiKSAjIEZ1bmN0aW9uIHRvIGNyZWF0ZSB0YWJsZSB0ZW1wbGF0ZQ0KDQoNCiMgVHVybiBvZmYgc2NpZW50aWZpYyBub3RhdGlvbg0Kb3B0aW9ucyhzY2lwZW4gPSA5OTkpDQpgYGANCjxicj48YnI+IA0KDQojIyBTYW1wbGUgT3ZlcnZpZXcNCioqKg0KDQoqIE4gPSA1NiAoTiBIQyA9IDI4LCBOIE9DRCA9IDI4KQ0KDQoqIE9DRCBhbmQgSEMgbWF0Y2hlZCBmb3IgZ2VuZGVyLCBhZ2UsIGVkdWNhdGlvbiBsZXZlbCwgYW5kIGhhbmRlZG5lc3MgDQoNCiogTmF0aXZlIEdlcm1hbiBzcGVha2VycyB3aXRoIG5vcm1hbCBvciBjb3JyZWN0ZWQtdG8tbm9ybWFsIHZpc2lvbg0KDQoqIFBhdGllbnRzIHdpdGggT0NEIHdlcmUgcmVjcnVpdGVkIGZyb20gdGhlIG91dHBhdGllbnQgY2xpbmljIGF0IEh1bWJvbGR0LVVuaXZlcnNpdMOkdCB6dSBCZXJsaW4uIEFsbCBwYXRpZW50cyB3ZXJlIGludGVydmlld2VkIGFuZCBkaWFnbm9zZWQgYnkgdHJhaW5lZCBwc3ljaG9sb2dpc3RzIHVzaW5nIHRoZSBTdHJ1Y3R1cmVkIENsaW5pY2FsIEludGVydmlldyBmb3IgRFNNLUlWIChTQ0lELUk7IFdpdHRjaGVuIGV0IGFsLiwgMTk5NykgYW5kIG1ldCB0aGUgRFNNLUlWIGNyaXRlcmlhIGZvciBPQ0QgYXMgcHJpbWFyeSBkaXNvcmRlci4gDQoNCiogRXhjbHVzaW9uIGNyaXRlcmlhIA0KICAtIGdlbmVyYWw6IG5ldXJvbG9naWNhbCBkaXNlYXNlcywgaW50YWtlIG9mIGJlbnpvZGlhemVwaW5lcyB3aXRoaW4gb25lIHdlZWsgYmVmb3JlIHBhcnRpY2lwYXRpb24gb3IgbmV1cm9sZXB0aWNzIHdpdGhpbiB0aHJlZSBtb250aHMgYmVmb3JlIHBhcnRpY2lwYXRpb24sIGFuZCBnZW5lcmFsIGV4Y2x1c2lvbiBjcml0ZXJpYSBmb3IgRUVHIGFuZCB0cmFuc2NyYW5pYWwgZGlyZWN0IGN1cnJlbnQgc3RpbXVsYXRpb24gKHREQ1MpLCBzdWNoIGFzIG1ldGFsbGljIGltcGxhbnRzLCBlbGVjdHJpY2FsIGRldmljZXMsIGZhY2lhbCBza2luIHByb2JsZW1zIChlLmcuIG5ldXJvZGVybWl0aXMpLCBvciBjdXJyZW50IHByZWduYW5jeQ0KICAtIE9DRDogY3VycmVudCBvciBwYXN0IGRpYWdub3NpcyBvZiBhbnkgc2NoaXpvcGhyZW5pYyBkaXNvcmRlciwgb3Igc3Vic3RhbmNlIGFidXNlIGRpc29yZGVyIA0KICAtIEhDOiBhbnkgY3VycmVudCBvciBwYXN0IG1lbnRhbCBkaXNvcmRlciANCg0KYGBge3IgZGVtb2dyYXBoaWNzfQ0KDQojIExvYWQgZGF0YSANCnBhcnRpY2lwYW50X2RhdGEgPC0gcmVhZC5zcHNzKCIuL2RhdGEvUHJvYmFuZGVuZGF0ZW4uc2F2IiwgdG8uZGF0YS5mcmFtZSA9IFRSVUUpDQpxdWVzdGlvbm5haXJlcyAgIDwtIHJlYWQuc3BzcygiLi9kYXRhL3BzeWNob0VRRXhwb3J0LnNhdiIsIHRvLmRhdGEuZnJhbWUgPSBUUlVFLCBhZGQudW5kZWNsYXJlZC5sZXZlbHMgPSAibm8iKSAjIGFkZC51bmRlY2xhcmVkLmxldmVscyByZXF1aXJlZCB0byBwcmV2ZW50IGlycmVsZXZhbnQgd2FybmluZyBtZXNzYWdlDQoNCg0KIyBTZWxlY3QgcmVsZXZhbnQgdmFyaWFibGVzDQpwYXJ0aWNpcGFudF9kYXRhIDwtIHBhcnRpY2lwYW50X2RhdGFbLGMoIkNvZGUiLCJBbHRlciIsIkdlc2NobGVjaHQiLCJTY2h1bGFic2NobHVzcyIsIkjDpG5kaWdrZWl0IiwiS29tb3JiaWRpdMOkdF8xIiwiS29tb3JiaWRpdMOkdF8yIiwNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiS29tb3JiaWRpdMOkdF8zIiwiTWVkaWthbWVudGVfSmFOZWluIiwiU1NSSSIsIlNOUkkiLCJUcml6eWtsX0FudGlkZXByZXNzaXZhIiwNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiS29tYmluYXRpb25fU1NSSV9BbnRpZGVwcmVzc2l2YSIsIllCT0NTX2dlc2FtdCIsIllCT0NTX0dlZGFua2VuIiwiWUJPQ1NfSGFuZGx1bmdlbiIsIk1BRFJTIiwgIldTVCIgKV0NCnF1ZXN0aW9ubmFpcmVzICAgPC0gcXVlc3Rpb25uYWlyZXNbLGMoIkNPREUiLCAiQkQyU1VNVDAiLCAiT0NJU1VNVDAiLCAiU1RTU1VNVDAiLCAiU1RUU1VNVDAiKV0gDQoNCg0KIyBNZXJnZSBkYXRhZnJhbWVzIGFuZCByZW5hbWUgY29sdW1ucw0KcGFydGljaXBhbnRfZGF0YSRDb2RlIDwtIGdzdWIoIiAiLCAiIiwgcGFydGljaXBhbnRfZGF0YSRDb2RlICwgZml4ZWQgPSBUUlVFKSAjIGRlbGV0ZSBlbXB0eSBzcGFjZXMgZnJvbSBzdHJpbmcgdG8gZW5hYmxlIG1lcmdpbmcNCmRlbW9ncmFwaGljcyA8LSBsZWZ0X2pvaW4ocGFydGljaXBhbnRfZGF0YSwgcXVlc3Rpb25uYWlyZXMsIGJ5ID0gYygiQ29kZSIgPSAiQ09ERSIpKSAlPiUNCiAgIyBSZW5hbWUgc29tZSBjb2x1bW5zDQogIGRwbHlyOjpyZW5hbWUocGFydGljaXBhbnRfaWQgPSBDb2RlLA0KICAgICAgICAgICAgICAgIEJESV9Ub3RhbCAgICAgID0gQkQyU1VNVDAsIA0KICAgICAgICAgICAgICAgIE9DSV9Ub3RhbCAgICAgID0gT0NJU1VNVDAsIA0KICAgICAgICAgICAgICAgIFNUQUlfU3RhdGUgICAgPSBTVFNTVU1UMCwgDQogICAgICAgICAgICAgICAgU1RBSV9UcmFpdCAgICAgPSBTVFRTVU1UMCkgJT4lDQogICMgQWRkIGdyb3VwIHZhcmlhYmxlDQogIGRwbHlyOjptdXRhdGUoZ3JvdXAgPSBhcy5mYWN0b3IoaWZlbHNlKHN1YnN0cihwYXJ0aWNpcGFudF9pZCwxMywxMykgPT0gIkMiLCAiSEMiLCAiT0NEIikpKSAgIA0KDQoNCiMgRXhjbHVkZSBQXzAyIChkdWUgdG8gcmV0YWluZXIpIGFuZCBDXzAyIChhcyBwcmVyZWdpc3RlcmVkOiBwYXRpZW50cyBhcmUgZXhjbHVkZWQgd2l0aCB0aGVpciBtYXRjaCkNCmRlbW9ncmFwaGljcyA8LSBkZW1vZ3JhcGhpY3NbZGVtb2dyYXBoaWNzJHBhcnRpY2lwYW50X2lkICE9ICJNb2RFUk5fdERDU19QMDIiICYgZGVtb2dyYXBoaWNzJHBhcnRpY2lwYW50X2lkICE9ICJNb2RFUk5fdERDU19DMDIiLF0NCg0KDQojIENfMTIgcmVwZWF0ZWQgdGhlIFdTVCBhdCBUMiwgYmVjYXVzZSBzY29yZSBhdCBUMSB3YXMgdmVyeSBsb3cgKDIyKTsgc2NvcmUgYWNoaWV2ZWQgYXQgVDIgd2FzIDI1OyB3ZSB3aWxsIHVzZSB0aGlzIHNjb3JlIA0KZGVtb2dyYXBoaWNzW2RlbW9ncmFwaGljcyRwYXJ0aWNpcGFudF9pZCA9PSAiTW9kRVJOX3REQ1NfQzEyIixdJFdTVCA8LSAyNQ0KDQoNCg0KDQojIyMgSGFuZGxlIG51bWVyaWMgdmFyaWFibGVzDQoNCiMgQ2FsY3VsYXRlIE0gYW5kIFNEIHBlciBncm91cCANCmRlbW9ncmFwaGljc19wZXJfZ3JvdXBfTV9TRCA8LSBkZW1vZ3JhcGhpY3MgJT4lDQogIGRwbHlyOjpncm91cF9ieShncm91cCkgJT4lDQogICMgQ2FsY3VsYXRlIE0gYW5kIFNEIG9mIHRoZSB2YXJpYWJsZXMNCiAgZHBseXI6OnN1bW1hcml6ZShhY3Jvc3MoYyhBbHRlcixXU1QsWUJPQ1NfZ2VzYW10LFlCT0NTX0dlZGFua2VuLFlCT0NTX0hhbmRsdW5nZW4sTUFEUlMsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgQkRJX1RvdGFsLE9DSV9Ub3RhbCxTVEFJX1N0YXRlLFNUQUlfVHJhaXQpLCBsaXN0KG1lYW4sc2QpLCBuYS5ybSA9IFRSVUUpKSAlPiUNCiAgIyBSZXNoYXBlIHRhYmxlIHRvIGhhdmUgb25lIGNvbHVtbiBwZXIgZ3JvdXANCiAgZ2F0aGVyKGtleSA9IGtleSwgdmFsdWUgPSB2YWx1ZSwgMjpuY29sKC4pLCBmYWN0b3Jfa2V5ID0gVFJVRSkgJT4lIA0KICBzcHJlYWQoa2V5ID0gbmFtZXMoLilbMV0sIHZhbHVlID0gInZhbHVlIikgJT4lDQogICMgQWRkIHZhcmlhYmxlIGNvbHVtbg0KICBkcGx5cjo6bXV0YXRlKFZhcmlhYmxlID0gYygiQWx0ZXIiLCAiIiwgIldTVCIsICIiLCAiWUJPQ1NfVG90YWwiLCAiIiwgIllCT0NTX0dlZGFua2VuIiwgIiIsICJZQk9DU19IYW5kbHVuZ2VuIiwgIiIsICAiTUFEUlMiLCAiIiwgIkJESV9Ub3RhbCIsICIiLCAiT0NJX1RvdGFsIiwgIiIsICJTVEFJX1N0YXRlIiwgIiIsICJTVEFJX1RyYWl0IiwgIiIpKSAlPiUNCiAgIyBBZGQgTS9TRCBjb2x1bW4NCiAgZHBseXI6Om11dGF0ZShNX1NEX29yX24gPSBjKCJNIiwgIlNEIiwgIk0iLCAiU0QiLCAiTSIsICJTRCIsICJNIiwgIlNEIiwgIk0iLCAiU0QiLCAiTSIsICJTRCIsICJNIiwgIlNEIiwgIk0iLCAiU0QiLCAiTSIsICJTRCIsICJNIiwgIlNEIikpICU+JQ0KICAjIFJlb3JkZXIgY29sdW1ucw0KICBkcGx5cjo6c2VsZWN0KFZhcmlhYmxlLCBNX1NEX29yX24sIEhDLCBPQ0QpDQoNCg0KIyBDYWxjdWxhdGUgdCB0ZXN0cw0KZGVtb2dyYXBoaWNzX3Blcl9ncm91cF90X3Rlc3QgPC0gZGVtb2dyYXBoaWNzICU+JSANCiAgc2VsZWN0KEFsdGVyLFdTVCxCRElfVG90YWwsT0NJX1RvdGFsLFNUQUlfU3RhdGUsU1RBSV9UcmFpdCwgZ3JvdXApICU+JSANCiAgZ2F0aGVyKGtleSA9IFZhcmlhYmxlLCB2YWx1ZSA9IHZhbHVlLCAtZ3JvdXApICU+JSANCiAgZ3JvdXBfYnkoZ3JvdXAsIFZhcmlhYmxlKSAlPiUgDQogIGRwbHlyOjpzdW1tYXJpc2UodmFsdWUgPSBsaXN0KHZhbHVlKSkgJT4lIA0KICBzcHJlYWQoZ3JvdXAsIHZhbHVlKSAlPiUgDQogIGRwbHlyOjpncm91cF9ieShWYXJpYWJsZSkgJT4lIA0KICBkcGx5cjo6bXV0YXRlKGRmID0gdC50ZXN0KHVubGlzdChIQyksIHVubGlzdChPQ0QpKSRwYXJhbWV0ZXIsDQogICAgICAgICB0X29yX2NoaV9zcV92YWx1ZSA9IHQudGVzdCh1bmxpc3QoSEMpLCB1bmxpc3QoT0NEKSkkc3RhdGlzdGljLCANCiAgICAgICAgIHBfdmFsdWUgPSB0LnRlc3QodW5saXN0KEhDKSwgdW5saXN0KE9DRCkpJHAudmFsdWUpICU+JQ0KICBkcGx5cjo6c2VsZWN0KC1jKEhDLCBPQ0QpKQ0KDQoNCg0KIyBNZXJnZSBNX1NEIGFuZCB0IHRlc3QgaW5mb3MNCmRlbW9ncmFwaGljc19wZXJfZ3JvdXAgPC0gbGVmdF9qb2luKGRlbW9ncmFwaGljc19wZXJfZ3JvdXBfTV9TRCwgZGVtb2dyYXBoaWNzX3Blcl9ncm91cF90X3Rlc3QsIGJ5ID0gIlZhcmlhYmxlIikNCg0KDQoNCg0KIyMjIEhhbmRsZSBjb3VuZCB2YXJpYWJsZXMNCg0KIyBDYWxjdWxhdGUgQ2hpLXNxdWFyZWQgdGVzdHMNCmdlbmRlcl90ZXN0ICAgICA8LSBjaGlzcS50ZXN0KGRlbW9ncmFwaGljcyRHZXNjaGxlY2h0LCBkZW1vZ3JhcGhpY3MkZ3JvdXApDQplZHVjYXRpb25fdGVzdCAgPC0gY2hpc3EudGVzdChkZW1vZ3JhcGhpY3MkU2NodWxhYnNjaGx1c3MsIGRlbW9ncmFwaGljcyRncm91cCkNCmhhbmRlZG5lc3NfdGVzdCA8LSBjaGlzcS50ZXN0KGRlbW9ncmFwaGljcyQiSMOkbmRpZ2tlaXQiLCBkZW1vZ3JhcGhpY3MkZ3JvdXApDQoNCg0KIyBFeHRyYWN0IGNvdW50cyBmb3IgZ2VuZGVyDQpnZW5kZXIgPC0gZGVtb2dyYXBoaWNzICU+JSBncm91cF9ieShncm91cCkgJT4lIGNvdW50KEdlc2NobGVjaHQpICU+JSANCiAgIyBSZXNoYXBlIHRhYmxlIHRvIGhhdmUgb25lIGNvbHVtbiBwZXIgZ3JvdXANCiAgc3ByZWFkKGtleSA9IG5hbWVzKC4pWzFdLCB2YWx1ZSA9IG4pICU+JQ0KICAjIEFkZCBjaGkgc3F1YXJlIHJlc3VsdHMNCiAgZHBseXI6Om11dGF0ZShkZiA9IGlmZWxzZShyb3dfbnVtYmVyKCk9PTEsIGdlbmRlcl90ZXN0JHBhcmFtZXRlciwgTkEpLA0KICAgICAgICAgICAgICAgIHRfb3JfY2hpX3NxX3ZhbHVlID0gaWZlbHNlKHJvd19udW1iZXIoKT09MSwgZ2VuZGVyX3Rlc3Qkc3RhdGlzdGljLCBOQSksDQogICAgICAgICAgICAgICAgcF92YWx1ZSA9IGlmZWxzZShyb3dfbnVtYmVyKCk9PTEsIGdlbmRlcl90ZXN0JHAudmFsdWUsIE5BKSkgJT4lDQogICMgQWRkIGZpcnN0IGNvbHVtbg0KICBkcGx5cjo6bXV0YXRlKFZhcmlhYmxlID0gYygiR2VzY2hsZWNodCIsICIiKSkgJT4lDQogICMgU2VsZWN0IGFuZCByZW9yZGVyIGNvbHVtbnMNCiAgZHBseXI6OnNlbGVjdChWYXJpYWJsZSwgZXZlcnl0aGluZygpKSAlPiUNCiAgIyBSZW5hbWUgb25lIGNvbHVtbiB0byBtYWtlIHJiaW5kIHdpcmggY29sdW1ucyBhYm92ZSBwb3NzaWJsZQ0KICBkcGx5cjo6cmVuYW1lKE1fU0Rfb3JfbiA9IEdlc2NobGVjaHQpDQoNCg0KIyBFeHRyYWN0IGNvdW50cyBmb3IgZWR1Y2F0aW9uDQplZHVjYXRpb24gPC0gZGVtb2dyYXBoaWNzICU+JSBncm91cF9ieShncm91cCkgJT4lIGNvdW50KFNjaHVsYWJzY2hsdXNzLCAuZHJvcCA9IEZBTFNFKSAlPiUgDQogICMgUmVzaGFwZSB0YWJsZSB0byBoYXZlIG9uZSBjb2x1bW4gcGVyIGdyb3VwDQogIHNwcmVhZChrZXkgPSBuYW1lcyguKVsxXSwgdmFsdWUgPSBuKSAlPiUNCiAgIyBBZGQgY2hpIHNxdWFyZSByZXN1bHRzDQogIGRwbHlyOjptdXRhdGUoZGYgPSBpZmVsc2Uocm93X251bWJlcigpPT0xLCBlZHVjYXRpb25fdGVzdCRwYXJhbWV0ZXIsIE5BKSwNCiAgICAgICAgICAgICAgICB0X29yX2NoaV9zcV92YWx1ZSA9IGlmZWxzZShyb3dfbnVtYmVyKCk9PTEsIGVkdWNhdGlvbl90ZXN0JHN0YXRpc3RpYywgTkEpLA0KICAgICAgICAgICAgICAgIHBfdmFsdWUgPSBpZmVsc2Uocm93X251bWJlcigpPT0xLCBlZHVjYXRpb25fdGVzdCRwLnZhbHVlLCBOQSkpICU+JQ0KICAjIEFkZCBmaXJzdCBjb2x1bW4NCiAgZHBseXI6Om11dGF0ZShWYXJpYWJsZSA9IGMoIlNjaHVsYWJzY2hsdXNzIiwgIiIsICIiICwgIiIsICIiICwgIiIpKSAlPiUNCiAgIyBTZWxlY3QgYW5kIHJlb3JkZXIgY29sdW1ucw0KICBkcGx5cjo6c2VsZWN0KFZhcmlhYmxlLCBldmVyeXRoaW5nKCkpICU+JQ0KICAjIFJlbmFtZSBvbmUgY29sdW1uIHRvIG1ha2UgcmJpbmQgd2lyaCBjb2x1bW5zIGFib3ZlIHBvc3NpYmxlDQogIGRwbHlyOjpyZW5hbWUoTV9TRF9vcl9uID0gU2NodWxhYnNjaGx1c3MpDQoNCg0KIyBFeHRyYWN0IGNvdW50cyBmb3IgaGFuZGVkbmVzcw0KaGFuZGVkbmVzcyA8LSBkZW1vZ3JhcGhpY3MgJT4lIGdyb3VwX2J5KGdyb3VwKSAlPiUgY291bnQoSMOkbmRpZ2tlaXQsIC5kcm9wID0gRkFMU0UpICU+JSANCiAgIyBSZXNoYXBlIHRhYmxlIHRvIGhhdmUgb25lIGNvbHVtbiBwZXIgZ3JvdXANCiAgc3ByZWFkKGtleSA9IG5hbWVzKC4pWzFdLCB2YWx1ZSA9IG4pICU+JQ0KICAjIEFkZCBjaGkgc3F1YXJlIHJlc3VsdHMNCiAgZHBseXI6Om11dGF0ZShkZiA9IGlmZWxzZShyb3dfbnVtYmVyKCk9PTEsIGhhbmRlZG5lc3NfdGVzdCRwYXJhbWV0ZXIsIE5BKSwNCiAgICAgICAgICAgICAgICB0X29yX2NoaV9zcV92YWx1ZSA9IGlmZWxzZShyb3dfbnVtYmVyKCk9PTEsIGhhbmRlZG5lc3NfdGVzdCRzdGF0aXN0aWMsIE5BKSwNCiAgICAgICAgICAgICAgICBwX3ZhbHVlID0gaWZlbHNlKHJvd19udW1iZXIoKT09MSwgaGFuZGVkbmVzc190ZXN0JHAudmFsdWUsIE5BKSkgJT4lDQogICMgQWRkIGZpcnN0IGNvbHVtbg0KICBkcGx5cjo6bXV0YXRlKFZhcmlhYmxlID0gYygiSMOkbmRpZ2tlaXQiLCAiIiwgIiIpKSAlPiUNCiAgIyBTZWxlY3QgYW5kIHJlb3JkZXIgY29sdW1ucw0KICBkcGx5cjo6c2VsZWN0KFZhcmlhYmxlLCBldmVyeXRoaW5nKCkpICU+JQ0KICAjIFJlbmFtZSBvbmUgY29sdW1uIHRvIG1ha2UgcmJpbmQgd2lyaCBjb2x1bW5zIGFib3ZlIHBvc3NpYmxlDQogIGRwbHlyOjpyZW5hbWUoTV9TRF9vcl9uID0gSMOkbmRpZ2tlaXQpDQoNCg0KDQojIERpc3BsYXkgdGFibGUNCm15X3RhYmxlX3RlbXBsYXRlKHJiaW5kKGRlbW9ncmFwaGljc19wZXJfZ3JvdXBbYygxLDIpLF0sIGdlbmRlciwgZWR1Y2F0aW9uLCBoYW5kZWRuZXNzLCBkZW1vZ3JhcGhpY3NfcGVyX2dyb3VwW2MoMzpucm93KGRlbW9ncmFwaGljc19wZXJfZ3JvdXApKSxdKSwgY2FwdGlvbiA9ICJEZW1vZ3JhcGhpYyBhbmQgQ2xpbmljYWwgVmFyaWFibGVzIikNCg0KYGBgYA0KPGJyPjxicj4=</div>
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open')
+  });
+});
+</script>
+
+<!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeSourceEmbed("0_Demographics.Rmd");
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
+
+<script>
+$(document).ready(function ()  {
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3,h4",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = false;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,200 @@
+---
+title: "Demographics"
+output: 
+  html_document
+
+---
+
+<!-- Set general settings -->
+
+```{r setup, include = FALSE}
+
+# Set general settings for markdown file
+knitr::opts_chunk$set(
+  message = FALSE,
+  warning = FALSE,
+  comment = "",
+  results = "hold"
+)
+
+
+# Clear environment
+rm(list = ls())
+
+
+# Enable/disable caching of time-consuming code chunks
+knitr_cache_enabled = TRUE
+
+
+# Load packages
+library(dplyr)      # for data manipulation
+library(knitr)      # for integrating computing and reporting in markdown
+library(kableExtra) # for customizing appearance of tables
+library(foreign)    # for reading in SPSS file
+library(tidyr)      # for gather and spread function
+
+
+# Load functions
+source("./functions/my_table_template.R") # Function to create table template
+
+
+# Turn off scientific notation
+options(scipen = 999)
+```
+<br><br> 
+
+## Sample Overview
+***
+
+* N = 56 (N HC = 28, N OCD = 28)
+
+* OCD and HC matched for gender, age, education level, and handedness 
+
+* Native German speakers with normal or corrected-to-normal vision
+
+* Patients with OCD were recruited from the outpatient clinic at Humboldt-Universität zu Berlin. All patients were interviewed and diagnosed by trained psychologists using the Structured Clinical Interview for DSM-IV (SCID-I; Wittchen et al., 1997) and met the DSM-IV criteria for OCD as primary disorder. 
+
+* Exclusion criteria 
+  - general: neurological diseases, intake of benzodiazepines within one week before participation or neuroleptics within three months before participation, and general exclusion criteria for EEG and transcranial direct current stimulation (tDCS), such as metallic implants, electrical devices, facial skin problems (e.g. neurodermitis), or current pregnancy
+  - OCD: current or past diagnosis of any schizophrenic disorder, or substance abuse disorder 
+  - HC: any current or past mental disorder 
+
+```{r demographics}
+
+# Load data 
+participant_data <- read.spss("./data/Probandendaten.sav", to.data.frame = TRUE)
+questionnaires   <- read.spss("./data/psychoEQExport.sav", to.data.frame = TRUE, add.undeclared.levels = "no") # add.undeclared.levels required to prevent irrelevant warning message
+
+
+# Select relevant variables
+participant_data <- participant_data[,c("Code","Alter","Geschlecht","Schulabschluss","Händigkeit","Komorbidität_1","Komorbidität_2",
+                                        "Komorbidität_3","Medikamente_JaNein","SSRI","SNRI","Trizykl_Antidepressiva",
+                                        "Kombination_SSRI_Antidepressiva","YBOCS_gesamt","YBOCS_Gedanken","YBOCS_Handlungen","MADRS", "WST" )]
+questionnaires   <- questionnaires[,c("CODE", "BD2SUMT0", "OCISUMT0", "STSSUMT0", "STTSUMT0")] 
+
+
+# Merge dataframes and rename columns
+participant_data$Code <- gsub(" ", "", participant_data$Code , fixed = TRUE) # delete empty spaces from string to enable merging
+demographics <- left_join(participant_data, questionnaires, by = c("Code" = "CODE")) %>%
+  # Rename some columns
+  dplyr::rename(participant_id = Code,
+                BDI_Total      = BD2SUMT0, 
+                OCI_Total      = OCISUMT0, 
+                STAI_State    = STSSUMT0, 
+                STAI_Trait     = STTSUMT0) %>%
+  # Add group variable
+  dplyr::mutate(group = as.factor(ifelse(substr(participant_id,13,13) == "C", "HC", "OCD")))   
+
+
+# Exclude P_02 (due to retainer) and C_02 (as preregistered: patients are excluded with their match)
+demographics <- demographics[demographics$participant_id != "ModERN_tDCS_P02" & demographics$participant_id != "ModERN_tDCS_C02",]
+
+
+# C_12 repeated the WST at T2, because score at T1 was very low (22); score achieved at T2 was 25; we will use this score 
+demographics[demographics$participant_id == "ModERN_tDCS_C12",]$WST <- 25
+
+
+
+
+### Handle numeric variables
+
+# Calculate M and SD per group 
+demographics_per_group_M_SD <- demographics %>%
+  dplyr::group_by(group) %>%
+  # Calculate M and SD of the variables
+  dplyr::summarize(across(c(Alter,WST,YBOCS_gesamt,YBOCS_Gedanken,YBOCS_Handlungen,MADRS,
+                            BDI_Total,OCI_Total,STAI_State,STAI_Trait), list(mean,sd), na.rm = TRUE)) %>%
+  # Reshape table to have one column per group
+  gather(key = key, value = value, 2:ncol(.), factor_key = TRUE) %>% 
+  spread(key = names(.)[1], value = "value") %>%
+  # Add variable column
+  dplyr::mutate(Variable = c("Alter", "", "WST", "", "YBOCS_Total", "", "YBOCS_Gedanken", "", "YBOCS_Handlungen", "",  "MADRS", "", "BDI_Total", "", "OCI_Total", "", "STAI_State", "", "STAI_Trait", "")) %>%
+  # Add M/SD column
+  dplyr::mutate(M_SD_or_n = c("M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD")) %>%
+  # Reorder columns
+  dplyr::select(Variable, M_SD_or_n, HC, OCD)
+
+
+# Calculate t tests
+demographics_per_group_t_test <- demographics %>% 
+  select(Alter,WST,BDI_Total,OCI_Total,STAI_State,STAI_Trait, group) %>% 
+  gather(key = Variable, value = value, -group) %>% 
+  group_by(group, Variable) %>% 
+  dplyr::summarise(value = list(value)) %>% 
+  spread(group, value) %>% 
+  dplyr::group_by(Variable) %>% 
+  dplyr::mutate(df = t.test(unlist(HC), unlist(OCD))$parameter,
+         t_or_chi_sq_value = t.test(unlist(HC), unlist(OCD))$statistic, 
+         p_value = t.test(unlist(HC), unlist(OCD))$p.value) %>%
+  dplyr::select(-c(HC, OCD))
+
+
+
+# Merge M_SD and t test infos
+demographics_per_group <- left_join(demographics_per_group_M_SD, demographics_per_group_t_test, by = "Variable")
+
+
+
+
+### Handle cound variables
+
+# Calculate Chi-squared tests
+gender_test     <- chisq.test(demographics$Geschlecht, demographics$group)
+education_test  <- chisq.test(demographics$Schulabschluss, demographics$group)
+handedness_test <- chisq.test(demographics$"Händigkeit", demographics$group)
+
+
+# Extract counts for gender
+gender <- demographics %>% group_by(group) %>% count(Geschlecht) %>% 
+  # Reshape table to have one column per group
+  spread(key = names(.)[1], value = n) %>%
+  # Add chi square results
+  dplyr::mutate(df = ifelse(row_number()==1, gender_test$parameter, NA),
+                t_or_chi_sq_value = ifelse(row_number()==1, gender_test$statistic, NA),
+                p_value = ifelse(row_number()==1, gender_test$p.value, NA)) %>%
+  # Add first column
+  dplyr::mutate(Variable = c("Geschlecht", "")) %>%
+  # Select and reorder columns
+  dplyr::select(Variable, everything()) %>%
+  # Rename one column to make rbind wirh columns above possible
+  dplyr::rename(M_SD_or_n = Geschlecht)
+
+
+# Extract counts for education
+education <- demographics %>% group_by(group) %>% count(Schulabschluss, .drop = FALSE) %>% 
+  # Reshape table to have one column per group
+  spread(key = names(.)[1], value = n) %>%
+  # Add chi square results
+  dplyr::mutate(df = ifelse(row_number()==1, education_test$parameter, NA),
+                t_or_chi_sq_value = ifelse(row_number()==1, education_test$statistic, NA),
+                p_value = ifelse(row_number()==1, education_test$p.value, NA)) %>%
+  # Add first column
+  dplyr::mutate(Variable = c("Schulabschluss", "", "" , "", "" , "")) %>%
+  # Select and reorder columns
+  dplyr::select(Variable, everything()) %>%
+  # Rename one column to make rbind wirh columns above possible
+  dplyr::rename(M_SD_or_n = Schulabschluss)
+
+
+# Extract counts for handedness
+handedness <- demographics %>% group_by(group) %>% count(Händigkeit, .drop = FALSE) %>% 
+  # Reshape table to have one column per group
+  spread(key = names(.)[1], value = n) %>%
+  # Add chi square results
+  dplyr::mutate(df = ifelse(row_number()==1, handedness_test$parameter, NA),
+                t_or_chi_sq_value = ifelse(row_number()==1, handedness_test$statistic, NA),
+                p_value = ifelse(row_number()==1, handedness_test$p.value, NA)) %>%
+  # Add first column
+  dplyr::mutate(Variable = c("Händigkeit", "", "")) %>%
+  # Select and reorder columns
+  dplyr::select(Variable, everything()) %>%
+  # Rename one column to make rbind wirh columns above possible
+  dplyr::rename(M_SD_or_n = Händigkeit)
+
+
+
+# Display table
+my_table_template(rbind(demographics_per_group[c(1,2),], gender, education, handedness, demographics_per_group[c(3:nrow(demographics_per_group)),]), caption = "Demographic and Clinical Variables")
+
+````
+<br><br>
