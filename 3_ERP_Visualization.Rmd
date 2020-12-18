@@ -191,7 +191,7 @@ plot_per_participant_OCD
 
 ### ERPs as a function of group and stimulation {.active}
 
-```{r plot-group-by-stimulation, fig.height = 10, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP trajectories (mean amplitude at FCz from 0 to 100 ms) as a function of (A) stimulation by group and (B) group by stimulation. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008)."}
+```{r plot-group-by-stimulation, fig.height = 10, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP trajectories (mean amplitude at FCz from 0 to 100 ms) as a function of (A) stimulation by group and (B) group by stimulation. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008).", cache = knitr_cache_enabled}
 
 # Calculate running within-subject CIs
 running_CIs_group_stim <- resp_locked_data %>%
@@ -262,15 +262,16 @@ figure_ERP_trajectories
 ```
 <br><br>
 
-## ERP Topographies
+## ERP Topographies {.tabset}
 ***
 
-```{r topographies, fig.height = 10, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP topograhpies (from 0 to 100 ms) separately for both groups and response conditions."}
+### Per group and response type
 
+```{r topographies, fig.height = 7, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP topograhpies (from 0 to 100 ms) separately for both groups and response conditions.", cache = knitr_cache_enabled}
 # Convert to long format for electrodes
 data_topo <- resp_locked_data %>%
   # Remove channels of no interest
-  dplyr::select(-IO1, -M1) %>%
+  dplyr::select(-IO1, -M1, -F9, -F10) %>%
   # Change from wide to long format for electrodes
   tidyr::gather(., electrode, amplitude, Fp1:O2, factor_key = TRUE)  %>%
   # Select time windows
@@ -280,10 +281,7 @@ data_topo <- resp_locked_data %>%
 
 
 # Calculate difference score incorrect-correct
-data_topo_correct  <- data_topo[data_topo$condition == "correct" ,]
-data_topo_incorrect <- data_topo[data_topo$condition == "incorrect",]
-
-data_topo_diff <- left_join(data_topo_correct, data_topo_incorrect, by = c("participant_id", "time", "group","session","stimulation","electrode")) %>%
+data_topo_diff <- left_join(data_topo[data_topo$condition == "correct",], data_topo[data_topo$condition == "incorrect",], by = c("participant_id", "time", "group","session","stimulation","electrode")) %>%
   # Calculate incorrect - correct
   dplyr::mutate(amplitude = amplitude.y - amplitude.x) %>%
   # Remove unncessary columns
@@ -294,55 +292,117 @@ data_topo_diff <- left_join(data_topo_correct, data_topo_incorrect, by = c("part
   electrode_locations(., electrode = "electrode", drop = FALSE, montage = NULL)
 
 
+# Calculate difference score sham-verum
+data_topo_diff_stimulation <- left_join(data_topo[data_topo$stimulation == "verum",], data_topo[data_topo$stimulation == "sham",], by = c("participant_id", "time", "group","condition","electrode")) %>%
+  # Calculate sham - verum
+  dplyr::mutate(amplitude = amplitude.y - amplitude.x) %>%
+  # Remove unncessary columns
+  dplyr::select(-c(stimulation.x, stimulation.y, amplitude.x, amplitude.y)) %>%
+  # Select time windows
+  dplyr::filter(time >= 0 & time <= 100) %>%
+  # Add electrode information
+  electrode_locations(., electrode = "electrode", drop = FALSE, montage = NULL)
+
+
 # Draw topographies
 plot_topo <- ggplot(data_topo, aes(x = x, y = y, fill = amplitude, label = electrode)) + 
-    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.9, groups = "group") + 
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.9) + 
     scale_fill_distiller(palette = "RdBu", limits = c(-5, 12)) + 
     theme_void() + 
     coord_equal() + 
-    labs(fill = expression(paste(" ", mu, "V"))) + 
+    labs(fill = expression(paste(mu, "V"))) + 
     theme(strip.text = element_text(size = 12, hjust = .5, face = "bold"),legend.position = "bottom") + 
     facet_grid(cols = vars(condition), rows = vars(group), switch = "y") +
-    theme(strip.text.x = element_text(margin = margin(0, 0, 0, 0))) + # to achive same text size with label for diff plot 
-    theme(strip.text.y.left = element_text(angle = 0)) # and to show group labels horizontally
+    theme(strip.text.y.left = element_text(angle = 0)) # to show group labels horizontally
 
 
 plot_topo_diff <- ggplot(data_topo_diff, aes(x = x, y = y, fill = amplitude, label = electrode)) + 
-    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.9, groups = "group") + 
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.9) + 
     scale_fill_distiller(palette = "RdBu", limits = c(-12, 0)) + 
     theme_void() + 
     coord_equal() + 
     ggtitle("incorrect-correct") +
-    labs(fill = expression(paste(" ", mu, "V"))) + 
-    theme(plot.title = element_text(size = 12, vjust = 3, hjust = .5, face = "bold"),legend.position = "bottom") + 
+    labs(fill = expression(paste(mu, "V"))) + 
+    theme(plot.title = element_text(size = 12, hjust = .5, face = "bold"),legend.position = "bottom") + 
     facet_grid(rows = vars(group)) +
     theme(strip.text.y = element_blank())  # remove facet labels
 
     
-
-# Place labels separately in order to center them correctly
+# Store legends separately in order to center them correctly
 legend_topo      <- get_legend(plot_topo)
 legend_topo_diff <- get_legend(plot_topo_diff)
 
 
-# Remove previous legends from plots ( and some of the titles)
+# Remove previous legends from plots 
 plot_topo       <- plot_topo      + theme(legend.position = "none")
 plot_topo_diff  <- plot_topo_diff + theme(legend.position = "none")
 
 
 # Arrange plots
 figure_ERP_topographies <- ggdraw() +
-  draw_plot(plot_topo,        x =  0,  y =  0, width = .66, height = .95) +
-  draw_plot(plot_topo_diff,   x = .66, y =  0, width = .33, height = .9)  +
-  draw_plot(legend_topo,      x = .23, y =  0,  width = .2,  height = .05) + 
-  draw_plot(legend_topo_diff, x = .7,  y =  0,  width = .2,  height = .05)
+  draw_plot(plot_topo,        x =  0,  y =  .1, width = .66,  height = .90)+
+  draw_plot(plot_topo_diff,   x = .66, y =  .1, width = .306, height = .90)+
+  draw_plot(legend_topo,      x = .23, y =  0, width = .2,    height = .1) + 
+  draw_plot(legend_topo_diff, x = .7,  y =  0, width = .2,    height = .1)
 
 
 # Save plot
-ggsave("./figures/figure_ERP_topographies.tiff", width = 20, height = 14, units = "cm", dpi=600, compression = "lzw")
+ggsave("./figures/figure_ERP_topographies.tiff", width = 16, height = 10, units = "cm", dpi=600, compression = "lzw")
 
 
 # Display plot
 figure_ERP_topographies
+```
+<br><br>
+
+### Per group, response type, and stimulation
+
+```{r topographies-stimulation, fig.height = 7, fig.width = 12, dpi=600, fig.cap = "Note. Response-locked ERP topograhpies (from 0 to 100 ms) separately for both groups, response conditions, and stimulation conditions.", cache = knitr_cache_enabled}
+
+# Draw topographies including stimulation
+plot_topo_stimulation <- plot_topo + 
+  facet_grid(cols = vars(condition, stimulation), rows = vars(group), switch = "y") +
+  scale_fill_distiller(palette = "RdBu", limits = c(-6, 12)) + 
+  theme(legend.position = "bottom") 
+
+
+plot_topo_diff_stimulation <- ggplot(data_topo_diff_stimulation, aes(x = x, y = y, fill = amplitude, label = electrode)) + 
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.9) + 
+    scale_fill_distiller(palette = "RdBu", limits = c(-2, 2)) + 
+    theme_void() + 
+    coord_equal() + 
+    ggtitle("sham-verum") +
+    labs(fill = expression(paste(mu, "V"))) + 
+    theme(plot.title = element_text(size = 12, vjust = 3, hjust = .5, face = "bold"),legend.position = "bottom") + 
+    facet_grid(cols = vars(condition), rows = vars(group)) +
+    theme(strip.text.y = element_blank())  # remove facet labels
+
+
+
+# Store legends separately in order to center them correctly
+legend_topo_stimulation      <- get_legend(plot_topo_stimulation)
+legend_topo_diff_stimulation <- get_legend(plot_topo_diff_stimulation)
+
+
+# Remove previous legends from plots 
+plot_topo_stimulation       <- plot_topo_stimulation      + theme(legend.position = "none")
+plot_topo_diff_stimulation  <- plot_topo_diff_stimulation + theme(legend.position = "none")
+
+
+# Arrange plots
+figure_ERP_topographies_stimulation <- ggdraw() +
+  draw_plot(plot_topo_stimulation,        x =  0,  y =  0,   width = .66,  height = .95)+
+  draw_plot(plot_topo_diff_stimulation,   x = .67, y =  0,   width = .306, height = .95)+
+  draw_plot(legend_topo_stimulation,      x = .23, y =  .08, width = .2,   height = .1) + 
+  draw_plot(legend_topo_diff_stimulation, x = .7,  y =  .08, width = .2,   height = .1)
+
+
+
+# Save plot
+ggsave("./figures/figure_ERP_topographies_stimulation.tiff", width = 20, height = 14, units = "cm", dpi=600, compression = "lzw")
+
+
+# Display plot
+figure_ERP_topographies_stimulation
 ```
 
