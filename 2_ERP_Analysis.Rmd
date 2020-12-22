@@ -68,6 +68,7 @@ my_figure_theme <- theme_classic(base_size = 11) +
 
 my_figure_colors <- c("#8ea6b4", "#465369")
 ```
+<br><br> 
 
 ## Data Cleaning
 ***
@@ -93,7 +94,7 @@ single_trial_data_clean <- single_trial_data %>%
   ) # (54998 of 55680 trials left)
 
 
-# Add column for number of errors (needed as covariate later) - this variable contains total number of errors, not only those entering analysis (preferred according to JK)
+# Add column for (grand mean centered) number of errors (needed as covariate later) - this variable contains total number of errors, not only those entering analysis (preferred according to JK)
 single_trial_data_clean <- single_trial_data %>% 
   dplyr::group_by(participant_id, session) %>% 
   dplyr::summarize(number_errors = sum(response_type == "incorrect")) %>%
@@ -103,7 +104,7 @@ single_trial_data_clean <- single_trial_data %>%
 single_trial_data_clean$number_errors_standardized <- scale(single_trial_data_clean$number_errors, center = TRUE, scale = TRUE)
 
 
-# Add column for number of speeding (needed as covariate later) 
+# Add column for (grand mean centered) number of speeding (needed as covariate later) 
 single_trial_data_clean <- feedback_infos[feedback_infos$block != 6,] %>% 
   dplyr::group_by(participant_id, session, feedback) %>%
   dplyr::count(feedback, .drop = FALSE) %>%
@@ -125,12 +126,35 @@ single_trial_data_clean <- single_trial_data_clean %>%
                                               participant_id == "P_28" | participant_id == "P_30", "yes", "no")))
 
 
+# Add column for (within-subject mean centered) baseline EEG (needed as covariate later) 
+single_trial_data_clean <- single_trial_data_clean %>% 
+  dplyr::group_by(participant_id, session) %>%
+  dplyr::mutate(MFN_baseline_pre_200_0_FCz_standardized = scale(MFN_baseline_pre_200_0_FCz, center = TRUE, scale = TRUE))
+
+
 # Calculate aggregated data per subject for boxplots, ANOVAs, t tests, and outlier detection
 df_aggregated_per_subject_MFN <- single_trial_data_clean %>%
   dplyr::group_by(participant_id, group, response_type, stimulation, session) %>%
   dplyr::summarize(
     MFN = mean(MFN_0_100_FCz, na.rm = TRUE)
    ) 
+
+
+# Calculate aggregated data per subject for ANOVA on 
+# a) difference incorrect - correct mean amplitude (0 to 100 ms at FCz)
+# b) difference incorrect - correct mean area (-50 to 150 ms at FCz) as described by Reinhart & Woodman (2014)
+df_aggregated_per_subject_MFN_diff <- single_trial_data_clean %>%
+  dplyr::group_by(participant_id, group, stimulation, session) %>%
+  dplyr::summarize(
+    MFN_correct        = mean(MFN_0_100_FCz[response_type == "correct"], na.rm = TRUE),
+    MFN_incorrect      = mean(MFN_0_100_FCz[response_type == "incorrect"], na.rm = TRUE),
+    MFN_correct_area   = mean(MFN_area_pre_50_150_FCz[response_type == "correct"], na.rm = TRUE),
+    MFN_incorrect_area = mean(MFN_area_pre_50_150_FCz[response_type == "incorrect"], na.rm = TRUE)
+    )  %>%
+  dplyr::mutate(
+    MFN_incorrect_minus_correct      = MFN_incorrect      - MFN_correct,
+    MFN_incorrect_minus_correct_area = MFN_incorrect_area - MFN_correct_area
+  )
 
 
 # Make categorical variables factors
@@ -146,7 +170,7 @@ Trials were excluded from all analyses if RT was shorter than 100 ms or longer t
 
 ```{r excluded-trials}
 
-# Calculate percentage of excluded trials per participant
+# Calculate percentage of excluded trials per group
 excluded_trials_per_participant <- single_trial_data %>%
   dplyr::group_by(group, participant_id, session) %>%
   dplyr::summarize(
@@ -159,7 +183,7 @@ excluded_trials_per_participant <- single_trial_data %>%
   dplyr::summarize(across(-c(participant_id, session), list(mean,sd,min,max)))
 
 
-# Display percentage of excluded trials per participant
+# Display percentage of excluded trials per group
 my_table_template(excluded_trials_per_participant,
   caption = "Excluded Trials (M and SD in %) Mean per Group", 
   col_names = c("Group", "M", "SD", "min", "max", "M", "SD", "min", "max", "M", "SD", "min", "max"),
@@ -797,7 +821,40 @@ Notes for assumption check would be the same as written for the MFN model.
 
 #### Check covariates
 
+The purpose of including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models including the interactions are presented below.
+Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. Continuous predictors were gran mean centered (number of errors, number of feedback faster) or within-subject mean-centered (baseline EEG). From Frömer et al. (2020; "When effort matters..."): "For each ERP, we regressed out the baseline activity at the same electrode sites (Alday et al., 2019). This approach accounts for variability prior to the effect of interest that can otherwise induce spurious effects due to noise or spill-over from previous stages of the trial. Although noise in the baseline is assumed to average to zero (across time points, as well as trials) when using traditional ERP-averaging approaches, this assumption does not necessarily hold for single-trial analyses, where a non-stationary baseline or unevenly distributed noise can easily lead to systematic biases in the subsequent time-series. To address these potential spurious effects, we follow recommendations to include the baseline as a nuisance regressor (Alday et al., 2019). "
+
 ```{r LMM-ERN-CRN-covariates, cache = knitr_cache_enabled}
+
+# ERN check covariate baseline EEG
+LMM_ERN_baseline_EEG <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * MFN_baseline_pre_200_0_FCz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_ERN_baseline_EEG,
+  dv.labels = "ERN [μV], covariate baseline EEG", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# CRN check covariate baseline EEG
+LMM_CRN_baseline_EEG <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * MFN_baseline_pre_200_0_FCz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_CRN_baseline_EEG,
+  dv.labels = "CRN [μV], covariate baseline EEG", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
 
 # ERN check covariate session
 LMM_ERN_session <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * session  + 
@@ -981,18 +1038,15 @@ tab_model(LMM_CRN_unmedicated,
 <br><br>
 
 **Covariates**
-
-The purpose of including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models including the interactions are presented below.
-Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. 
 <br><br>
 
-* **ERN group difference**: Remains a trend when including the covariate session, number of feedback faster, or stimulus type in the model. Turns non-significant when including the variable number of errors or medication in the model. 
+* **ERN group difference**: Remains a trend when including the covariate session, number of feedback faster, or stimulus type in the model. Turns non-significant when including the variable baseline EEG, number of errors or medication in the model. 
 
-* **CRN group difference**: Remains a trend when including the covariate session, number of feedback faster, or stimulus type in the model. Turns non-significant when including the variable number of errors or medication in the model. 
+* **CRN group difference**: Remains a trend when including the covariate baseline EEG, session, number of feedback faster, or stimulus type in the model. Turns non-significant when including the variable number of errors or medication in the model.
 
-* **ERN stimulation effect**: Remains a trend when including the covariate session or medication in the model. Turns non-significant when including the variable number of errors, number of feedback faster, or stimulus type in the model. 
+* **ERN stimulation effect**: Remains a trend when including the covariate baseline EEG, session, or medication in the model. Turns non-significant when including the variable number of errors, number of feedback faster, or stimulus type in the model. 
 
-* **CRN stimulation effect**: Remains significant when including the covariate session, number of errors (almost sign.),  stimulus type, or medication in the model. Turns to a trend when including the variable number of feedback faster in the model (but only when allowing interactions with the covariate, not when only allowing its main effect). 
+* **CRN stimulation effect**: Remains significant when including the covariate baseline EEG, session, number of errors (almost sign.),  stimulus type, or medication in the model. Turns to a trend when including the variable number of feedback faster in the model (but only when allowing interactions with the covariate, not when only allowing its main effect). 
 <br><br>
 
 **Subgroup analyses**
@@ -1013,7 +1067,6 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# model is not singular and all random terms explain variance, however according to summary output it seems to fail to converge?
 
 
 tab_model(LMM_ERN_group,
@@ -1051,6 +1104,38 @@ Is same as in non-nested models (tab LMM separately for ERN / CRN)
 #### Check covariates
 
 ```{r LMM-ERN-CRN-per-group-covariates, cache = knitr_cache_enabled}
+
+
+# ERN check covariate baseline EEG
+LMM_ERN_group_baseline_EEG <- lmer(MFN_0_100_FCz ~ group/stimulation * MFN_baseline_pre_200_0_FCz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_ERN_group_baseline_EEG,
+  dv.labels = "ERN [μV], covariate baseline EEG", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# CRN check covariate baseline EEG
+LMM_CRN_group_baseline_EEG <- lmer(MFN_0_100_FCz ~ group/stimulation * MFN_baseline_pre_200_0_FCz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_CRN_group_baseline_EEG,
+  dv.labels = "CRN [μV], covariate baseline EEG", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
 
 # ERN check covariate session
 LMM_ERN_group_session <- lmer(MFN_0_100_FCz ~ group/stimulation * session  + 
@@ -1244,7 +1329,6 @@ For further infos, see notes in section non-nested ERN-CRN models.
 * **ERN stimulation effect in HC/OCD**: For HC and OCD remains non-significant in all models.
 
 * **CRN stimulation effect in HC/OCD**: For HC remains non-significant in all models. For OCD remains significant in all models. 
-
 <br><br>
 
 **Subgroup analyses**
@@ -1252,12 +1336,316 @@ For further infos, see notes in section non-nested ERN-CRN models.
 When including only unmedicated patients, there is no ERN group difference anymore, no CRN group trend anymore and no CRN stimulation effect in OCD anymore (possibly due to reduced power). 
 <br><br>
 
+### LMM for Pe {.tabset}
+
+#### Model
+
+```{r LMM-Pe, cache = knitr_cache_enabled}
+
+# Pe
+LMM_Pe <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(LMM_Pe) # Model does converge
+# isSingular(LMM_Pe) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_Pe)) # All terms explain variance (> 0.5%)
+
+
+tab_model(LMM_Pe,
+  dv.labels = "Pe [μV]", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
+There is no group difference but a significant stimulation effect on Pe, with a higher Pe for verum stimulation (this is in line with Reinhart & Woodman, 2014). There is no interaction group * stimulation. 
+<br><br>
+
+#### Assumption checks
+
+```{r LMM-Pe-assumptions, fig.width = 20, fig.height = 15, cache = knitr_cache_enabled}
+
+# Pe check model assumptions
+performance::check_model(LMM_Pe, panel = TRUE)
+
+# In addition to plots, print verbal output for some assumption tests to facilitate conclusion
+print("# Check for heteroscedasticity")
+performance::check_heteroscedasticity(LMM_Pe)
+
+print("# Check for influential observations (Cook's distance)")
+performance::check_outliers(LMM_Pe, effects = "random")
+
+print("# Check for normal distributed random effects")
+performance::check_normality(LMM_Pe, effects = "random")
+```
+
+Notes for assumption check would be the same as written for the MFN model.
+<br><br>
+
+#### Check covariates
+
+```{r LMM-Pe-covariates, cache = knitr_cache_enabled}
+
+# Pe check covariate baseline EEG
+LMM_Pe_baseline_EEG <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * MFN_baseline_pre_200_0_FCz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_baseline_EEG,
+  dv.labels = "Pe [μV], covariate baseline EEG", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# Pe check covariate session
+LMM_Pe_session <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * session  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_session,
+  dv.labels = "Pe [μV], covariate session", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# Pe check covariate number of errors (predictor was z standardized)
+LMM_Pe_number_errors <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * number_errors_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_number_errors,
+  dv.labels = "Pe [μV], covariate number of errors", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+ 
+# Pe check covariate number of feedback faster (predictor was z standardized)
+LMM_Pe_number_feedback_faster <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * number_feedback_faster_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_number_feedback_faster,
+  dv.labels = "Pe [μV], covariate number of feedback faster", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# Pe check covariate stimulus type
+LMM_Pe_stimulus_type <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * stimulus_type  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_stimulus_type,
+  dv.labels = "Pe [μV], covariate stimulus type", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# Pe check covariate medication
+LMM_Pe_medication <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * medication  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_medication,
+  dv.labels = "Pe [μV], covariate medication", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
+**Covariates**
+
+For further infos, see notes in section non-nested ERN-CRN models.
+<br><br>
+
+* **Pe group difference**: Remains non-significant in all models. 
+
+* **Pe stimulation effect**: Remains significant when including the covariate baseline EEG, session, number of errors, number of feedback faster. Turns non-significant when including the variable stimulus type or medication in the model.
+<br><br>
+
+
+### LMM for Pe (nested) {.tabset}
+
+#### Model
+
+```{r LMM-Pe-per-group, cache = knitr_cache_enabled}
+
+# Pe
+LMM_Pe_group <- lmer(Pe_200_400_Pz ~ group/stimulation + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(LMM_Pe_group) # Model does converge
+# isSingular(LMM_Pe_group) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_Pe_group)) # All terms explain variance (> 0.5%)
+
+
+tab_model(LMM_Pe_group,
+  dv.labels = "Pe [μV]", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
+For the Pe, there was a main effect of stimulation (see above). When testing this effect separately in the groups, a stimulation effect on Pe is evident for the OCD but not for the HC group. The higher order interaction group * stimulation was not significant.
+<br><br>
+
+
+#### Assumption checks 
+
+Is same as in non-nested model (tab LMM Pe)
+<br><br>
+
+#### Check covariates
+
+```{r LMM-Pe-per-group-covariates, cache = knitr_cache_enabled}
+
+# Pe check covariate baseline EEG
+LMM_Pe_group_baseline_EEG <- lmer(Pe_200_400_Pz ~ group/stimulation * MFN_baseline_pre_200_0_FCz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_group_baseline_EEG,
+  dv.labels = "Pe [μV], covariate baseline EEG", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# Pe check covariate session
+LMM_Pe_group_session <- lmer(Pe_200_400_Pz ~ group/stimulation * session  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_group_session,
+  dv.labels = "Pe [μV], covariate session", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# Pe check covariate number of errors (predictor was z standardized)
+LMM_Pe_group_number_errors <- lmer(Pe_200_400_Pz ~ group/stimulation * number_errors_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_group_number_errors,
+  dv.labels = "Pe [μV], covariate number of errors", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+ 
+# Pe check covariate number of feedback faster (predictor was z standardized)
+LMM_Pe_group_number_feedback_faster <- lmer(Pe_200_400_Pz ~ group/stimulation * number_feedback_faster_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_group_number_feedback_faster,
+  dv.labels = "Pe [μV], covariate number of feedback faster", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# Pe check covariate stimulus type
+LMM_Pe_group_stimulus_type <- lmer(Pe_200_400_Pz ~ group/stimulation * stimulus_type  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_group_stimulus_type,
+  dv.labels = "Pe [μV], covariate stimulus type", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# Pe check covariate medication
+LMM_Pe_group_medication <- lmer(Pe_200_400_Pz ~ group/stimulation * medication  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_group_medication,
+  dv.labels = "Pe [μV], covariate medication", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
+**Covariates**
+
+For further infos, see notes in section non-nested ERN-CRN models.
+<br><br>
+
+* **Pe group difference**: See notes in section non-nested model.
+
+* **Pe stimulation effect in HC/OCD**: For HC remains non-significant in all models. For OCD remains significant in all models, except for the model including the variable stimulus type. 
+<br><br>
+
 ## ANOVAs {.tabset}
 ***
 
 ### ANOVAs
 
-To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), MFN/ERN/CRN were additionally analyzed with repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), and (only for MRN) response type (correct, incorrect). No  Greenhouse–Geisser correction was applied, as no factor had more than two levels. As can be seen below, the ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all effects (trend for ERN and CRN group difference and stimulation effect on ERN, significant stimulation effect on CRN).
+To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), MFN/ERN/CRN/Diff incorrect - correct (as mean amplitude and mean area) were additionally analyzed with repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), and (only for MRN) response type (correct, incorrect). No  Greenhouse–Geisser correction was applied, as no factor had more than two levels. As can be seen below, the MFN, ERN, and CRN ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all effects (trend for ERN and CRN group difference and stimulation effect on ERN, significant stimulation effect on CRN). When using the ERN quantification as in Reinhart & Woodman (-50 to 150 as difference incorrect - correct mean area) or the difference incorrect - correct mean amplitude as dependent variable, there is no group or stimulation effect. 
 
 ```{r ANOVAs}
 
@@ -1299,16 +1687,40 @@ anova_CRN <- aov_ez(
 )
 
 
+# ANOVA difference incorrect - correct mean amplitude (0 to 100 ms at FCz)
+anova_incorrect_minus_correct <- aov_ez(
+  id     = "participant_id", 
+  dv     = "MFN_incorrect_minus_correct", 
+  data   = df_aggregated_per_subject_MFN_diff,
+  within = c("stimulation"),
+  between= c("group"),
+  observed = c("group")
+)
+
+
+# ANOVA difference incorrect - correct mean area (-50 to 150 ms at FCz) as in Reinahrt & Woodman (2014)
+anova_incorrect_minus_correct_area <- aov_ez(
+  id     = "participant_id", 
+  dv     = "MFN_incorrect_minus_correct_area", 
+  data   = df_aggregated_per_subject_MFN_diff,
+  within = c("stimulation"),
+  between= c("group"),
+  observed = c("group")
+)
+
+
 # Display ANOVA results
 my_table_template(nice(anova_MFN, MSE = FALSE), caption = "MFN")
 my_table_template(nice(anova_ERN, MSE = FALSE), caption = "ERN")
 my_table_template(nice(anova_CRN, MSE = FALSE), caption = "CRN")
+my_table_template(nice(anova_incorrect_minus_correct, MSE = FALSE), caption = "Difference incorrect - correct mean amplitude (0 to 100 ms at FCz)")
+my_table_template(nice(anova_incorrect_minus_correct_area, MSE = FALSE), caption = "Difference incorrect - correct mean area (-50 to 150 ms at FCz) as described by Reinhart & Woodman (2014)")
 ```
 <br><br>
 
 ### Pairwise comparisons
 
-As no significant main effect with > 2 levels or interaction effect was present, no post hoc pairwise comparisons would need to be conducted. However, the stimulation effect on ERN in the separate groups may be seen as pre-planned contrast that we want to test. For these effects, I calculated pairwise comparisons using the emmeans package with Holm–Bonferroni *p* value adjustments. There is still no stimulation effect on ERN in the two groups (but not too far away either). The effect on CRN is present in the OCD group. In the sham condition, the CRN is higher (more negative) in the OCD group; in the verum condition there is no significant group difference anymore.
+As no significant main effect with > 2 levels or interaction effect was present, no post hoc pairwise comparisons would need to be conducted. However, the stimulation effect on ERN in the separate groups may be seen as pre-planned contrast that we want to test. For these effects, I calculated pairwise comparisons using the emmeans package with Holm–Bonferroni *p* value adjustments. There is still no stimulation effect on ERN in the two groups (but not too far away either). The effect on CRN is present in the OCD group. In the sham condition, the CRN is higher (more negative) in the OCD group; in the verum condition there is no significant group difference anymore. Quantifying the ERN as the difference incorrect - correct mean area (-50 to 150 ms at FCz) as described by Reinhart & Woodman (2014), there is a trend for a stimulation effect in the HC group. 
 
 ```{r ANOVAs-pairwise-tests}
 
@@ -1320,6 +1732,8 @@ afex_options(emmeans_model = "multivariate")
 pairwise_ERN    <- summary(pairs(emmeans(anova_ERN, "stimulation", by = "group"), adjust = "holm"))
 pairwise_CRN_1  <- summary(pairs(emmeans(anova_CRN, "stimulation", by = "group"), adjust = "holm"))
 pairwise_CRN_2  <- summary(pairs(emmeans(anova_CRN, "group", by = "stimulation"), adjust = "holm"))
+pairwise_incorrect_minus_correct      <- summary(pairs(emmeans(anova_incorrect_minus_correct,      "stimulation", by = "group"), adjust = "holm"))
+pairwise_incorrect_minus_correct_area <- summary(pairs(emmeans(anova_incorrect_minus_correct_area, "stimulation", by = "group"), adjust = "holm"))
 
 
 
@@ -1327,6 +1741,8 @@ pairwise_CRN_2  <- summary(pairs(emmeans(anova_CRN, "group", by = "stimulation")
 pairwise_ERN$cohens_dz   <- round(t_to_d(pairwise_ERN$t.ratio,   pairwise_ERN$df,   paired = TRUE)[1], digits = 2)
 pairwise_CRN_1$cohens_dz <- round(t_to_d(pairwise_CRN_1$t.ratio, pairwise_CRN_1$df, paired = TRUE)[1], digits = 2)
 pairwise_CRN_2$cohens_dz <- round(t_to_d(pairwise_CRN_2$t.ratio, pairwise_CRN_2$df, paired = TRUE)[1], digits = 2)
+pairwise_incorrect_minus_correct$cohens_dz      <- round(t_to_d(pairwise_incorrect_minus_correct$t.ratio,      pairwise_incorrect_minus_correct$df,     paired = TRUE)[1], digits = 2)
+pairwise_incorrect_minus_correct_area$cohens_dz <- round(t_to_d(pairwise_incorrect_minus_correct_area$t.ratio, pairwise_incorrect_minus_correct_area$df, paired = TRUE)[1], digits = 2)
 
 # Display results 
 my_table_template(pairwise_ERN, 
@@ -1343,7 +1759,17 @@ my_table_template(pairwise_CRN_1,
 
 my_table_template(pairwise_CRN_2, 
                   digits = c(0, 0, 2, 2, 0, 2, 3, 2),
-                  caption = "CRN: Stimulation Effect Within Groups",
+                  caption = "CRN: Group Effect Within Stimulation",
+                  footnote = "P values are adjusted with Holm–Bonferroni method.") 
+
+my_table_template(pairwise_incorrect_minus_correct, 
+                  digits = c(0, 0, 2, 2, 0, 2, 3, 2),
+                  caption = "Difference Incorrect Minus Correct Mean Amplitude (0 to 100 ms at FCz): Stimulation Effect Within Groups",
+                  footnote = "P values are adjusted with Holm–Bonferroni method.") 
+
+my_table_template(pairwise_incorrect_minus_correct_area, 
+                  digits = c(0, 0, 2, 2, 0, 2, 3, 2),
+                  caption = "Difference Incorrect Minus Correct Mean Area (-50 to 150 ms at FCz): Stimulation Effect Within Groups",
                   footnote = "P values are adjusted with Holm–Bonferroni method.") 
 ```
 ### Simple t tests
