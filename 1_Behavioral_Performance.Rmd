@@ -64,6 +64,7 @@ my_figure_theme <- theme_classic(base_size = 11) +
 
 my_figure_colors <- c("#8ea6b4", "#465369")
 ```
+<br><br> 
 
 ## Data Cleaning
 ***
@@ -1051,7 +1052,7 @@ performance::check_normality(LMM_rt, effects = "random")
 #### Check covariates
 
 The purpose of including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models including the interactions are presented below.
-Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses.
+Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. Continuous predictors were gran mean centered (number of errors, number of feedback faster).
 
 ```{r LMM-RT-covariates, cache = knitr_cache_enabled}
 
