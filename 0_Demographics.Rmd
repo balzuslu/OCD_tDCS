@@ -55,9 +55,8 @@ options(scipen = 999)
 * Patients with OCD were recruited from the outpatient clinic at Humboldt-Universität zu Berlin. All patients were interviewed and diagnosed by trained psychologists using the Structured Clinical Interview for DSM-IV (SCID-I; Wittchen et al., 1997) and met the DSM-IV criteria for OCD as primary disorder. 
 
 * Exclusion criteria 
-  - general: neurological diseases, intake of benzodiazepines within one week before participation or neuroleptics within three months before participation, and general exclusion criteria for EEG and transcranial direct current stimulation (tDCS), such as metallic implants, electrical devices, facial skin problems (e.g. neurodermitis), or current pregnancy
-  - OCD: current or past diagnosis of any schizophrenic disorder, or substance abuse disorder 
-  - HC: any current or past mental disorder 
+  - general: history of any neurological disorder, current or lifetime diagnosis of a substance-related disorder, schizophrenia spectrum disorder, bipolar disorder, use of benzodiazepines during the last week or of neuroleptic medication during last three months, and general exclusion criteria for tDCS (e.g., any metal or electronic implants in the head or upper body, skin disorder or skin condition at or near stimulation locations, pregnancy)
+  - HC: self-reported history of any current or past axis I disorder or psychotherapeutic treatment
 
 ```{r demographics}
 
@@ -112,7 +111,8 @@ demographics_per_group_M_SD <- demographics %>%
   # Add M/SD column
   dplyr::mutate(M_SD_or_n = c("M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD")) %>%
   # Reorder columns
-  dplyr::select(Variable, M_SD_or_n, HC, OCD)
+  dplyr::select(Variable, M_SD_or_n, HC, OCD) %>%
+  dplyr::ungroup()
 
 
 # Calculate t tests
@@ -121,13 +121,14 @@ demographics_per_group_t_test <- demographics %>%
   gather(key = Variable, value = value, -group) %>% 
   group_by(group, Variable) %>% 
   dplyr::summarise(value = list(value)) %>% 
-  spread(group, value) %>% 
+  spread(group, value) %>%
+  dplyr::ungroup() %>%
   dplyr::group_by(Variable) %>% 
   dplyr::mutate(df = t.test(unlist(HC), unlist(OCD))$parameter,
          t_or_chi_sq_value = t.test(unlist(HC), unlist(OCD))$statistic, 
          p_value = t.test(unlist(HC), unlist(OCD))$p.value) %>%
-  dplyr::select(-c(HC, OCD))
-
+  dplyr::select(-c(HC, OCD))  %>%
+  dplyr::ungroup()
 
 
 # Merge M_SD and t test infos
@@ -157,7 +158,8 @@ gender <- demographics %>% group_by(group) %>% count(Geschlecht) %>%
   # Select and reorder columns
   dplyr::select(Variable, everything()) %>%
   # Rename one column to make rbind wirh columns above possible
-  dplyr::rename(M_SD_or_n = Geschlecht)
+  dplyr::rename(M_SD_or_n = Geschlecht)  %>%
+  dplyr::ungroup()
 
 
 # Extract counts for education
@@ -173,7 +175,8 @@ education <- demographics %>% group_by(group) %>% count(Schulabschluss, .drop = 
   # Select and reorder columns
   dplyr::select(Variable, everything()) %>%
   # Rename one column to make rbind wirh columns above possible
-  dplyr::rename(M_SD_or_n = Schulabschluss)
+  dplyr::rename(M_SD_or_n = Schulabschluss)  %>%
+  dplyr::ungroup()
 
 
 # Extract counts for handedness
@@ -189,7 +192,8 @@ handedness <- demographics %>% group_by(group) %>% count(Händigkeit, .drop = FA
   # Select and reorder columns
   dplyr::select(Variable, everything()) %>%
   # Rename one column to make rbind wirh columns above possible
-  dplyr::rename(M_SD_or_n = Händigkeit)
+  dplyr::rename(M_SD_or_n = Händigkeit)  %>%
+  dplyr::ungroup()
 
 
 
