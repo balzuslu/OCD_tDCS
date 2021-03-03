@@ -33,7 +33,7 @@ The corresponding HTML files display the output from running the R Markdown file
 
 ## Usage
 
-To reproduce statistical analyses, download the source files, open the file Action_Evaluation.Rproj and run `renv::restore()` to automatically install all required packages into the project library.
+To reproduce statistical analyses, download the source files, open the file OCD_tDCS.Rproj and run `renv::restore()` to automatically install all required packages into the project library.
 
 
 
