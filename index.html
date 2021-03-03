@@ -454,13 +454,195 @@ div.tocify {
 <pre class="r"><code># Load markdown file that contains the task and data description
 filename         &lt;- &quot;Task_and_Data_Description.md&quot;
 data_description &lt;- readChar(filename, file.info(filename)$size, )</code></pre>
-<p><br><br></p>
+<!--
+Task and Data Description
+-->
+<div id="procedure-project-overview" class="section level2">
+<h2>Procedure (Project Overview)</h2>
+<p> </p>
+<ul>
+<li>The study was a randomized double-blind controlled placebo (sham tDCS) crossover trial. <strong>Patients with obsessive-compulsive disorder (OCD) and matched healthy control participants were invited for two sessions</strong> (crossover design), differing only with respect to the stimulation condition (sham vs. cathodal stimulation; order of stimulation conditions was counterbalanced).</li>
+</ul>
+<p> </p>
+<ul>
+<li>Following administration of <strong>self-report questionnaires / clinical inventories</strong>, participants received <strong>cathodal tDCS or sham tDCS</strong>.
+<ul>
+<li>All participants completed the following questionnaires: OCI-R, BDI-II, Harm Avoidance scale of the TCI , STAI, PSWQ, FMPS, PANAS, Neuroticism and Conscientiousness scale of the NEO-FFI, BIS/BAS</li>
+<li>Severity of OCD symptoms and of depressive symptoms were assessed in all patients using Y-BOCS and MADRS.</li>
+</ul></li>
+</ul>
+<p> </p>
+<ul>
+<li>Following stimulation, participants performed an arrow version of the <strong>flanker interference task</strong> (see below) and a speeded <strong>go/no-go task</strong> with an embedded word categorization task (see GNG analysis folder).
+<ul>
+<li>During the tasks, <strong>behavioral performance, EEG, and activity of the autonomic nervous system</strong> (heart rate and skin conductance) were assessed.</li>
+</ul></li>
+</ul>
+<p> </p>
+</div>
+<div id="flanker-task" class="section level2">
+<h2>Flanker Task</h2>
+<p> </p>
+<ul>
+<li>Participants performed an arrow version of the flanker interference task.
+<ul>
+<li>They were instructed to respond as quickly and accurately as possible to the direction of a centrally located horizontal target arrow, which was flanked by four horizontal distractor arrows. In half of the trials, the target was flanked by arrows pointing in the same direction (congruent trials), in the other half by arrows pointing in the opposite direction (incongruent trials).</li>
+<li>During the task, behavioral performance and the electroencephalogram (EEG) were assessed.</li>
+</ul></li>
+</ul>
+<p> </p>
+</div>
+<div id="hypotheses" class="section level2">
+<h2>Hypotheses</h2>
+<p> </p>
+<ul>
+<li><p>Patients with <strong>OCD exhibit an enhanced error-related negativity (ERN)</strong> compared to healthy control participants.  </p></li>
+<li><p>Compared to sham stimulation, cathodal tDCS over the medial-frontal cortex <strong>attenuates the ERN amplitude, increases the error rate and the error positivity (Pe) amplitude, and reduces post-error slowing and the number of correct second responses</strong> (= replication Reinhart &amp; Woodman, 2014).  </p></li>
+<li><p>The stimulation effect, in particular the <strong>attenuation of the ERN amplitude, is more pronounced in patients with OCD</strong> compared to the control group (see Klawohn, Endrass, Preuss, Riesel, &amp; Kathmann, 2016).  </p></li>
+<li><p>Inhibitory <strong>effects of the cathodal stimulation can only be found for unmedicated patients</strong> (= pre-planned subgroup analysis, since SSRIs may change inhibitory effects of cathodal stimulation to an excitatory effect, see Nitsche et al., 2009).</p></li>
+</ul>
+<p> </p>
+</div>
+<div id="exploratory-hypotheses" class="section level2">
+<h2>Exploratory Hypotheses</h2>
+<p> </p>
+<ul>
+<li>We may aim to explore whether the ERN amplitude is positively related to the skin conductance response (SCR) and to post-error slowing on a single-trial level.</li>
+<li>We may additionally investigate whether cathodal stimulation attenuates the SCR related to errors.</li>
+<li>We may explore group differences in the SCR in response to errors and in the correct-related negativity (CRN) as well as the effect of tDCS on these measures and on group differences.</li>
+</ul>
+<p> </p>
+</div>
+<div id="design" class="section level2">
+<h2>Design</h2>
+<p> </p>
+<ul>
+<li>2 x 2 x 2 design: stimulation condition (verum, sham) and response type (correct, incorrect) as within-participant factors, group (HC, OCD) as between-participant factor.</li>
+</ul>
+<p> </p>
+</div>
+<div id="data-description" class="section level2">
+<h2>Data Description</h2>
+<p> </p>
+<ul>
+<li>Data set: ‘Single_Trial_Data.rda’</li>
+<li>53760 observations (56 participants, 2 sessions per participant, 480 trials per session), 17 variables</li>
+</ul>
+<p> </p>
+<table>
+<colgroup>
+<col width="10%" />
+<col width="49%" />
+<col width="39%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>VARIABLE</th>
+<th>DESCRIPTION</th>
+<th>VALUES</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>participant_id</td>
+<td>Participant identifier</td>
+<td>C_01 to C_30 and P_01 to P_30</td>
+</tr>
+<tr class="even">
+<td>group</td>
+<td>Participant group</td>
+<td>HC = healthy control group <br> OCD = OCD group</td>
+</tr>
+<tr class="odd">
+<td>session</td>
+<td>Experimental session</td>
+<td>T1 = first experimental session <br> T2 = second experimental session</td>
+</tr>
+<tr class="even">
+<td>stimulation</td>
+<td>Stimulation condition</td>
+<td>verum = cathodal tDCS <br> sham = placebo tDCS</td>
+</tr>
+<tr class="odd">
+<td>trial</td>
+<td>Trial number within the task</td>
+<td>1 to 480 per participant and session</td>
+</tr>
+<tr class="even">
+<td>stimulus_type</td>
+<td>Stimulus type in the flanker task</td>
+<td>congruent = congurent stimulus <br> incongruent = incongruent stimulus</td>
+</tr>
+<tr class="odd">
+<td>response_type</td>
+<td>Response type in the flanker task</td>
+<td>correct = correct response <br> incorrect = incorrect response <br> miss = missing response</td>
+</tr>
+<tr class="even">
+<td>rt</td>
+<td>RT in the flanker task</td>
+<td>RT in milliseconds <br> NAs for trials in which no response was made (miss)</td>
+</tr>
+<tr class="odd">
+<td>rt_log</td>
+<td>Log-transformed RT in the flanker task</td>
+<td>log(RT) in milliseconds <br> NAs for trials in which no response was made (miss)</td>
+</tr>
+<tr class="even">
+<td>rt_invalid</td>
+<td>Indication whether RT in the flanker task was &lt; 100 ms or &gt; 800 ms</td>
+<td>TRUE <br> FALSE <br> NAs for trials in which no response was made (miss)</td>
+</tr>
+<tr class="odd">
+<td>response_type_2nd</td>
+<td>Response type of second response in the flanker task</td>
+<td>correct = correct response <br> incorrect = incorrect response <br> NAs for trials in which no second response was made</td>
+</tr>
+<tr class="even">
+<td>rt_2nd</td>
+<td>RT of second response in the flanker task</td>
+<td>RT in milliseconds <br> NAs for trials in which no second response was made</td>
+</tr>
+<tr class="odd">
+<td>MFN_0_100_FCz</td>
+<td>Response-locked ERP from 0 to 100 ms at electrode FCz</td>
+<td>Mean amplitude in microvolt <br> NAs for trials with EEG artifact</td>
+</tr>
+<tr class="even">
+<td>MFN_baseline_pre_200_0_FCz</td>
+<td>Response-locked baseline activity from -200 to 0 ms at electrode FCz</td>
+<td>Mean amplitude in microvolt <br> NAs for trials with EEG artifact</td>
+</tr>
+<tr class="odd">
+<td>MFN_area_pre_50_150_FCz</td>
+<td>Response-locked ERP from -50 to 150 ms at electrode FCz</td>
+<td>Area amplitude in microvolt <br> NAs for trials with EEG artifact</td>
+</tr>
+<tr class="even">
+<td>Pe_200_400_Pz</td>
+<td>Response-locked ERP from 200 to 400 ms at electrode Pz</td>
+<td>Mean amplitude in microvolt <br> NAs for trials with EEG artifact</td>
+</tr>
+<tr class="odd">
+<td>Pe_baseline_pre_200_0_Pz</td>
+<td>Response-locked baseline activity from -200 to 0 ms at electrode Pz</td>
+<td>Mean amplitude in microvolt <br> NAs for trials with EEG artifact</td>
+</tr>
+</tbody>
+</table>
+<p> </p>
+</div>
+<div id="references" class="section level2">
+<h2>References</h2>
+<p> </p>
+<p>Klawohn, J., Endrass, T., Preuss, J., Riesel, A., &amp; Kathmann, N. (2016). Modulation of hyperactive error signals in obsessiveâ€“compulsive disorder by dual-task demands. <em>Journal of Abnormal Psychology, 125</em>(2), 292-298. <a href="doi:10.1037/abn0000134" class="uri">doi:10.1037/abn0000134</a> Nitsche, M. A., Kuo, M.-F., Karrasch, R., WÃ¤chter, B., Liebetanz, D., &amp; Paulus, W. (2009). Serotonin affects transcranial direct currentâ€“induced neuroplasticity in Humans. <em>Biological Psychiatry, 66</em>(5), 503-508. <a href="doi:10.1016/j.biopsych.2009.03.022" class="uri">doi:10.1016/j.biopsych.2009.03.022</a> Reinhart, R. M., &amp; Woodman, G. F. (2014). Causal control of medialâ€“frontal cortex governs electrophysiological and behavioral indices of performance monitoring and learning. <em>Journal of Neuroscience, 34</em>(12), 4214-4227. <a href="doi:10.1523/JNEUROSCI.5421-13.2014" class="uri">doi:10.1523/JNEUROSCI.5421-13.2014</a> <br><br></p>
+</div>
 <div id="session-info" class="section level2">
 <h2>Session Info</h2>
 <pre class="r"><code>sessionInfo()</code></pre>
 <pre><code>## R version 3.6.1 (2019-07-05)
 ## Platform: x86_64-w64-mingw32/x64 (64-bit)
-## Running under: Windows 10 x64 (build 18363)
+## Running under: Windows 10 x64 (build 19042)
 ## 
 ## Matrix products: default
 ## 
