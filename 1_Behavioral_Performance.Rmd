@@ -93,16 +93,10 @@ single_trial_data <- single_trial_data %>%
                  ifelse(lag(response_type == "correct") == TRUE & response_type == "incorrect", 0, NA))
     ) 
 
-# For each first trial in a block, accuracy_prev_trial cannot be determined; set these values to NA
+# For each first trial in a block, accuracy_prev_trial, pea, and pca cannot be determined; set these values to NA
 single_trial_data[single_trial_data$trial == 1   | single_trial_data$trial == 81 |
                   single_trial_data$trial == 161 | single_trial_data$trial == 241| 
-                  single_trial_data$trial == 321 | single_trial_data$trial == 401, "accuracy_prev_trial"] <- NA
-
-
-# For each last trial in a block, pea and pca cannot be determined; set these values to NA
-single_trial_data[single_trial_data$trial == 80  | single_trial_data$trial == 160|
-                  single_trial_data$trial == 240 | single_trial_data$trial == 320| 
-                  single_trial_data$trial == 400 | single_trial_data$trial == 480, c("pea", "pca")] <- NA
+                  single_trial_data$trial == 321 | single_trial_data$trial == 401, c("accuracy_prev_trial", "pea", "pca")] <- NA
 
 
 # Exclude missing responses, RT outliers and trials with ERP artifacts
@@ -110,8 +104,8 @@ single_trial_data_clean <- single_trial_data %>%
   dplyr::filter(
       response_type != "miss" &
       rt_invalid  == FALSE &
-      !is.nan(MFN_0_100_FCz)
-  ) # (54998 of 55680 trials left)
+      !is.na(MFN_0_100_FCz)
+  ) # (53093 of 53760 trials left)
 
 
 # Create specific condition column (to exclude congruent errors if necessary)
@@ -136,7 +130,8 @@ for (i in 3:(nrow(single_trial_data_clean)-1)) {
 
 
 # For each last first and trial in a block, PES cannot be determined; set these values to NA
-single_trial_data_clean[single_trial_data_clean$trial == 80  | single_trial_data_clean$trial ==81  |
+single_trial_data_clean[single_trial_data_clean$trial == 1   |
+                        single_trial_data_clean$trial == 80  | single_trial_data_clean$trial == 81 |
                         single_trial_data_clean$trial == 160 | single_trial_data_clean$trial == 161| 
                         single_trial_data_clean$trial == 240 | single_trial_data_clean$trial == 241|
                         single_trial_data_clean$trial == 320 | single_trial_data_clean$trial == 321|
@@ -149,7 +144,7 @@ single_trial_data_clean <- single_trial_data %>%
   dplyr::group_by(participant_id, session) %>% 
   dplyr::summarize(number_errors = sum(response_type == "incorrect")) %>%
   dplyr::ungroup(.) %>%
-  dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session"))
+  dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session")) 
 # Standardize this variable
 single_trial_data_clean$number_errors_standardized <- scale(single_trial_data_clean$number_errors, center = TRUE, scale = TRUE)
 
@@ -162,7 +157,7 @@ single_trial_data_clean <- feedback_infos[feedback_infos$block != 6,] %>%
   dplyr::rename(number_feedback_faster = n) %>%
   dplyr::ungroup(.) %>%  
   dplyr::select(-feedback) %>%
-  dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session"))
+  dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session")) 
 # Standardize this variable
 single_trial_data_clean$number_feedback_faster_standardized <- scale(single_trial_data_clean$number_feedback_faster, center = TRUE, scale = TRUE)
 
@@ -183,13 +178,15 @@ df_aggregated_per_subject_rt <- single_trial_data_clean %>%
   dplyr::group_by(participant_id, group, response_type, stimulus_type, stimulation, session) %>%
   dplyr::summarize(
     rt = mean(rt, na.rm = TRUE)
-    ) 
+    )  %>%
+  dplyr::ungroup()
 
 df_aggregated_per_subject_accuracy <- single_trial_data_clean %>%
   dplyr::group_by(participant_id, group, stimulus_type, stimulation, session) %>%
   dplyr::summarize(
     accuracy_numeric = mean(accuracy_numeric, na.rm = TRUE)*100
-    ) 
+    )  %>%
+  dplyr::ungroup()
 
 df_aggregated_per_subject_pes_pea_pca <- single_trial_data_clean %>%
   dplyr::group_by(participant_id, group, stimulation, session) %>%
@@ -197,7 +194,8 @@ df_aggregated_per_subject_pes_pea_pca <- single_trial_data_clean %>%
     pes = mean(pes, na.rm = TRUE),
     pea = mean(pea, na.rm = TRUE)*100,
     pca = mean(pca, na.rm = TRUE)*100
-  ) 
+  )  %>%
+  dplyr::ungroup()
 ```
 
 Trials were excluded from all analyses if RT was shorter than 100 ms or longer than 800 ms or if the response in a trial was missing. We further discarded trials containing artifacts in the EEG, i.e., a voltage difference exceeding 50 μV between two consecutive sampling points or 200 μV within an epoch. Please see section "ERP Analysis" for percentage of excluded trials. 
@@ -210,7 +208,8 @@ performance_outliers <- df_aggregated_per_subject_accuracy %>%
   dplyr::mutate(outlier_2_sd = case_when(abs(accuracy_numeric - mean(accuracy_numeric, na.rm = TRUE)) <=  2 * sd(accuracy_numeric, na.rm = TRUE)~ FALSE, TRUE ~ TRUE),
                 outlier_3_sd = case_when(abs(accuracy_numeric - mean(accuracy_numeric, na.rm = TRUE)) <=  3 * sd(accuracy_numeric, na.rm = TRUE)~ FALSE, TRUE ~ TRUE)
                 ) %>%
-  dplyr::filter(outlier_2_sd == TRUE) 
+  dplyr::filter(outlier_2_sd == TRUE)  %>%
+  dplyr::ungroup()
 
 
 # Display performance outliers
@@ -223,9 +222,11 @@ number_of_errors <- single_trial_data %>%
   dplyr::summarize(errors_total    = sum(response_type == "incorrect"), 
                    errors_analyzed = sum(response_type == "incorrect" & !is.nan(MFN_0_100_FCz) & rt_invalid == FALSE)
   ) %>%
+  dplyr::ungroup() %>%
   dplyr::group_by(group) %>%
   # Calculate M and SD of the variables
-  dplyr::summarize(across(-c(participant_id, session), list(mean,sd,min,max)))
+  dplyr::summarize(across(-c(participant_id, session), list(mean,sd,min,max)))  %>%
+  dplyr::ungroup()
   
                                                                                                  
 # Display number of errors
@@ -235,7 +236,7 @@ my_table_template(number_of_errors,
                   header_above_config = c(" " = 1, "In total" = 4, "In analysis" = 4)
 )
 ```
-For some participants, in the task is more than 2 SD (N sessions = `r nrow(performance_outliers)`) or even 3 SD (N sessions = `r nrow(performance_outliers[performance_outliers$outlier_3_sd == TRUE,])`) below the group mean per condition (stimulus type x stimulation). But their accuracy is still quite good (> 70% in incongruent category), so these will not be excluded. Being an outlier in task performance is also no exclusion criterion specified in the preregistration. No participant committed < 6 errors. Thus, no participant will be excluded based on this criterion.
+For some participants, accuracy in the task is more than 2 SD (N sessions = `r nrow(performance_outliers)`) or even 3 SD (N sessions = `r nrow(performance_outliers[performance_outliers$outlier_3_sd == TRUE,])`) below the group mean per condition (stimulus type x stimulation). But their accuracy is still quite good (> 70% in incongruent category), so these will not be excluded. Note that these information refer to the accuracy in the cleaned data, not the raw data. Being an outlier in task performance is also no exclusion criterion specified in the preregistration. No participant committed < 6 errors. Thus, no participant will be excluded based on this criterion.
 <br><br>
 
 ```{r feedback}
@@ -313,7 +314,8 @@ qqplot_pes <- ggplot(single_trial_data_clean[!is.na(single_trial_data_clean$pes)
 # Plot distribution accuracy (we first need the values aggregated per session and participant)
 accuracy_histogram <- single_trial_data_clean %>%
   dplyr::group_by(participant_id, session) %>%
-  dplyr::summarize(mean_accuracy = sum(accuracy_numeric) / length(participant_id) * 100)
+  dplyr::summarize(mean_accuracy = sum(accuracy_numeric) / length(participant_id) * 100)  %>%
+  dplyr::ungroup()
 
 hist_accuracy <- ggplot(accuracy_histogram, aes(x = mean_accuracy)) +
   geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
@@ -534,7 +536,7 @@ descriptive_statistics_pes <- summarySEwithinO(
   dplyr::mutate_at("pes", round, digits = 0) 
 
 
-# Split and re-merge PEA table to display both groups next to each other
+# Split and re-merge PES table to display both groups next to each other
 descriptive_statistics_pes_display <-  split(descriptive_statistics_pes, descriptive_statistics_pes$group)
 descriptive_statistics_pes_display <-  left_join(descriptive_statistics_pes_display$HC, descriptive_statistics_pes_display$OCD, by = c("stimulation", "session"))
 
@@ -1005,6 +1007,39 @@ tab_model(LMM_rt,
 Responses are faster in the congruent than in the incongruent condition. Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation. Trends for the following interactions are present: group:stimulus_congruence and stimulation:group:response_type.
 <br><br>
 
+#### LMM nested
+
+```{r LMM-RT-per-group, cache = knitr_cache_enabled}
+
+# Run model with maximal random-effects structure
+LMM_rt_group <- lmer(rt_log ~ group/stimulation * (incorrect_correct + incongruent_congruent) +
+  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(LMM_rt_group) # Model does converge 
+# isSingular(LMM_rt_group) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_rt_group)) # All terms explain variance 
+
+
+# Display results (fixed effects)
+tab_model(LMM_rt_group,
+  dv.labels = "log(RT)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
+For the separate groups, there is no significant effect of stimulation on RT. Trends for the following interactions are present: group * stimulus_congruence and HC:stimulation:stimulus_congruence.
+<br><br>
+
 #### Assumption checks
 
 ```{r LMM-RT-assumptions, fig.width = 20, fig.height = 15, cache = knitr_cache_enabled}
@@ -1052,7 +1087,7 @@ performance::check_normality(LMM_rt, effects = "random")
 #### Check covariates
 
 The purpose of including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models including the interactions are presented below.
-Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. Continuous predictors were gran mean centered (number of errors, number of feedback faster).
+Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. Continuous predictors were grand mean centered (number of errors, number of feedback faster).
 
 ```{r LMM-RT-covariates, cache = knitr_cache_enabled}
 
@@ -1106,16 +1141,17 @@ tab_model(LMM_rt_number_feedback_faster,
 
 #### LMM
 
-To quantify PES robust, we used the method proposed by Dutilh et al. (2012). "A single-trial value of PES was computed by performing a pairwise comparison of correct trials around each error (RTpost-error − RTpre-error). This method ensures that post-error and post-correct trials originate from the same time periods in the data set and thus controls for global fluctuations in motivation and attention." To avoid the effects of consecutive errors on RTs, we considered only error trials that were preceded by at least two correct responses and followed by at least one correct response (i.e., sequences of CCEC trials, where ‘C’ represents correct trials and ‘E’ represents error trials). 
+To quantify PES robust, we used the method proposed by Dutilh et al. (2012). "A single-trial value of PES was computed by performing a pairwise comparison of correct trials around each error (RT post-error − RT pre-error). This method ensures that post-error and post-correct trials originate from the same time periods in the data set and thus controls for global fluctuations in motivation and attention." To avoid the effects of consecutive errors on RTs, we considered only error trials that were preceded by at least two correct responses and followed by at least one correct response (i.e., sequences of CCEC trials, where ‘C’ represents correct trials and ‘E’ represents error trials). 
 
 I decided to test the stimulation effect on PES in a separate model instead of including the factor correctness of previous trial in the RT model. Otherwise, this would have led to an overly complex LMM on RTs. Additionally, all trials would have been included then, preventing to use the robust (and preregistered) PES quantification by Dutilh et al. (2012).
 
 I included stimulus type as covariate (hence, only as fixed, not as random effect) in this model to avoid confounding the PES effect with stimulus congruency, as stimulus congruency of the respective trial might potentially interfere with PES. The results do not change when the covariate is not included. The covariate was included only in the LMM, not in the parallel ANOVA calculated below.
 
 ```{r LMM-PES}
+
 # Run model with maximal random-effects structure (to avoid singularity / non-convergence and rePCA value of 0, correlations betw. random terms and radom slope of stimulus_type had to be removed)
 LMM_pes <- lmer(pes ~ verum_sham * OCD_HC + incongruent_congruent +
-  (1 + verum_sham  || participant_id),
+  (1 + verum_sham || participant_id),
 data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1140,6 +1176,39 @@ tab_model(LMM_pes,
 ```
 <br><br>
 There is PES (intercept is significant). There is no effect of congruency in the respective on PES. There is no evidence for an effect of group or stimulation. 
+<br><br>
+
+#### LMM nested
+
+```{r LMM-PES-per-group}
+
+# Run model with maximal random-effects structure (to avoid singularity / non-convergence and rePCA value of 0, correlations betw. random terms and radom slope of stimulus_type had to be removed)
+LMM_pes_group <- lmer(pes ~ group/stimulation + incongruent_congruent +
+  (1 + verum_sham || participant_id),
+data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(LMM_pes_group) # Model does converge
+# isSingular(LMM_pes_group) # is also ok
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_pes_group)) # All terms explain variance
+
+
+# Display results (fixed effects)
+tab_model(LMM_pes_group,
+  dv.labels = "PES (ms)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
+For the separate groups, there is no significant effect of stimulation on PES.
 <br><br>
 
 #### Assumption checks
@@ -1276,6 +1345,39 @@ tab_model(GLMM_accuracy,
 Accuracy is lower in the incongruent condition than in the congruent condition. Furthermore, accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy). There is no evidence for an effect of group or stimulation. There is a significant interaction group:stimulus_type and a trend for an interaction stimulation:accuracy_prev_trial.
 <br><br>
 
+#### GLMM nested
+
+```{r GLMM-accuracy-per-group, cache = knitr_cache_enabled}
+
+# Run model with maximal random-effects structure
+GLMM_accuracy_group <- glmer(accuracy_numeric ~ group/stimulation * (incongruent_congruent + accuracy_prev_trial) +
+  (1 + verum_sham * incongruent_congruent | participant_id),
+data = single_trial_data_clean,
+family = binomial,
+control = glmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(GLMM_accuracy_group) # Model does converge
+# isSingular(GLMM_accuracy_group) # is also ok
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(GLMM_accuracy_group)) # All terms explain variance
+
+
+# Display results (fixed effects)
+tab_model(GLMM_accuracy_group,
+  dv.labels = "Accuracy", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
+  string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
+For the separate groups, there is no significant effect of stimulation on accuracy. There is a significant interaction stimulation:accuracy_prev_trial in the OCD group.
+<br><br>
+
 #### Assumption checks
 
 ```{r GLMM-accuracy-assumptions}
@@ -1368,28 +1470,32 @@ data_anova_rt <- single_trial_data_clean %>%
   dplyr::group_by(participant_id, stimulation, group, condition) %>%
   dplyr::summarize(
     rt_log = mean(rt_log, na.rm = TRUE)
-  )
+  )  %>%
+  dplyr::ungroup()
 
 
 data_anova_pes <- single_trial_data_clean[!is.na(single_trial_data_clean$pes),] %>%
   dplyr::group_by(participant_id, stimulation, group) %>%
   dplyr::summarize(
     pes = mean(pes)
-  )
+  )  %>%
+  dplyr::ungroup()
 
 
 data_anova_accuracy <- single_trial_data_clean[!is.na(single_trial_data_clean$accuracy_prev_trial),] %>%
   dplyr::group_by(participant_id, stimulation, group, stimulus_type, accuracy_prev_trial) %>%
   dplyr::summarize(
     percentage_correct_responses = sum(accuracy_numeric) / length(participant_id) * 100
-  )
+  )  %>%
+  dplyr::ungroup()
 
 
 data_anova_number_2nd_resp <- single_trial_data_clean %>%
   dplyr::group_by(participant_id, group, stimulation, session) %>%
   dplyr::summarize(
     number_2nd_resp = sum(!is.na(response_type_2nd[response_type_2nd == "correct"]))
-  )
+  )  %>%
+  dplyr::ungroup()
       
 
 # ANOVA RT
@@ -1437,7 +1543,7 @@ anova_number_2nd_resp <- aov_ez(
 
 
 # Display ANOVA results
-my_table_template(nice(anova_rt,       MSE = FALSE), caption = "RT")
+my_table_template(nice(anova_rt,       MSE = FALSE), caption = "RT (log)")
 my_table_template(nice(anova_pes,      MSE = FALSE), caption = "PES")                  
 my_table_template(nice(anova_accuracy, MSE = FALSE), caption = "Accuracy")
 my_table_template(nice(anova_number_2nd_resp, MSE = FALSE), caption = "Number of corrective second responses (only correct)")
