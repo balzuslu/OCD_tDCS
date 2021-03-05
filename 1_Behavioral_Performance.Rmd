@@ -1004,7 +1004,7 @@ tab_model(LMM_rt,
 )
 ```
 <br><br>
-Responses are faster in the congruent than in the incongruent condition. Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation. Trends for the following interactions are present: group:stimulus_congruence and stimulation:group:response_type.
+Responses are faster in the congruent than in the incongruent condition. Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation. Trends for the following interactions are present: group:stimulus_congruence and stimulation:group:response_type. 
 <br><br>
 
 #### LMM nested
@@ -1135,6 +1135,77 @@ tab_model(LMM_rt_number_feedback_faster,
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
 ```
+<br><br>
+
+#### GLMM / GLMM nested
+
+In the preregistration I wrote that for RT, a GLMM with gamma or inverse gaussian distribution with an identity link function on raw RT will be preferred over a LMM on transformed values, if both models allow a sufficiently complex random structure without convergence problems. So I tried a GLMM here. There are no convergence problems. <br><br>
+Lo & Andrews (2015) recommend gamma or inverse gaussian distribution for RTs. For the RTs, gamma distribution fits very well and a bit better than inverse gaussian distribution. Hence, I would choose gamma distribution and the identity link funktion (recommended by Lo & Andrews, 2015). BUT: With the gamma distribution, all effects in the GLMM turn significant (since the standard error gets tiny), which seems not right to me. Using the inverse gaussian distribution (see results below), the results seem much more realisitic (effects are comparable to the LMM). 
+
+```{r GLMM-RT, cache = knitr_cache_enabled}
+
+# Fit inverse gaussian distribution
+# library("GeneralizedHyperbolic")
+# inv_gauss <- nigFit(single_trial_data_clean$rt, plots = FALSE, printOut = FALSE) 
+# plot(inv_gauss)
+
+
+# Fit gamma distribution
+# library("fitdistrplus")
+# gamma <- fitdist(single_trial_data_clean$rt, distr = "gamma")
+# plot(gamma)
+
+
+# Run model with maximal random-effects structure but without correlations between random terms to achieve convergence
+GLMM_rt <- glmer(rt ~ verum_sham * OCD_HC * (incorrect_correct + incongruent_congruent) +
+  (1 + verum_sham * (incorrect_correct + incongruent_congruent) || participant_id),
+  data = single_trial_data_clean,
+  family = inverse.gaussian(link="identity"),
+  control = glmerControl(optimizer="bobyqa"))
+
+
+# Check model output
+# summary(GLMM_rt) # Model does converge 
+# isSingular(GLMM_rt) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(GLMM_rt)) # All terms explain variance 
+
+
+tab_model(GLMM_rt,
+  dv.labels = "RT", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
+  string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
+)
+
+
+
+# Run nested model with maximal random-effects structure  but without correlations between random terms to achieve convergence
+GLMM_rt_group <- glmer(rt ~ group/stimulation * (incorrect_correct + incongruent_congruent) +
+  (1 + verum_sham * (incorrect_correct + incongruent_congruent) || participant_id),
+  data = single_trial_data_clean,
+  family = inverse.gaussian(link="identity"),
+  control = glmerControl(optimizer="bobyqa"))
+
+
+# Check model output
+# summary(GLMM_rt_group) # Model does converge 
+# isSingular(GLMM_rt_group) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(GLMM_rt_group)) # All terms explain variance 
+
+
+tab_model(GLMM_rt_group,
+  dv.labels = "RT", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE,
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "z value",
+  string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
+In contrast to the LMM, the GLMM shows a significant interaction stimulation * group * response type (this was a trend before). The rest is pretty much the same as in the LMM (except for an additional significant main effect of group). 
 <br><br>
 
 ### PES {.tabset}
