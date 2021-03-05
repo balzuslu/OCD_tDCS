@@ -800,10 +800,12 @@ tab_model(LMM_CRN,
 )
 ```
 <br><br>
-There is a trend for a higher ERN in OCD compared to HC. There also is a trend for a higher CRN in OCD compared to HC. For CRN, there is an effect of stimulation, with smaller (i.e., less negative) CRN in the verum stimulation compared to the sham condition. There is a trend for a stimulation effect on ERN (which turns significant when using maximum likelihood instead of REML estimation). 
+There is a trend for a higher ERN in OCD compared to HC. There also is a trend for a higher CRN in OCD compared to HC. For CRN, there is an effect of stimulation, with smaller (i.e., less negative) CRN in the verum stimulation compared to the sham condition. There is a trend for a stimulation effect on ERN (which turns significant when using maximum likelihood instead of REML estimation). <br><br>
+
+Reinhart and Woodman (2014) found no stimulation effect on CRN. But from their Figure 2, I actually had the impression that the cathodal stimulation seems to rather increase the CRN (more neg), and a little bit reduces ERN. Maybe that their finding of a stimulation effect on the ERN (which was quantified as difference ERN-CRN) might be caused to a great deal by the effect on CRN? But possibly this stimulation effect was not significant when analyzing the CRN or ERN alone. In our data, the stimulation also reduces the CRN, which is probably why I see no effect in the difference ERN-CRN quantification as Reinhart & Woodman did (see ANOVA section). 
 <br><br>
 
-#### Assumption checks ERN model
+#### Assumption checks ERN
 
 ```{r LMM-ERN-CRN-assumptions1, fig.width = 20, fig.height = 15, cache = knitr_cache_enabled}
 
@@ -824,7 +826,7 @@ performance::check_normality(LMM_ERN, effects = "random")
 Notes for assumption check would be the same as written for the MFN model.
 <br><br>
 
-#### Assumption checks CRN model
+#### Assumption checks CRN
 
 ```{r LMM-ERN-CRN-assumptions2, fig.width = 20, fig.height = 15, cache = knitr_cache_enabled}
 
@@ -843,6 +845,42 @@ performance::check_normality(LMM_CRN, effects = "random")
 ```
 
 Notes for assumption check would be the same as written for the MFN model.
+<br><br>
+
+#### Equivalence Test: ERN
+
+```{r ERN-equivalence-test}
+
+# Equivalence bounds (refers to difference in raw values of 1 microvolt, not standardized differences in means)
+bound_l <- -1 # lower equivalence bound
+bound_u <-  1 # upper equivalence bound (the more positive this number, the less negative verum ERN compared to sham ERN) - this is the boundary of interest
+
+
+# Use the contest1D functions of the lmerTest package to perform tests centered on the lower and upper equivalence bound, using the rhs option
+lower <- contest1D(LMM_ERN, c(0, 1, 0, 0), confint = TRUE, rhs = bound_l) # get t value for test against lower bound
+upper <- contest1D(LMM_ERN, c(0, 1, 0, 0), confint = TRUE, rhs = bound_u) # get t value for test against upper bound
+# Note: c(0,1,0,0) means test for stimulation effect (= second fixed effect), as can be seen with fixef(LMM_ERN)
+
+
+# Recalculate the required one-sided tests from the t-values (test provided by contest1D is two-sided)
+p_lower <- pt(lower$`t value`, lower$df, lower.tail = FALSE) # test against lower bound
+p_upper <- pt(upper$`t value`, upper$df, lower.tail = TRUE) # test against upper bound
+
+
+# ALTERNATIVE: Divide the p-values provided by contest1D by 2, because one-sided tests are required but contest1D provides two-sided test
+# p_lower <- lower$`Pr(>|t|)`/2 
+# p_upper <- upper$`Pr(>|t|)`/2
+```
+
+Test against lower bound: t(`r round(lower$df, 2)`) = `r round(lower$"t value", 2)`, *p* = `r round(p_lower, 5)`  <br>
+Test against upper bound: t(`r round(upper$df, 2)`) = `r round(upper$"t value", 2)`, *p* = `r round(p_upper, 3)`  <br>
+
+*Since the test against the upper bound is not significant, we cannot reject that the true value is not equal to or more extreme than the upper equivalence bound (i.e., we cannot reject that the verum ERN is at least 1 microvolt less negative than the sham ERN), which means that we failed to obtain an equivalent result.* <br><br>
+
+**The ERM amplitude in the sham vs. verum condition is not statistically equivalent and not statistically different (or trend only)** <br>
+"Based on equivalence bounds (= smalles effect size of interest, SESOI) of -1.0 microvolt and 1.0 microvolt for the stimulation effect on the ERN quantified as mean amplitude from 0 to 100 ms at FCz, **we cannot reject effect sizes that we still consider meaningful**, t(44.18) = −0.33, p = .371. Because the effect was also not statistically different from 0 in a traditional null-hypothesis test, the result is inconclusive. **We can neither conclude that the effect is different from zero, nor that the effect is too small to matter**. We need to collect more data to draw conclusions about the presence of an effect, or the absence of a meaningful effect (or both)." <br> *citation: Improving Inferences About Null Effects With Bayes Factors and Equivalence Tests (Lakens et al., 2020)* <br><br>
+
+*Is this SESOI justified? E.g. can it be based on the fact that 1 microvolt ERN reduction in OCD would lead to comparable ERN magnitude in OCD and HC? 1.5 would still lead to the same conclusion.*
 <br><br>
 
 #### Check covariates
@@ -1734,7 +1772,12 @@ For further infos, see notes in section non-nested ERN-CRN models.
 ### ANOVAs
 
 To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Reinhart & Woodman 2014), MFN/ERN/CRN/Diff ERN-CRN were additionally analyzed with repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), and (only for MRN) response type (correct, incorrect). No  Greenhouse–Geisser correction was applied, as no factor had more than two levels. As can be seen below, the MFN, ERN, and CRN ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all effects (trend for ERN and CRN group difference and stimulation effect on ERN, significant stimulation effect on CRN). <br><br>
-For comparison with Reinhart & Woodman (2014), we also used area amplitude quantifications. Since it is not clear from the paper which exact quantification method was used, we exported ERN and difference ERN-CRN from -50 to 150 ms both as integral area amplitude (area for negatives subtracted from area for positives; is equivalent to mean amplitude, except that the mean is divided by the length of the interval) and negative area amplitude (positives are zeroed, only neg area is considered). When using the ERN quantification as integral area amplitude from -50 to 150 ms, there is a significant stimulation effect (is a trend for ERN negative area amplitude quantification). For the difference area amplitude quantifications, there is no stimulation effect. 
+
+For comparison with Reinhart & Woodman (2014), we also used area amplitude quantifications. Since it is not clear from the paper which exact quantification method was used*, we exported ERN and difference ERN-CRN from -50 to 150 ms both as integral area amplitude (area for negatives subtracted from area for positives; is equivalent to mean amplitude, except that the mean is divided by the length of the interval) and negative area amplitude (positives are zeroed, only neg area is considered). When using the ERN quantification as integral area amplitude from -50 to 150 ms, there is a significant stimulation effect (is a trend for ERN negative area amplitude quantification). For the difference area amplitude quantifications, there is no stimulation effect. <br><br>
+
+Note: <br>
+The area amplitude quantification in the flanker task contains 18 rt outlier trials (out of 55680 trials; 5 of those 18 errors). Those trials were not excluded from the bins in the flanker analysis, but this should be ok (also, rt in these trials is only slightly below 100 or above 800 ms). <br>
+I guess that Reinhart & Woodman used the quantification integral area amplitude difference ERN-CRN (instead of negative area amplitude), since one figure shows that ERN and CRN were both positive in their study. But still, it is not clear in their paper when/whether they used ERN and when difference ERN-CRN as measure (see Evernote 2020_12_21).
 
 ```{r ANOVAs}
 
