@@ -22,6 +22,7 @@ options(scipen = 999)
 # Define paths
 path_behavioral_data <- "C:/Users/Luisa/PhD/1_PhD_Project/7_ModERN_Stimulation_Study/4_Behavioral_Data/Flanker/"   
 path_ERP_data        <- "C:/Users/Luisa/PhD/1_PhD_Project/7_ModERN_Stimulation_Study/8_Analyses/1_Flanker_Analysis_with_EEGLAB/4_Single_Trial_ERPs/"
+path_SCR_data        <- "C:/Users/Luisa/PhD/1_PhD_Project/7_ModERN_Stimulation_Study/8_Analyses/1_Flanker_Analysis_with_EEGLAB/6_SCR/3_Cleaned_SCR_Data/"
 path_cleaned_data    <- "C:/Users/Luisa/PhD/1_PhD_Project/7_ModERN_Stimulation_Study/8_Analyses/1_Flanker_Analysis_with_EEGLAB/B_Statistical_Analyses/data/"
 
 
@@ -43,12 +44,12 @@ for (participant in logfiles){
 }  
 
 
-# Load ERP data
+# Load ERP and SCR data
 ERN_data     <- read.csv(paste0(path_ERP_data, "single_trial_MFN_0_100_FCz_with_events.csv"),             header = TRUE, stringsAsFactors = FALSE)
 ERN_baseline <- read.csv(paste0(path_ERP_data, "single_trial_MFN_baseline_-200_0_FCz_with_events.csv"),   header = TRUE, stringsAsFactors = FALSE)
 Pe_data      <- read.csv(paste0(path_ERP_data, "single_trial_Pe_200_400_Pz_with_events.csv"),             header = TRUE, stringsAsFactors = FALSE)
 Pe_baseline  <- read.csv(paste0(path_ERP_data, "single_trial_Pe_baseline_-200_0_Pz_with_events.csv"),     header = TRUE, stringsAsFactors = FALSE)
-
+SCR_data     <- read.csv(paste0(path_SCR_data, "single_trial_SCR.csv"),                                   header = TRUE, stringsAsFactors = FALSE)
 
 
 # Load feedback infos and concatenate data of all participants (read P_29_T2 in separately, because this subject had an additional task block)
@@ -84,11 +85,12 @@ Pe_baseline[Pe_baseline$participant_id == 'P_17_T1'   & Pe_baseline$trial >= 270
 # 3) If everything is fine, only very few rows of the ERP column in the subsequently created single_trial_data table should contain NA (NaN = artifact; NA = no eeg data present)
 
 
-# Merge behavioral and ERP data (rows in behavioral_data with no match in ERN_data will have NAs in the ERP column)
+# Merge behavioral, ERP, and SCR data (rows in behavioral_data with no match in ERN_data will have NAs in the ERP column)
 single_trial_data <- left_join(behavioral_data,   ERN_data, by = c('name' = 'participant_id', 'trial' = 'trial', 'resp1' = 'event'))
 single_trial_data <- left_join(single_trial_data, ERN_baseline, by = c('name' = 'participant_id', 'trial' = 'trial', 'resp1' = 'event', 'artifact' = 'artifact'))
 single_trial_data <- left_join(single_trial_data, Pe_data, by = c('name' = 'participant_id', 'trial' = 'trial', 'resp1' = 'event', 'artifact' = 'artifact'))
 single_trial_data <- left_join(single_trial_data, Pe_baseline, by = c('name' = 'participant_id', 'trial' = 'trial', 'resp1' = 'event', 'artifact' = 'artifact'))
+single_trial_data <- left_join(single_trial_data, SCR_data, by = c('name' = 'participant_id', 'trial' = 'trial', 'cond' = 'cond', 'resp1' = 'resp1'))
 
 
 
@@ -130,7 +132,7 @@ single_trial_data[single_trial_data$name =="C_01_T2"| single_trial_data$name =="
 
 # Rename columns and remove string '_T1/T2' from participant ID (to get correct number of factor levels later)
 single_trial_data <- single_trial_data %>% 
-  subset(select = c("name", "group", "session", "stimulation", "trial", "stimulus_type", "response_type", "rt1", "rt_log", "rt_invalid" ,"response_type_2nd", "rt2", "MFN_0_100_FCz", "MFN_.200_0_FCz", "Pe_200_400_Pz", "Pe_.200_0_Pz")) %>%
+  subset(select = c("name", "group", "session", "stimulation", "trial", "stimulus_type", "response_type", "rt1", "rt_log", "rt_invalid" ,"response_type_2nd", "rt2", "MFN_0_100_FCz", "MFN_.200_0_FCz", "Pe_200_400_Pz", "Pe_.200_0_Pz","ISCR")) %>%
   dplyr::rename(participant_id     = name,
                 rt                 = rt1,
                 rt_2nd             = rt2,
