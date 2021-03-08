@@ -309,7 +309,7 @@ ggdraw() +
 
 ### ERN/CRN per participant 
 
-```{r plot-RT-per-subject-and-response-type, fig.width = 12, fig.height = 20, cache = knitr_cache_enabled}
+```{r plot-MFN-per-subject-and-response-type, fig.width = 12, fig.height = 20, cache = knitr_cache_enabled}
 
 MFN_per_participant <- ggplot(single_trial_data_clean, aes(x = response_type, y = MFN_0_100_FCz, group = response_type)) + 
   geom_point(aes(fill = response_type), color = "black", shape = 21, position = "jitter") + 
@@ -565,7 +565,7 @@ plot_MFN_lines
 
 ### Plot without session
 
-```{r descriptive-statistics-plot-rt-acc, fig.width = 8, fig.height = 7, fig.cap = "Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of response type, stimulation condition, and group. Means and 95% confidence intervals (shown in orange/red) were calculated based on single-trial data. Boxplots are based on data aggregated by participant. CIs are adjusted for within-participant designs as described by Morey (2008)."}
+```{r descriptive-statistics-plot-MFN, fig.width = 8, fig.height = 7, fig.cap = "Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of response type, stimulation condition, and group. Means and 95% confidence intervals (shown in orange/red) were calculated based on single-trial data. Boxplots are based on data aggregated by participant. CIs are adjusted for within-participant designs as described by Morey (2008)."}
 
 # Create plot MFN 
 plot_MFN <- ggplot() +
@@ -872,15 +872,22 @@ p_upper <- pt(upper$`t value`, upper$df, lower.tail = TRUE) # test against upper
 # p_upper <- upper$`Pr(>|t|)`/2
 ```
 
+Equivalence testing: two one-sided tests (TOST) procedure to test for equivalence and reject the presence of a smallest effect size of interest (SESOI) 
+
+Statistically equivalent: difference between groups is smaller than what is considered meaningful and statistically falls within the interval indicated by the equivalence bounds <br><br>
+
 Test against lower bound: t(`r round(lower$df, 2)`) = `r round(lower$"t value", 2)`, *p* = `r round(p_lower, 5)`  <br>
 Test against upper bound: t(`r round(upper$df, 2)`) = `r round(upper$"t value", 2)`, *p* = `r round(p_upper, 3)`  <br>
 
-*Since the test against the upper bound is not significant, we cannot reject that the true value is not equal to or more extreme than the upper equivalence bound (i.e., we cannot reject that the verum ERN is at least 1 microvolt less negative than the sham ERN), which means that we failed to obtain an equivalent result.* <br><br>
+*Since the test against the upper bound is not significant, we cannot reject that the true value is not equal to or more extreme than the upper equivalence bound (i.e., we cannot reject that the verum ERN is at least 1 microvolt less negative than the sham ERN), which means that we did not obtain an equivalent result.* <br><br>
 
-**The ERM amplitude in the sham vs. verum condition is not statistically equivalent and not statistically different (or trend only)** <br>
+**The ERN amplitude in the sham vs. verum condition is not statistically equivalent and not statistically different (or trend only)** <br>
 "Based on equivalence bounds (= smalles effect size of interest, SESOI) of -1.0 microvolt and 1.0 microvolt for the stimulation effect on the ERN quantified as mean amplitude from 0 to 100 ms at FCz, **we cannot reject effect sizes that we still consider meaningful**, t(44.18) = −0.33, p = .371. Because the effect was also not statistically different from 0 in a traditional null-hypothesis test, the result is inconclusive. **We can neither conclude that the effect is different from zero, nor that the effect is too small to matter**. We need to collect more data to draw conclusions about the presence of an effect, or the absence of a meaningful effect (or both)." <br> *citation: Improving Inferences About Null Effects With Bayes Factors and Equivalence Tests (Lakens et al., 2020)* <br><br>
 
-*Is this SESOI justified? E.g. can it be based on the fact that 1 microvolt ERN reduction in OCD would lead to comparable ERN magnitude in OCD and HC? 1.5 would still lead to the same conclusion.*
+*Is this SESOI justified? why do we consider changes of at least 1 (or 1.5°) microvolt as meaningful and below as not meaningful? E.g. can it be based on the fact that 1 microvolt ERN reduction in OCD would lead to comparable ERN magnitude in OCD and HC? Does an ERN change of 1 microvolt predict something meaningful? The effect is considerably smalller than the one reported by Reinhart & Woodman (2014) and much smaller than reported ERN modification effects by Klawohn et al. (2015°°; 2020).*
+
+*°would still lead to the same conclusion*
+*°° also used mean amplitude*
 <br><br>
 
 #### Check covariates
