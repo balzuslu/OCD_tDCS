@@ -173,7 +173,7 @@ single_trial_data_clean$response_type_2nd   <- as.factor(single_trial_data_clean
 single_trial_data_clean$accuracy_prev_trial <- as.factor(single_trial_data_clean$accuracy_prev_trial)
 
 
-# Calculate aggregated data per subject for boxplots,  outlier detection, and ANOVAs
+# Calculate aggregated data per participant for boxplots,  outlier detection, and ANOVAs
 df_aggregated_per_subject_rt <- single_trial_data_clean %>%
   dplyr::group_by(participant_id, group, response_type, stimulus_type, stimulation, session) %>%
   dplyr::summarize(
@@ -202,8 +202,11 @@ Trials were excluded from all analyses if RT was shorter than 100 ms or longer t
 
 ```{r performance-outliers}
 
-# Detect performance outliers (accuracy deviates more than 2/3 SD below/above group mean per condition)
-performance_outliers <- df_aggregated_per_subject_accuracy %>% 
+# Detect performance outliers (accuracy deviates more than 2/3 SD below/above group mean per condition) - based on raw data, not cleaned data
+performance_outliers <- single_trial_data %>%
+  dplyr::group_by(participant_id, group, stimulation, stimulus_type, session) %>%
+  dplyr::summarize(accuracy_numeric = mean(accuracy_numeric, na.rm = TRUE)*100)  %>%
+  dplyr::ungroup() %>% 
   dplyr::group_by(group, stimulus_type, stimulation) %>%
   dplyr::mutate(outlier_2_sd = case_when(abs(accuracy_numeric - mean(accuracy_numeric, na.rm = TRUE)) <=  2 * sd(accuracy_numeric, na.rm = TRUE)~ FALSE, TRUE ~ TRUE),
                 outlier_3_sd = case_when(abs(accuracy_numeric - mean(accuracy_numeric, na.rm = TRUE)) <=  3 * sd(accuracy_numeric, na.rm = TRUE)~ FALSE, TRUE ~ TRUE)
@@ -236,7 +239,7 @@ my_table_template(number_of_errors,
                   header_above_config = c(" " = 1, "In total" = 4, "In analysis" = 4)
 )
 ```
-For some participants, accuracy in the task is more than 2 SD (N sessions = `r nrow(performance_outliers)`) or even 3 SD (N sessions = `r nrow(performance_outliers[performance_outliers$outlier_3_sd == TRUE,])`) below the group mean per condition (stimulus type x stimulation). But their accuracy is still quite good (> 70% in incongruent category), so these will not be excluded. Note that these information refer to the accuracy in the cleaned data, not the raw data. Being an outlier in task performance is also no exclusion criterion specified in the preregistration. No participant committed < 6 errors. Thus, no participant will be excluded based on this criterion.
+For some participants, accuracy in the task is more than 2 SD (N sessions = `r nrow(performance_outliers)`) or even 3 SD (N sessions = `r nrow(performance_outliers[performance_outliers$outlier_3_sd == TRUE,])`) below the group mean per condition (stimulus type x stimulation). But their accuracy is still quite good (> 70% in incongruent category), so these will not be excluded. Note that these information refer to the accuracy in the raw data, not the cleaned data. Being an outlier in task performance is also no exclusion criterion specified in the preregistration. No participant committed < 6 errors. Thus, no participant will be excluded based on this criterion.
 <br><br>
 
 ```{r feedback}
@@ -382,7 +385,7 @@ ggdraw() +
 
 ### RT per participant 
 
-```{r plot-RT-per-subject-and-response-type, fig.width = 12, fig.height = 20, cache = knitr_cache_enabled}
+```{r plot-RT-per-participant-and-response-type, fig.width = 12, fig.height = 20, cache = knitr_cache_enabled}
 
 rt_per_participant <- ggplot(single_trial_data_clean, aes(x = response_type, y = rt)) + 
   geom_point(position = "jitter", aes(color = stimulus_type)) + 
@@ -416,7 +419,7 @@ my_table_template(normality_rt, row_names = TRUE)
 
 ### Determine RT transformation
 
-LMM analysis of RT will be conducted on log-transformed RT values to meet the assumption of normally distributed residuals. The appropriate transformation was determined (or rather "validaated", see notes below) using the Box–Cox procedure (Box & Cox, 1964). 
+LMM analysis of RT will be conducted on log-transformed RT values to meet the assumption of normally distributed residuals. The appropriate transformation was determined (or rather "validated", see notes below) using the Box–Cox procedure (Box & Cox, 1964). 
 
 ```{r RT-determine-transformation, fig.width = 8, fig.height = 3}
 
@@ -798,7 +801,7 @@ To quantify PES robust, we used the method proposed by Dutilh et al. (2012). See
 
 ### Plot with session
 
-```{r descriptive-statistics-plot-including-session, fig.width = 10, fig.height = 15, fig.cap = "Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of stimulation condition, group, and session. Means and 95% confidence intervals (shown in orange/red) were calculated based on single-trial data. Boxplots are based on data aggregated by participant. CIs are adjusted for within-participant designs as described by Morey (2008)."}
+```{r descriptive-statistics-plot-including-session, fig.width = 10, fig.height = 15, fig.cap = "Note. (A) RT, (B) accuracy, (c) post-error slowing and (D) post-error accuracy, and (E) post-correct accuracy in the flanker task are shown as a function of response type, stimulation condition, group, and session. Means and 95% confidence intervals (shown in orange/red) were calculated based on single-trial data. Boxplots are based on data aggregated by participant. CIs are adjusted for within-participant designs as described by Morey (2008)."}
 
 # Create plot RT 
 plot_rt_session <- ggplot() +
@@ -949,7 +952,7 @@ contrasts(single_trial_data_clean$session)             <- contr.sdif(2)
 model_matrix <- model.matrix(~ stimulation * group * (response_type + stimulus_type), single_trial_data_clean)
 
 
-# Attach the model matrix (8 columns) to the dataframe
+# Attach the model matrix (12 columns) to the dataframe
 single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 12)] <- model_matrix
 
 
@@ -1087,12 +1090,12 @@ performance::check_normality(LMM_rt, effects = "random")
 #### Check covariates
 
 The purpose of including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models including the interactions are presented below.
-Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. Continuous predictors were grand mean centered (number of errors, number of feedback faster).
+Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. Continuous predictors were grand mean standardized (number of errors, number of feedback faster).
 
 ```{r LMM-RT-covariates, cache = knitr_cache_enabled}
 
 # RT check covariate session
-LMM_rt_session <- lmer(rt_log ~ verum_sham * OCD_HC * session * (incorrect_correct + incongruent_congruent) +
+LMM_rt_session <- lmer(rt_log ~ verum_sham * OCD_HC * (incorrect_correct + incongruent_congruent + session) +
   (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
 data = single_trial_data_clean,
 REML = TRUE,
@@ -1107,7 +1110,7 @@ tab_model(LMM_rt_session,
 
 
 # RT check covariate number of errors (predictor was z standardized)
-LMM_rt_number_errors <- lmer(rt_log ~ verum_sham * OCD_HC * number_errors_standardized * (incorrect_correct + incongruent_congruent) +
+LMM_rt_number_errors <- lmer(rt_log ~ verum_sham * OCD_HC * (incorrect_correct + incongruent_congruent + number_errors_standardized) +
   (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
 data = single_trial_data_clean,
 REML = TRUE,
@@ -1122,7 +1125,7 @@ tab_model(LMM_rt_number_errors,
 
 
 # RT check covariate number of feedback faster (predictor was z standardized)
-LMM_rt_number_feedback_faster <- lmer(rt_log ~ verum_sham * OCD_HC * number_feedback_faster_standardized * (incorrect_correct + incongruent_congruent) +
+LMM_rt_number_feedback_faster <- lmer(rt_log ~ verum_sham * OCD_HC * (incorrect_correct + incongruent_congruent + number_feedback_faster_standardized) +
   (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
 data = single_trial_data_clean,
 REML = TRUE,
@@ -1156,7 +1159,7 @@ Lo & Andrews (2015) recommend gamma or inverse gaussian distribution for RTs. Fo
 # plot(gamma)
 
 
-# Run model with maximal random-effects structure but without correlations between random terms to achieve convergence
+# Run final model (without correlations between random terms to achieve convergence)
 GLMM_rt <- glmer(rt ~ verum_sham * OCD_HC * (incorrect_correct + incongruent_congruent) +
   (1 + verum_sham * (incorrect_correct + incongruent_congruent) || participant_id),
   data = single_trial_data_clean,
@@ -1181,7 +1184,7 @@ tab_model(GLMM_rt,
 
 
 
-# Run nested model with maximal random-effects structure  but without correlations between random terms to achieve convergence
+# Run final nested model (without correlations between random terms to achieve convergence)
 GLMM_rt_group <- glmer(rt ~ group/stimulation * (incorrect_correct + incongruent_congruent) +
   (1 + verum_sham * (incorrect_correct + incongruent_congruent) || participant_id),
   data = single_trial_data_clean,
@@ -1220,7 +1223,7 @@ I included stimulus type as covariate (hence, only as fixed, not as random effec
 
 ```{r LMM-PES}
 
-# Run model with maximal random-effects structure (to avoid singularity / non-convergence and rePCA value of 0, correlations betw. random terms and radom slope of stimulus_type had to be removed)
+# Run final model (to avoid singularity / non-convergence and rePCA value of 0, correlations betw. random terms and radom slope of stimulus_type had to be removed)
 LMM_pes <- lmer(pes ~ verum_sham * OCD_HC + incongruent_congruent +
   (1 + verum_sham || participant_id),
 data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
@@ -1253,7 +1256,7 @@ There is PES (intercept is significant). There is no effect of congruency in the
 
 ```{r LMM-PES-per-group}
 
-# Run model with maximal random-effects structure (to avoid singularity / non-convergence and rePCA value of 0, correlations betw. random terms and radom slope of stimulus_type had to be removed)
+# Run final model (to avoid singularity / non-convergence and rePCA value of 0, correlations betw. random terms and radom slope of stimulus_type had to be removed)
 LMM_pes_group <- lmer(pes ~ group/stimulation + incongruent_congruent +
   (1 + verum_sham || participant_id),
 data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
@@ -1473,9 +1476,9 @@ overdisp_fun(GLMM_accuracy) # If the p-value is < 0.05, the data are overdispers
 
 * **Assumption 1: Chosen Link Function is Appropriate  -> Is OK** 
   
-* **Assumption 2: Normality of Random Effects -> Is OK???**
+* **Assumption 2: Normality of Random Effects -> Is OK**
     + Are random effects approximately normally distributed?
-    + Written output says this is ok (but: standard errors and hence also plot not available due to || syntax) 
+    + Written output says this is ok 
 
 * **Assumption 3: Appropriate Estimation of Variance (No Overdispersion)  -> Is OK**
     + Overdispersion is not a problem here. The empirical variance in data does not exceed the nominal variance under the presumed model. The chi-square test of the ratio of the empirical variance in data and the nominal variance under the presumed model is not significant.
@@ -1520,7 +1523,10 @@ tab_model(GLMM_accuracy_number_feedback_faster,
 
 ## ANOVAs {.tabset}
 ***
-To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), RT, PES, and accuracy were additionally analyzed with Greenhouse–Geisser corrected repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), response type (correct, incorrect)/condition (congruent correct, incongruent correct, incongruent incorrect), and accuracy previous trial (correct, incorrect). (GG correction only relevant for the ANOVA on RT, as factors in all other have only two levels, so that sphericity could not be violated). As can be seen below, the ANOVAs yielded similar results as obtained with mixed-effects modeling with respect to all main effects, interaction effects, and pairwise comparisons. I additionally analyzed whether there is an stimulation effect on the number of corrective second responses (because this was erroneously stated in the preregistration). There is none. This analysis requires aggregated data, hence I only calculated an ANOVA, no LMM.
+
+### ANOVAs
+
+To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), RT, PES, and accuracy were additionally analyzed with Greenhouse–Geisser corrected repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), response type (correct, incorrect)/condition (congruent correct, incongruent correct, incongruent incorrect), and accuracy previous trial (correct, incorrect). (GG correction only relevant for the ANOVA on RT, as factors in all other have only two levels, so that sphericity could not be violated). As can be seen below, the ANOVAs yielded similar results as obtained with mixed-effects modeling with respect to all effects. I additionally analyzed whether there is an stimulation effect on the number of corrective second responses (because this was erroneously stated in the preregistration). There is none. This analysis requires aggregated data, hence I only calculated an ANOVA, no LMM.
 
 ```{r ANOVAs}
 
@@ -1693,7 +1699,7 @@ ggplot(gather(residuals_anova_accuracy, cols, value), aes(sample = value)) +
 
 
 # Test normality of residuals
-print("# ANOVA RT: Normality of Residuals with Shapiro Wilk Test")
+print("# ANOVA RT: Check Normality of Residuals with Shapiro Wilk Test")
 do.call(rbind, lapply(residuals_anova_rt[,], function(x) shapiro.test(x)["p.value"]))
 
 print("# ANOVA PES: Check Normality of Residuals with Shapiro Wilk Test")
@@ -1705,11 +1711,11 @@ do.call(rbind, lapply(residuals_anova_accuracy[,], function(x) shapiro.test(x)["
 
 * **Assumption #1: Dependent variable interval or ratio variable -> Is OK**
 
-* **Assumption #2: Balanced design** (each subject has to have a value in each condition) **-> Is OK**
+* **Assumption #2: Balanced design** (each participant has to have a value in each condition) **-> Is OK**
 
 * **Assumption #3: No dependency in the scores between participants** (dependency can exist only across scores for individuals) **-> Is OK**
 
-* **Assumption #4: Residuals** of the dependent variable in each level of the within-subjects factor are approximately **normally distributed -> NOT OK** (see above; but for RT and PES only small deviation)**
+* **Assumption #4: Residuals** of the dependent variable in each level of the within-participants factor are approximately **normally distributed -> NOT OK** (see above; but for RT and PES only small deviation)**
 
-* **Assumption #5: Sphericity** (only relevant for within-subject factors with > 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is OK**
+* **Assumption #5: Sphericity** (only relevant for within-participant factors with > 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is OK**
 <br><br>
