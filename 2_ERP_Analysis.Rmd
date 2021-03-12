@@ -90,10 +90,10 @@ single_trial_data_clean <- single_trial_data %>%
       response_type != "miss" &
       rt_invalid  == FALSE &
       !is.na(MFN_0_100_FCz)
-  ) # (53093 of 55680 trials left)
+  ) # (53093 of 53760 trials left)
 
 
-# Add column for (grand mean centered) number of errors (needed as covariate later) - this variable contains total number of errors, not only those entering analysis (preferred according to JK)
+# Add column for (grand mean standardized) number of errors (needed as covariate later) - this variable contains total number of errors, not only those entering analysis (preferred according to JK)
 single_trial_data_clean <- single_trial_data %>% 
   dplyr::group_by(participant_id, session) %>% 
   dplyr::summarize(number_errors = sum(response_type == "incorrect")) %>%
@@ -103,7 +103,7 @@ single_trial_data_clean <- single_trial_data %>%
 single_trial_data_clean$number_errors_standardized <- scale(single_trial_data_clean$number_errors, center = TRUE, scale = TRUE)
 
 
-# Add column for (grand mean centered) number of speeding (needed as covariate later) 
+# Add column for (grand mean standardized) number of speeding (needed as covariate later) 
 single_trial_data_clean <- feedback_infos[feedback_infos$block != 6,] %>% 
   dplyr::group_by(participant_id, session, feedback) %>%
   dplyr::count(feedback, .drop = FALSE) %>%
@@ -125,7 +125,7 @@ single_trial_data_clean <- single_trial_data_clean %>%
                                               participant_id == "P_28" | participant_id == "P_30", "yes", "no")))
 
 
-# Add column for (within-subject mean centered) baseline EEG (needed as covariate later) 
+# Add column for (within-participant standardized) baseline EEG (needed as covariate later) 
 single_trial_data_clean <- single_trial_data_clean %>% 
   dplyr::group_by(participant_id, session) %>%
   dplyr::mutate(
@@ -134,7 +134,7 @@ single_trial_data_clean <- single_trial_data_clean %>%
   dplyr::ungroup()
 
 
-# Calculate aggregated data per subject for boxplots, ANOVAs, t tests, and outlier detection
+# Calculate aggregated data per participant for boxplots, ANOVAs, t tests, and outlier detection
 df_aggregated_per_subject_MFN <- single_trial_data_clean %>%
   dplyr::group_by(participant_id, group, response_type, stimulation, session) %>%
   dplyr::summarize(
@@ -143,15 +143,15 @@ df_aggregated_per_subject_MFN <- single_trial_data_clean %>%
   dplyr::ungroup()
 
 
-# Calculate aggregated data per subject for ANOVA 
+# Calculate aggregated data per participant for ANOVA 
 df_aggregated_per_subject_ANOVA <- single_trial_data_clean %>%
   dplyr::group_by(participant_id, group, stimulation, session) %>%
   dplyr::summarize(
-    CRN_mean_amplitude_0_100_FCz   = mean(MFN_0_100_FCz[response_type == "correct"], na.rm = TRUE),
+    CRN_mean_amplitude_0_100_FCz = mean(MFN_0_100_FCz[response_type == "correct"],   na.rm = TRUE),
     ERN_mean_amplitude_0_100_FCz = mean(MFN_0_100_FCz[response_type == "incorrect"], na.rm = TRUE)
     )  %>%
   dplyr::mutate(
-    difference_ERN_CRN_mean_amplitude_0_100_FCz = ERN_mean_amplitude_0_100_FCz- CRN_mean_amplitude_0_100_FCz
+    difference_ERN_CRN_mean_amplitude_0_100_FCz = ERN_mean_amplitude_0_100_FCz - CRN_mean_amplitude_0_100_FCz
   ) %>%
   dplyr::ungroup() 
 
@@ -197,7 +197,7 @@ excluded_trials_per_participant <- single_trial_data %>%
   dplyr::summarize(
     invalid_rt   = sum(!is.na(rt_invalid) & rt_invalid != FALSE) / length(participant_id) * 100,
     misses       = sum(response_type == "miss") / length(participant_id) * 100,
-    EEG_artifact = sum(is.nan(MFN_0_100_FCz)) / length(participant_id) * 100
+    EEG_artifact = sum(is.nan(MFN_0_100_FCz)) / length(participant_id) * 100 # is.nan -> trials lost due trigger miss have NA and thus do not count here
    )  %>%
   dplyr::ungroup() %>%
   dplyr::group_by(group) %>%
@@ -208,7 +208,7 @@ excluded_trials_per_participant <- single_trial_data %>%
 
 # Display percentage of excluded trials per group
 my_table_template(excluded_trials_per_participant,
-  caption = "Excluded Trials (M and SD in %) Mean per Group", 
+  caption = "Excluded Trials (M and SD in %) per Group", 
   col_names = c("Group", "M", "SD", "min", "max", "M", "SD", "min", "max", "M", "SD", "min", "max"),
   header_above_config = c(" " = 1, "RT < 100 / > 800 ms" = 4, "Misses" = 4, "EEG artifact" = 4)
 )
@@ -309,7 +309,7 @@ ggdraw() +
 
 ### ERN/CRN per participant 
 
-```{r plot-MFN-per-subject-and-response-type, fig.width = 12, fig.height = 20, cache = knitr_cache_enabled}
+```{r plot-MFN-per-participant-and-response-type, fig.width = 12, fig.height = 20, cache = knitr_cache_enabled}
 
 MFN_per_participant <- ggplot(single_trial_data_clean, aes(x = response_type, y = MFN_0_100_FCz, group = response_type)) + 
   geom_point(aes(fill = response_type), color = "black", shape = 21, position = "jitter") + 
@@ -328,11 +328,11 @@ For the single-trial data, Shapiro-Wilk is not suitable, as it always returns a 
 ```{r normality-single-trial-MFN}
 
 normality_MFN <- round(data.frame(matrix(c(skewness(single_trial_data_clean$MFN_0_100_FCz),
-                                          kurtosis(single_trial_data_clean$MFN_0_100_FCz),
-                                          skewness(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",]$MFN_0_100_FCz),
-                                          kurtosis(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",]$MFN_0_100_FCz),
-                                          skewness(single_trial_data_clean[single_trial_data_clean$response_type == "correct",]$MFN_0_100_FCz),
-                                          kurtosis(single_trial_data_clean[single_trial_data_clean$response_type == "correct",]$MFN_0_100_FCz)),
+                                           kurtosis(single_trial_data_clean$MFN_0_100_FCz),
+                                           skewness(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",]$MFN_0_100_FCz),
+                                           kurtosis(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",]$MFN_0_100_FCz),
+                                           skewness(single_trial_data_clean[single_trial_data_clean$response_type == "correct",]$MFN_0_100_FCz),
+                                           kurtosis(single_trial_data_clean[single_trial_data_clean$response_type == "correct",]$MFN_0_100_FCz)),
                                         nrow=2, ncol = 3)),digits = 1)
 rownames(normality_MFN) <- c("Skewness","Kurtosis")
 colnames(normality_MFN) <- c("MFN", "ERN", "CRN")
@@ -391,13 +391,12 @@ invisible(capture.output(split_half_reliability <- splithalf(data = single_trial
 # Display permutation-based split-half internal consistency
 my_table_template(split_half_reliability$final_estimates, caption = "Permutation-based split-half reliability")
 ```
-The internal consitency of ERN and CRN was estimated using a permutation-based split-half approach (Parsons 2020) with 5000 random splits. The (Spearman-Brown corrected) split-half internal consistency of ERN and CRN are excellent. The columns SB_low and SB_high represent 95% confience intervall limits. The spearman-brown corrected reliability estimate for the ERN was .95, 95% CI [.93, .97], for CRN 1, 95% CI [.99, 1]. The splithalf package was built to deal with RTs. However, the principle should also apply to ERP values, so the results should be correct. However, I also calculated the odd-even split-half reliabilty to compare the results (see below).
+The internal consitency of ERN and CRN was estimated using a permutation-based split-half approach (Parsons 2020) with 5000 random splits. The (Spearman-Brown corrected) split-half internal consistency of ERN and CRN are excellent. The columns SB_low and SB_high represent 95% confience intervall limits. The spearman-brown corrected reliability estimate for the ERN was .96, 95% CI [.93, .97], for CRN 1, 95% CI [.99, 1]. The splithalf package was built to deal with RTs. However, the principle should also apply to ERP values, so the results should be correct. However, I also calculated the odd-even split-half reliabilty to compare the results (see below).
 <br><br>
 
 ```{r odd-even-split-half-reliability}
 
 # Code odd and even trials for reliability 
-single_trial_data_clean$oddeven <- single_trial_data_clean$trial %% 2
 single_trial_data_clean$oddeven <- single_trial_data_clean$trial %% 2
 
 
@@ -434,7 +433,7 @@ colnames(oddeven_split_half_reliability) <- c("splithalf_raw", "splithalf_CI_low
 rownames(oddeven_split_half_reliability) <- c("CRN", "ERN")
 my_table_template(oddeven_split_half_reliability, row_names = TRUE, caption = "Odd-even split-half reliability")
 ```
-Odd-even reliability for the ERN is also good. 
+Odd-even reliability for the ERN/CRN is also excellent. 
 <br><br>
 
 ## Descriptive Statistics {.tabset}
@@ -594,7 +593,7 @@ plot_MFN
 
 ### Plot with session
 
-```{r descriptive-statistics-plot-including-session, fig.width = 10, fig.height = 7, fig.cap = "Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of response type, stimulation condition, group, and session. Means and 95% confidence intervals (shown in orange/red) were calculated based on single-trial data. Boxplots are based on data aggregated by subject. CIs are adjusted for within-participant designs as described by Morey (2008)."}
+```{r descriptive-statistics-plot-including-session, fig.width = 10, fig.height = 7, fig.cap = "Note. Response-locked ERP (ERN, CRN; 0-100 ms at FCz) in the flanker task is shown as a function of response type, stimulation condition, group, and session. Means and 95% confidence intervals (shown in orange/red) were calculated based on single-trial data. Boxplots are based on data aggregated by participant. CIs are adjusted for within-participant designs as described by Morey (2008)."}
 
 # Create plot MFN 
 plot_MFN_session <- ggplot() +
@@ -613,7 +612,7 @@ plot_MFN_session <- ggplot() +
 
 
 # Save plot
- ggsave("./figures/figure_MFN_session.tiff", width = 20, height = 25, units = "cm", dpi=600, compression = "lzw")
+ggsave("./figures/figure_MFN_session.tiff", width = 20, height = 25, units = "cm", dpi=600, compression = "lzw")
 
 
 # Display plot
@@ -650,7 +649,7 @@ contrasts(single_trial_data_clean$medication)    <- contr.sdif(2)
 model_matrix <- model.matrix(~ stimulation * group * response_type, single_trial_data_clean)
 
 
-# Attach the model matrix (16 columns) to the dataframe
+# Attach the model matrix (8 columns) to the dataframe
 single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 8)] <- model_matrix
 
 
@@ -807,7 +806,7 @@ Reinhart and Woodman (2014) found no stimulation effect on CRN. But from their F
 
 #### Assumption checks ERN
 
-```{r LMM-ERN-CRN-assumptions1, fig.width = 20, fig.height = 15, cache = knitr_cache_enabled}
+```{r LMM-ERN-assumptions, fig.width = 20, fig.height = 15, cache = knitr_cache_enabled}
 
 # ERN check model assumptions
 performance::check_model(LMM_ERN, panel = TRUE)
@@ -828,7 +827,7 @@ Notes for assumption check would be the same as written for the MFN model.
 
 #### Assumption checks CRN
 
-```{r LMM-ERN-CRN-assumptions2, fig.width = 20, fig.height = 15, cache = knitr_cache_enabled}
+```{r LMM-CRN-assumptions, fig.width = 20, fig.height = 15, cache = knitr_cache_enabled}
 
 # CRN check model assumptions
 performance::check_model(LMM_CRN, panel = TRUE)
@@ -884,7 +883,7 @@ Test against upper bound: t(`r round(upper$df, 2)`) = `r round(upper$"t value", 
 **The ERN amplitude in the sham vs. verum condition is not statistically equivalent and not statistically different (or trend only)** <br>
 "Based on equivalence bounds (= smalles effect size of interest, SESOI) of -1.0 microvolt and 1.0 microvolt for the stimulation effect on the ERN quantified as mean amplitude from 0 to 100 ms at FCz, **we cannot reject effect sizes that we still consider meaningful**, t(44.18) = −0.33, p = .371. Because the effect was also not statistically different from 0 in a traditional null-hypothesis test, the result is inconclusive. **We can neither conclude that the effect is different from zero, nor that the effect is too small to matter**. We need to collect more data to draw conclusions about the presence of an effect, or the absence of a meaningful effect (or both)." <br> *citation: Improving Inferences About Null Effects With Bayes Factors and Equivalence Tests (Lakens et al., 2020)* <br><br>
 
-*Is this SESOI justified? why do we consider changes of at least 1 (or 1.5°) microvolt as meaningful and below as not meaningful? E.g. can it be based on the fact that 1 microvolt ERN reduction in OCD would lead to comparable ERN magnitude in OCD and HC? Does an ERN change of 1 microvolt predict something meaningful? The effect is considerably smalller than the one reported by Reinhart & Woodman (2014) and much smaller than reported ERN modification effects by Klawohn et al. (2015°°; 2020).*
+*Is this SESOI justified? Wy do we consider changes of at least 1 (or 1.5°) microvolt as meaningful and below as not meaningful? E.g. can it be based on the fact that 1 microvolt ERN reduction in OCD would lead to comparable ERN magnitude in OCD and HC? Does an ERN change of 1 microvolt predict something meaningful? The effect is considerably smalller than the one reported by Reinhart & Woodman (2014) and much smaller than reported ERN modification effects by Klawohn et al. (2015°°; 2020).*
 
 *°would still lead to the same conclusion*
 *°° also used mean amplitude*
@@ -892,8 +891,8 @@ Test against upper bound: t(`r round(upper$df, 2)`) = `r round(upper$"t value", 
 
 #### Check covariates
 
-The purpose of including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models including the interactions are presented below.
-Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. Continuous predictors were grand mean centered (number of errors, number of feedback faster) or within-subject mean-centered (baseline EEG). From Frömer et al. (2020; "When effort matters..."): "For each ERP, we regressed out the baseline activity at the same electrode sites (Alday et al., 2019). This approach accounts for variability prior to the effect of interest that can otherwise induce spurious effects due to noise or spill-over from previous stages of the trial. Although noise in the baseline is assumed to average to zero (across time points, as well as trials) when using traditional ERP-averaging approaches, this assumption does not necessarily hold for single-trial analyses, where a non-stationary baseline or unevenly distributed noise can easily lead to systematic biases in the subsequent time-series. To address these potential spurious effects, we follow recommendations to include the baseline as a nuisance regressor (Alday et al., 2019)."
+The purpose of including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models including the interactions are presented below. Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. Continuous predictors were grand mean standardized (number of errors, number of feedback faster) or within-participant standardized (baseline EEG). <br><br>
+From Frömer et al. (2020; "When effort matters..."): "For each ERP, we regressed out the baseline activity at the same electrode sites (Alday et al., 2019). This approach accounts for variability prior to the effect of interest that can otherwise induce spurious effects due to noise or spill-over from previous stages of the trial. Although noise in the baseline is assumed to average to zero (across time points, as well as trials) when using traditional ERP-averaging approaches, this assumption does not necessarily hold for single-trial analyses, where a non-stationary baseline or unevenly distributed noise can easily lead to systematic biases in the subsequent time-series. To address these potential spurious effects, we follow recommendations to include the baseline as a nuisance regressor (Alday et al., 2019)."
 
 ```{r LMM-ERN-CRN-covariates, cache = knitr_cache_enabled}
 
@@ -1761,6 +1760,21 @@ tab_model(LMM_Pe_group_medication,
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
+
+
+# Pe include only unmedicated participants
+LMM_Pe_group_unmedicated <- lmer(Pe_200_400_Pz ~ group/stimulation  +  
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$medication == "no",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_group_unmedicated,
+  dv.labels = "Pe [μV], only unmedicated participants", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
 ```
 <br><br>
 **Covariates**
@@ -1778,13 +1792,13 @@ For further infos, see notes in section non-nested ERN-CRN models.
 
 ### ANOVAs
 
-To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Reinhart & Woodman 2014), MFN/ERN/CRN/Diff ERN-CRN were additionally analyzed with repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), and (only for MRN) response type (correct, incorrect). No  Greenhouse–Geisser correction was applied, as no factor had more than two levels. As can be seen below, the MFN, ERN, and CRN ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all effects (trend for ERN and CRN group difference and stimulation effect on ERN, significant stimulation effect on CRN). <br><br>
+To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Reinhart & Woodman, 2014), MFN/ERN/CRN/Diff ERN-CRN were additionally analyzed with repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), and (only for MRN) response type (correct, incorrect). No  Greenhouse–Geisser correction was applied, as no factor had more than two levels. As can be seen below, the MFN, ERN, and CRN ANOVAs yielded the same results as obtained with mixed-effects modeling with respect to all effects (trend for ERN and CRN group difference and stimulation effect on ERN, significant stimulation effect on CRN). <br><br>
 
-For comparison with Reinhart & Woodman (2014), we also used area amplitude quantifications. Since it is not clear from the paper which exact quantification method was used*, we exported ERN and difference ERN-CRN from -50 to 150 ms both as integral area amplitude (area for negatives subtracted from area for positives; is equivalent to mean amplitude, except that the mean is divided by the length of the interval) and negative area amplitude (positives are zeroed, only neg area is considered). When using the ERN quantification as integral area amplitude from -50 to 150 ms, there is a significant stimulation effect (is a trend for ERN negative area amplitude quantification). For the difference area amplitude quantifications, there is no stimulation effect. <br><br>
+For comparison with Reinhart & Woodman (2014), we also used area amplitude quantifications. Since it is not clear from the paper which exact quantification method was used°, we exported ERN and difference ERN-CRN from -50 to 150 ms both as integral area amplitude (area for negatives subtracted from area for positives; is equivalent to mean amplitude, except that the mean is divided by the length of the interval) and negative area amplitude (positives are zeroed, only neg area is considered). When using the ERN quantification as integral area amplitude from -50 to 150 ms, there is a significant stimulation effect (is a trend for ERN negative area amplitude quantification). For the difference area amplitude quantifications, there is no stimulation effect. <br><br>
 
 Note: <br>
-The area amplitude quantification in the flanker task contains 18 rt outlier trials (out of 55680 trials; 5 of those 18 errors). Those trials were not excluded from the bins in the flanker analysis, but this should be ok (also, rt in these trials is only slightly below 100 or above 800 ms). <br>
-I guess that Reinhart & Woodman used the quantification integral area amplitude difference ERN-CRN (instead of negative area amplitude), since one figure shows that ERN and CRN were both positive in their study. But still, it is not clear in their paper when/whether they used ERN and when difference ERN-CRN as measure (see Evernote 2020_12_21).
+The area amplitude quantification in the flanker task contains 18 RT outlier trials (out of 55680 trials; 5 of those 18 errors). Those trials were not excluded from the bins in the flanker analysis, but this should be ok (also, RT in these trials is only slightly below 100 or above 800 ms). <br>
+° I guess that Reinhart & Woodman used the quantification integral area amplitude difference ERN-CRN (instead of negative area amplitude), since one figure shows that ERN and CRN were both positive in their study. But still, it is not clear in their paper when/whether they used ERN and when difference ERN-CRN as measure (see Evernote 2020_12_21).
 
 ```{r ANOVAs}
 
@@ -1905,13 +1919,13 @@ afex_options(emmeans_model = "multivariate")
 
 
 # Pairwise t tests
-pairwise_ERN_mean_amp                <- summary(pairs(emmeans(anova_ERN_mean_amp, "stimulation", by = "group"), adjust = "holm"))
-pairwise_CRN_mean_amp                <- summary(pairs(emmeans(anova_CRN_mean_amp, "stimulation", by = "group"), adjust = "holm"))
-pairwise_CRN_mean_amp_by_stimulation <- summary(pairs(emmeans(anova_CRN_mean_amp, "group", by = "stimulation"), adjust = "holm"))
+pairwise_ERN_mean_amp                <- summary(pairs(emmeans(anova_ERN_mean_amp,                "stimulation", by = "group"), adjust = "holm"))
+pairwise_CRN_mean_amp                <- summary(pairs(emmeans(anova_CRN_mean_amp,                "stimulation", by = "group"), adjust = "holm"))
+pairwise_CRN_mean_amp_by_stimulation <- summary(pairs(emmeans(anova_CRN_mean_amp,                "group", by = "stimulation"), adjust = "holm"))
 pairwise_difference_ERN_CRN_mean_amp <- summary(pairs(emmeans(anova_difference_ERN_CRN_mean_amp, "stimulation", by = "group"), adjust = "holm"))
-pairwise_ERN_int_area                <- summary(pairs(emmeans(anova_ERN_int_area, "stimulation", by = "group"), adjust = "holm"))
+pairwise_ERN_int_area                <- summary(pairs(emmeans(anova_ERN_int_area,                "stimulation", by = "group"), adjust = "holm"))
 pairwise_difference_ERN_CRN_int_area <- summary(pairs(emmeans(anova_difference_ERN_CRN_int_area, "stimulation", by = "group"), adjust = "holm"))
-pairwise_ERN_neg_area                <- summary(pairs(emmeans(anova_ERN_neg_area, "stimulation", by = "group"), adjust = "holm"))
+pairwise_ERN_neg_area                <- summary(pairs(emmeans(anova_ERN_neg_area,                "stimulation", by = "group"), adjust = "holm"))
 pairwise_difference_ERN_CRN_neg_area <- summary(pairs(emmeans(anova_difference_ERN_CRN_neg_area, "stimulation", by = "group"), adjust = "holm"))
 
 
@@ -2020,7 +2034,7 @@ ggdraw() +
 
 
 # Test normality of residuals
-print("# ANOVA MFN: Normality of Residuals with Shapiro Wilk Test")
+print("# ANOVA MFN: Check Normality of Residuals with Shapiro Wilk Test")
 do.call(rbind, lapply(residuals_anova_MFN[,], function(x) shapiro.test(x)["p.value"]))
 
 print("# ANOVA ERN: Check Normality of Residuals with Shapiro Wilk Test")
@@ -2032,13 +2046,13 @@ do.call(rbind, lapply(residuals_anova_CRN[,], function(x) shapiro.test(x)["p.val
 
 * **Assumption #1: Dependent variable interval or ratio variable -> Is OK**
 
-* **Assumption #2: Balanced design** (each subject has to have a value in each condition) **-> Is OK**
+* **Assumption #2: Balanced design** (each participant has to have a value in each condition) **-> Is OK**
 
 * **Assumption #3: No dependency in the scores between participants** (dependency can exist only across scores for individuals) **-> Is OK**
 
-* **Assumption #4: Residuals** of the dependent variable in each level of the within-subjects factor are approximately **normally distributed -> Is OK** (see above; for incorrect verum condition only small deviation)
+* **Assumption #4: Residuals** of the dependent variable in each level of the within-participants factor are approximately **normally distributed -> Is OK** (see above; for incorrect verum condition only small deviation)
 
-* **Assumption #5: Sphericity** (only relevant for withlin-subject factors with > 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is OK**
+* **Assumption #5: Sphericity** (only relevant for within-participant factors with > 2 levels) (afex package automatically corrects (Greenhouse Geisser) for any violations if necessary) **-> Is OK**
 
 <br><br>
 
