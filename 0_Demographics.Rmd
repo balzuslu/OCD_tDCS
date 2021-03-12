@@ -79,7 +79,7 @@ demographics <- left_join(participant_data, questionnaires, by = c("Code" = "COD
   dplyr::rename(participant_id = Code,
                 BDI_Total      = BD2SUMT0, 
                 OCI_Total      = OCISUMT0, 
-                STAI_State    = STSSUMT0, 
+                STAI_State     = STSSUMT0, 
                 STAI_Trait     = STTSUMT0) %>%
   # Add group variable
   dplyr::mutate(group = as.factor(ifelse(substr(participant_id,13,13) == "C", "HC", "OCD")))   
@@ -137,7 +137,7 @@ demographics_per_group <- left_join(demographics_per_group_M_SD, demographics_pe
 
 
 
-### Handle cound variables
+### Handle count variables
 
 # Calculate Chi-squared tests
 gender_test     <- chisq.test(demographics$Geschlecht, demographics$group)
