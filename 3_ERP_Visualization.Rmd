@@ -30,7 +30,7 @@ knitr_cache_enabled = TRUE
 library(dplyr)      # for data manipulation
 library(ggplot2)    # for plotting
 library(cowplot)    # for arranging plots
-library(purrr)      # for calculate within-subject CIs for ERP trajectories
+library(purrr)      # for calculate within-participant CIs for ERP trajectories
 library(eegUtils)   # for plotting topographies
 library(tidyr)      # for gather function 
 
@@ -193,7 +193,7 @@ plot_per_participant_OCD
 
 ```{r plot-group-by-stimulation, fig.height = 10, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP trajectories (mean amplitude at FCz from 0 to 100 ms) as a function of (A) stimulation by group and (B) group by stimulation. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008).", cache = knitr_cache_enabled}
 
-# Calculate running within-subject CIs
+# Calculate running within-participant CIs
 running_CIs_group_stim <- resp_locked_data %>%
   split(.$time) %>%
   map(~summarySEwithinO(data = .,
@@ -203,10 +203,10 @@ running_CIs_group_stim <- resp_locked_data %>%
                        idvar = "participant_id"))
 
 
-# Calculate running within-subject CIs 
+# Calculate running within-participant CIs 
 CIs_group_stim <- purrr::map_df(running_CIs_group_stim,magrittr::extract) %>%
   dplyr::mutate(
-    time = rep(unique(resp_locked_data$time), each = 8) #Note, 8 refers to the number of conditions
+    time = rep(unique(resp_locked_data$time), each = 8) # Note: 8 refers to the number of conditions (group x stimulation x response_type = 2 x 2 x 2 = 8)
     )
 
 
@@ -248,7 +248,7 @@ plot_group_by_stim <- ggplot(resp_locked_data,aes(time, FCz)) +
 
 # Arrange plots
 figure_ERP_trajectories <- ggdraw() +
-  draw_plot(plot_stim_by_group,   x = 0, y =.5, width = 1, height =.5) +
+  draw_plot(plot_stim_by_group,  x = 0, y =.5, width = 1, height =.5) +
   draw_plot(plot_group_by_stim,  x = 0, y = 0, width = 1, height =.5) +
   draw_plot_label(c("A", "B"), c(0, 0), c(1, .5), size = 15)
 
@@ -260,6 +260,8 @@ ggsave("./figures/figure_ERP_trajectories.tiff", width = 14, height = 18, units 
 # Display plot
 figure_ERP_trajectories
 ```
+<br>
+*Note: CRN is clearly visible but positive. This is quite typical for mastoid reference. *
 <br><br>
 
 ## ERP Topographies {.tabset}
@@ -342,8 +344,8 @@ plot_topo_diff  <- plot_topo_diff + theme(legend.position = "none")
 figure_ERP_topographies <- ggdraw() +
   draw_plot(plot_topo,        x =  0,  y =  .1, width = .66,  height = .90)+
   draw_plot(plot_topo_diff,   x = .66, y =  .1, width = .306, height = .90)+
-  draw_plot(legend_topo,      x = .23, y =  0, width = .2,    height = .1) + 
-  draw_plot(legend_topo_diff, x = .7,  y =  0, width = .2,    height = .1)
+  draw_plot(legend_topo,      x = .23, y =  0,  width = .2,   height = .1) + 
+  draw_plot(legend_topo_diff, x = .7,  y =  0,  width = .2,   height = .1)
 
 
 # Save plot
