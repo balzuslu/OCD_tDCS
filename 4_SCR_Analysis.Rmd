@@ -65,7 +65,7 @@ my_figure_colors <- c("#8ea6b4", "#465369")
 ## Data Cleaning
 ***
 
-```{r load-and-clean-data, cache = knitr_cache_enabled}
+```{r load-and-clean-data}
 
 # Load data
 load(file = "./data/Single_Trial_Data.rda")

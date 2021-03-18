@@ -56,7 +56,7 @@ my_figure_colors_2 <- c("seagreen1","lightsalmon","seagreen","lightsalmon4")
 
 <!-- Load and clean data -->
 
-```{r load-and-clean-data, cache = knitr_cache_enabled}
+```{r load-and-clean-data}
 
 # Load data
 resp_locked_data <- read.csv(file = "./data/response_locked_data_for_plots.csv", header = TRUE)

@@ -54,7 +54,7 @@ is_outlier <- function(x) {
 
 <!-- Load and clean data -->
 
-```{r load-and-clean-data, cache = knitr_cache_enabled}
+```{r load-and-clean-data}
 
 # Load data 
 questionnaires <- read.spss("./data/psychoEQExport.sav", to.data.frame = TRUE, add.undeclared.levels = "no") # add.undeclared.levels required to prevent irrelevant warning message
