@@ -54,9 +54,12 @@ my_figure_colors_1 <- c("steelblue1","lightcoral","blue","red")
 my_figure_colors_2 <- c("seagreen1","lightsalmon","seagreen","lightsalmon4")
 ```
 
+## Response-locked ERPs
+***
+
 <!-- Load and clean data -->
 
-```{r load-and-clean-data}
+```{r load-and-clean-data-resp-locked}
 
 # Load data
 resp_locked_data <- read.csv(file = "./data/response_locked_data_for_plots.csv", header = TRUE)
@@ -132,12 +135,12 @@ resp_locked_data <- resp_locked_data[resp_locked_data$participant_id != "P_02" &
 resp_locked_data$participant_id <- droplevels(resp_locked_data$participant_id)
 ```
 
-## ERP Trajectories {.tabset}
+### ERP Trajectories {.tabset}
 ***
 
-### Per participant
+#### Per participant
 
-```{r plot-per-participant, fig.height = 9, fig.width = 10, cache = knitr_cache_enabled}
+```{r plot-per-participant-resp-locked, fig.height = 9, fig.width = 10, cache = knitr_cache_enabled}
 # Plot ERPs per participant for HC
 plot_per_participant_HC <- ggplot(resp_locked_data[resp_locked_data$group == "HC",],aes(time, FCz)) +
   stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour = stimulation:condition)) +
@@ -150,7 +153,7 @@ plot_per_participant_HC <- ggplot(resp_locked_data[resp_locked_data$group == "HC
   scale_colour_manual(values = my_figure_colors_2) +  
   facet_wrap(.~ participant_id+session, ncol = 8, labeller = labeller(.multi_line = FALSE, sep=": ")) +
   ggtitle("ERPs per participant: HC") +  
-  labs(x = "\ntime (ms)", y = expression(paste("Mean amplitude at FCz [",mu,"V]")), colour = "") +  
+  labs(x = "\ntime (ms)", y = expression(paste("FCz [",mu,"V]")), colour = "") +  
   theme(strip.text.x = element_text(margin = margin(0, 0, 0, 0))) +
   my_figure_theme
 
@@ -175,7 +178,7 @@ plot_per_participant_OCD <- ggplot(resp_locked_data[resp_locked_data$group == "O
   scale_colour_manual(values = my_figure_colors_2) +  
   facet_wrap(.~ participant_id+session, ncol = 8, labeller = labeller(.multi_line = FALSE, sep=": ")) +
   ggtitle("ERPs per participant: OCD") +  
-  labs(x = "\ntime (ms)", y = expression(paste("Mean amplitude at FCz [",mu,"V]")), colour = "") +  
+  labs(x = "\ntime (ms)", y = expression(paste("FCz [",mu,"V]")), colour = "") +  
   theme(strip.text.x = element_text(margin = margin(0, 0, 0, 0))) +
   my_figure_theme
 
@@ -189,12 +192,12 @@ plot_per_participant_OCD
 ```
 <br><br>
 
-### ERPs as a function of group and stimulation {.active}
+#### ERPs as a function of group and stimulation {.active}
 
-```{r plot-group-by-stimulation, fig.height = 10, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP trajectories (mean amplitude at FCz from 0 to 100 ms) as a function of (A) stimulation by group and (B) group by stimulation. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008).", cache = knitr_cache_enabled}
+```{r plot-group-by-stimulation-resp-locked, fig.height = 10, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP trajectories (at FCz) as a function of (A) stimulation by group and (B) group by stimulation. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008).", cache = knitr_cache_enabled}
 
 # Calculate running within-participant CIs
-running_CIs_group_stim <- resp_locked_data %>%
+running_CIs_group_stimulation_resp_locked <- resp_locked_data %>%
   split(.$time) %>%
   map(~summarySEwithinO(data = .,
                        measurevar = "FCz",
@@ -204,16 +207,16 @@ running_CIs_group_stim <- resp_locked_data %>%
 
 
 # Calculate running within-participant CIs 
-CIs_group_stim <- purrr::map_df(running_CIs_group_stim,magrittr::extract) %>%
+CIs_group_stimulation_resp_locked <- purrr::map_df(running_CIs_group_stimulation_resp_locked,magrittr::extract) %>%
   dplyr::mutate(
     time = rep(unique(resp_locked_data$time), each = 8) # Note: 8 refers to the number of conditions (group x stimulation x response_type = 2 x 2 x 2 = 8)
     )
 
 
 # Plot ERPs per stimulation by group
-plot_stim_by_group <- ggplot(resp_locked_data,aes(time, FCz)) +
+plot_stimulation_by_group_resp_locked <- ggplot(resp_locked_data,aes(time, FCz)) +
   stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= stimulation:condition)) +
-  geom_ribbon(data = CIs_group_stim, aes(ymin = FCz-ci, ymax = FCz+ci, fill = stimulation:condition), alpha = 0.15) + guides(fill = "none") +
+  geom_ribbon(data = CIs_group_stimulation_resp_locked, aes(ymin = FCz-ci, ymax = FCz+ci, fill = stimulation:condition), alpha = 0.15) + guides(fill = "none") +
   geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
   geom_hline(yintercept = 0, linetype = "dashed", colour="grey") +  
   geom_ribbon(aes(xmin=0, xmax=100), alpha=.2, fill="grey70") +
@@ -224,14 +227,14 @@ plot_stim_by_group <- ggplot(resp_locked_data,aes(time, FCz)) +
   scale_fill_manual(values = my_figure_colors_2) +
   facet_grid(. ~ group) + 
   ggtitle("ERPs per stimulation by group") +
-  labs(x = "\ntime (ms)", y = expression(paste("Mean amplitude at FCz [",mu,"V]")), colour = "") +
+  labs(x = "\ntime (ms)", y = expression(paste("FCz [",mu,"V]")), colour = "") +
   my_figure_theme
 
 
 # Plot ERPs per group by stimulation
-plot_group_by_stim <- ggplot(resp_locked_data,aes(time, FCz)) +
+plot_group_by_stimulation_resp_locked <- ggplot(resp_locked_data,aes(time, FCz)) +
   stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= group:condition)) +
-  geom_ribbon(data = CIs_group_stim, aes(ymin = FCz-ci, ymax = FCz+ci, fill = group:condition), alpha = 0.15) + guides(fill = "none") +
+  geom_ribbon(data = CIs_group_stimulation_resp_locked, aes(ymin = FCz-ci, ymax = FCz+ci, fill = group:condition), alpha = 0.15) + guides(fill = "none") +
   geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
   geom_hline(yintercept = 0, linetype = "dashed", colour="grey") + 
   geom_ribbon(aes(xmin=0, xmax=100), alpha=.2, fill="grey70") +
@@ -242,14 +245,14 @@ plot_group_by_stim <- ggplot(resp_locked_data,aes(time, FCz)) +
   scale_fill_manual(values = my_figure_colors_1) +
   facet_grid(. ~ stimulation) + 
   ggtitle("ERPs per group by stimulation") +
-  labs(x = "\ntime (ms)", y = expression(paste("Mean amplitude at FCz [",mu,"V]")), colour = "") +
+  labs(x = "\ntime (ms)", y = expression(paste("FCz [",mu,"V]")), colour = "") +
   my_figure_theme 
 
 
 # Arrange plots
-figure_ERP_trajectories <- ggdraw() +
-  draw_plot(plot_stim_by_group,  x = 0, y =.5, width = 1, height =.5) +
-  draw_plot(plot_group_by_stim,  x = 0, y = 0, width = 1, height =.5) +
+figure_ERP_trajectories_resp_locked <- ggdraw() +
+  draw_plot(plot_stimulation_by_group_resp_locked,  x = 0, y =.5, width = 1, height =.5) +
+  draw_plot(plot_group_by_stimulation_resp_locked,  x = 0, y = 0, width = 1, height =.5) +
   draw_plot_label(c("A", "B"), c(0, 0), c(1, .5), size = 15)
 
 
@@ -258,18 +261,18 @@ ggsave("./figures/figure_ERP_trajectories.tiff", width = 14, height = 18, units 
 
 
 # Display plot
-figure_ERP_trajectories
+figure_ERP_trajectories_resp_locked
 ```
 <br>
 *Note: CRN is clearly visible but positive. This is quite typical for mastoid reference. *
 <br><br>
 
-## ERP Topographies {.tabset}
+### ERP Topographies {.tabset}
 ***
 
-### Per group and response type
+#### Per group and response type
 
-```{r topographies, fig.height = 7, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP topograhpies (from 0 to 100 ms) separately for both groups and response conditions.", cache = knitr_cache_enabled}
+```{r topographies-resp-locked, fig.height = 7, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP topograhpies (from 0 to 100 ms) separately for both groups and response conditions.", cache = knitr_cache_enabled}
 # Convert to long format for electrodes
 data_topo <- resp_locked_data %>%
   # Remove channels of no interest
@@ -357,9 +360,9 @@ figure_ERP_topographies
 ```
 <br><br>
 
-### Per group, response type, and stimulation
+#### Per group, response type, and stimulation
 
-```{r topographies-stimulation, fig.height = 7, fig.width = 12, dpi=600, fig.cap = "Note. Response-locked ERP topograhpies (from 0 to 100 ms) separately for both groups, response conditions, and stimulation conditions.", cache = knitr_cache_enabled}
+```{r topographies-stimulation-resp-locked, fig.height = 7, fig.width = 12, dpi=600, fig.cap = "Note. Response-locked ERP topograhpies (from 0 to 100 ms) separately for both groups, response conditions, and stimulation conditions.", cache = knitr_cache_enabled}
 
 # Draw topographies including stimulation
 plot_topo_stimulation <- plot_topo + 
@@ -407,4 +410,164 @@ ggsave("./figures/figure_ERP_topographies_stimulation.tiff", width = 20, height 
 # Display plot
 figure_ERP_topographies_stimulation
 ```
+<br><br>
+
+## Stimulus-locked ERPs
+***
+
+<!-- Load and clean data -->
+
+```{r load-and-clean-data-stim-locked}
+
+# Load data
+stim_locked_data <- read.csv(file = "./data/stimulus_locked_data_for_plots.csv", header = TRUE)
+
+
+# Rename conditions
+stim_locked_data$condition[stim_locked_data$condition == 9]  <- "correct";
+stim_locked_data$condition[stim_locked_data$condition == 10] <- "incorrect";
+
+
+
+# Add stimulation condition variable
+stim_locked_data$stimulation <- NA
+stim_locked_data[
+  stim_locked_data$participant_id =="C_01_T1"| stim_locked_data$participant_id =="C_02_T1"| stim_locked_data$participant_id =="C_03_T2"|
+  stim_locked_data$participant_id =="C_04_T2"| stim_locked_data$participant_id =="C_05_T1"| stim_locked_data$participant_id =="C_06_T2"|
+  stim_locked_data$participant_id =="C_07_T1"| stim_locked_data$participant_id =="C_08_T1"| stim_locked_data$participant_id =="C_09_T2"|
+  stim_locked_data$participant_id =="C_10_T2"| stim_locked_data$participant_id =="C_11_T2"| stim_locked_data$participant_id =="C_12_T2"|
+  stim_locked_data$participant_id =="C_13_T1"| stim_locked_data$participant_id =="C_15_T2"| stim_locked_data$participant_id =="C_16_T1"|
+  stim_locked_data$participant_id =="C_17_T2"| stim_locked_data$participant_id =="C_18_T2"| stim_locked_data$participant_id =="C_19_T1"|
+  stim_locked_data$participant_id =="C_20_T1"| stim_locked_data$participant_id =="C_21_T2"| stim_locked_data$participant_id =="C_22_T2"|
+  stim_locked_data$participant_id =="C_23_T1"| stim_locked_data$participant_id =="C_24_T1"| stim_locked_data$participant_id =="C_25_T1"|
+  stim_locked_data$participant_id =="C_26_T1"| stim_locked_data$participant_id =="C_27_T2"| stim_locked_data$participant_id =="C_28_T2"|
+  stim_locked_data$participant_id =="C_29_T1"| stim_locked_data$participant_id =="C_30_T2"| stim_locked_data$participant_id =="P_01_T1"|
+  stim_locked_data$participant_id =="P_02_T2"| stim_locked_data$participant_id =="P_03_T2"| stim_locked_data$participant_id =="P_04_T1"|
+  stim_locked_data$participant_id =="P_05_T1"| stim_locked_data$participant_id =="P_06_T1"| stim_locked_data$participant_id =="P_07_T2"|
+  stim_locked_data$participant_id =="P_08_T2"| stim_locked_data$participant_id =="P_09_T2"| stim_locked_data$participant_id =="P_10_T1"|
+  stim_locked_data$participant_id =="P_11_T2"| stim_locked_data$participant_id =="P_12_T2"| stim_locked_data$participant_id =="P_13_T1"|
+  stim_locked_data$participant_id =="P_15_T1"| stim_locked_data$participant_id =="P_16_T1"| stim_locked_data$participant_id =="P_17_T2"|
+  stim_locked_data$participant_id =="P_18_T1"| stim_locked_data$participant_id =="P_19_T1"| stim_locked_data$participant_id =="P_20_T2"|
+  stim_locked_data$participant_id =="P_21_T2"| stim_locked_data$participant_id =="P_22_T1"| stim_locked_data$participant_id =="P_23_T1"|
+  stim_locked_data$participant_id =="P_24_T2"| stim_locked_data$participant_id =="P_25_T1"| stim_locked_data$participant_id =="P_26_T2"|
+  stim_locked_data$participant_id =="P_27_T1"| stim_locked_data$participant_id =="P_28_T2"| stim_locked_data$participant_id =="P_29_T2"|
+  stim_locked_data$participant_id =="P_30_T1",]$stimulation <- "sham"
+
+stim_locked_data[
+  stim_locked_data$participant_id =="C_01_T2"| stim_locked_data$participant_id =="C_02_T2"| stim_locked_data$participant_id =="C_03_T1"|
+  stim_locked_data$participant_id =="C_04_T1"| stim_locked_data$participant_id =="C_05_T2"| stim_locked_data$participant_id =="C_06_T1"|
+  stim_locked_data$participant_id =="C_07_T2"| stim_locked_data$participant_id =="C_08_T2"| stim_locked_data$participant_id =="C_09_T1"|
+  stim_locked_data$participant_id =="C_10_T1"| stim_locked_data$participant_id =="C_11_T1"| stim_locked_data$participant_id =="C_12_T1"|
+  stim_locked_data$participant_id =="C_13_T2"| stim_locked_data$participant_id =="C_15_T1"| stim_locked_data$participant_id =="C_16_T2"|
+  stim_locked_data$participant_id =="C_17_T1"| stim_locked_data$participant_id =="C_18_T1"| stim_locked_data$participant_id =="C_19_T2"|
+  stim_locked_data$participant_id =="C_20_T2"| stim_locked_data$participant_id =="C_21_T1"| stim_locked_data$participant_id =="C_22_T1"|
+  stim_locked_data$participant_id =="C_23_T2"| stim_locked_data$participant_id =="C_24_T2"| stim_locked_data$participant_id =="C_25_T2"|
+  stim_locked_data$participant_id =="C_26_T2"| stim_locked_data$participant_id =="C_27_T1"| stim_locked_data$participant_id =="C_28_T1"|
+  stim_locked_data$participant_id =="C_29_T2"| stim_locked_data$participant_id =="C_30_T1"| stim_locked_data$participant_id =="P_01_T2"|
+  stim_locked_data$participant_id =="P_02_T1"| stim_locked_data$participant_id =="P_03_T1"| stim_locked_data$participant_id =="P_04_T2"|
+  stim_locked_data$participant_id =="P_05_T2"| stim_locked_data$participant_id =="P_06_T2"| stim_locked_data$participant_id =="P_07_T1"|
+  stim_locked_data$participant_id =="P_08_T1"| stim_locked_data$participant_id =="P_09_T1"| stim_locked_data$participant_id =="P_10_T2"|
+  stim_locked_data$participant_id =="P_11_T1"| stim_locked_data$participant_id =="P_12_T1"| stim_locked_data$participant_id =="P_13_T2"|
+  stim_locked_data$participant_id =="P_15_T2"| stim_locked_data$participant_id =="P_16_T2"| stim_locked_data$participant_id =="P_17_T1"|
+  stim_locked_data$participant_id =="P_18_T2"| stim_locked_data$participant_id =="P_19_T2"| stim_locked_data$participant_id =="P_20_T1"|
+  stim_locked_data$participant_id =="P_21_T1"| stim_locked_data$participant_id =="P_22_T2"| stim_locked_data$participant_id =="P_23_T2"|
+  stim_locked_data$participant_id =="P_24_T1"| stim_locked_data$participant_id =="P_25_T2"| stim_locked_data$participant_id =="P_26_T1"|
+  stim_locked_data$participant_id =="P_27_T2"| stim_locked_data$participant_id =="P_28_T1"| stim_locked_data$participant_id =="P_29_T1"|
+  stim_locked_data$participant_id =="P_30_T2",]$stimulation <- "verum"
+
+
+
+# Add group and session variables and remove string '_T1/T2' from participant ID (to get correct number of factor levels later); make all factors
+stim_locked_data <- stim_locked_data  %>% 
+  dplyr::mutate(
+    group          = as.factor(ifelse(substr(participant_id, 1,1) == "C", "HC", "OCD")),
+    session        = as.factor(ifelse(substr(participant_id, 6,7) == "T1", "T1", "T2")),
+    participant_id = as.factor(substr(participant_id, 1,4)), 
+    condition      = as.factor(condition),
+    stimulation    = as.factor(stimulation)
+    )
+
+
+# Exclude P_02 (due to retainer) and C_02 (as preregistered: patients are excluded with their match)
+stim_locked_data <- stim_locked_data[stim_locked_data$participant_id != "P_02" & stim_locked_data$participant_id != "C_02",]
+stim_locked_data$participant_id <- droplevels(stim_locked_data$participant_id)
+```
+
+### ERP Trajectories {.tabset}
+***
+
+#### ERPs as a function of group and stimulation {.active}
+
+```{r plot-group-by-stimulation-stim-locked, fig.height = 10, fig.width = 10, dpi=600, fig.cap = "Note. Stimulus-locked ERP trajectories (at CPz, but note that for N2 FCz should better be displayed) as a function of (A) stimulation by group and (B) group by stimulation. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008).", cache = knitr_cache_enabled}
+
+# Calculate running within-participant CIs
+running_CIs_group_stimulation_stim_locked <- stim_locked_data %>%
+  split(.$time) %>%
+  map(~summarySEwithinO(data = .,
+                       measurevar = "CPz",
+                       withinvars = c("condition", "stimulation"),
+                       betweenvars = "group",
+                       idvar = "participant_id"))
+
+
+# Calculate running within-participant CIs 
+CIs_group_stimulation_stim_locked <- purrr::map_df(running_CIs_group_stimulation_stim_locked,magrittr::extract) %>%
+  dplyr::mutate(
+    time = rep(unique(stim_locked_data$time), each = 8) # Note: 8 refers to the number of conditions (group x stimulation x response_type = 2 x 2 x 2 = 8)
+    )
+
+
+# Plot ERPs per stimulation by group
+plot_stimulation_by_group_stim_locked <- ggplot(stim_locked_data,aes(time, CPz)) +
+  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= stimulation:condition)) +
+  geom_ribbon(data = CIs_group_stimulation_stim_locked, aes(ymin = CPz-ci, ymax = CPz+ci, fill = stimulation:condition), alpha = 0.15) + guides(fill = "none") +
+  geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour="grey") +  
+  geom_ribbon(aes(xmin=200, xmax=295), alpha=.2, fill="grey70") +
+  geom_ribbon(aes(xmin=305, xmax=500), alpha=.2, fill="grey70") +
+  coord_cartesian(ylim=c(-4,12), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-4,12,2)) +
+  scale_x_continuous(breaks=seq(-500,1000,200)) +
+  scale_colour_manual(values = my_figure_colors_2) +
+  scale_fill_manual(values = my_figure_colors_2) +
+  facet_grid(. ~ group) + 
+  ggtitle("ERPs per stimulation by group") +
+  labs(x = "\ntime (ms)", y = expression(paste("CPz [",mu,"V]")), colour = "") +
+  my_figure_theme
+
+
+# Plot ERPs per group by stimulation
+plot_group_by_stimulation_stim_locked <- ggplot(stim_locked_data,aes(time, CPz)) +
+  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= group:condition)) +
+  geom_ribbon(data = CIs_group_stimulation_stim_locked, aes(ymin = CPz-ci, ymax = CPz+ci, fill = group:condition), alpha = 0.15) + guides(fill = "none") +
+  geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour="grey") + 
+  geom_ribbon(aes(xmin=200, xmax=295), alpha=.2, fill="grey70") +
+  geom_ribbon(aes(xmin=305, xmax=500), alpha=.2, fill="grey70") +
+  coord_cartesian(ylim=c(-4,12), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-4,12,2)) +
+  scale_x_continuous(breaks=seq(-500,1000,200)) +
+  scale_colour_manual(values = my_figure_colors_1) +
+  scale_fill_manual(values = my_figure_colors_1) +
+  facet_grid(. ~ stimulation) + 
+  ggtitle("ERPs per group by stimulation") +
+  labs(x = "\ntime (ms)", y = expression(paste("CPz [",mu,"V]")), colour = "") +
+  my_figure_theme 
+
+
+# Arrange plots
+figure_ERP_trajectories_stim_locked <- ggdraw() +
+  draw_plot(plot_stimulation_by_group_stim_locked,  x = 0, y =.5, width = 1, height =.5) +
+  draw_plot(plot_group_by_stimulation_stim_locked,  x = 0, y = 0, width = 1, height =.5) +
+  draw_plot_label(c("A", "B"), c(0, 0), c(1, .5), size = 15)
+
+
+# Save plot
+ggsave("./figures/figure_ERP_trajectories_stim_locked.tiff", width = 14, height = 18, units = "cm", dpi=600, compression = "lzw")
+
+
+# Display plot
+figure_ERP_trajectories_stim_locked
+```
+<br>
 
