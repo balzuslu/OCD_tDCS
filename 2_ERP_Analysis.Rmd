@@ -125,12 +125,14 @@ single_trial_data_clean <- single_trial_data_clean %>%
                                               participant_id == "P_28" | participant_id == "P_30", "yes", "no")))
 
 
-# Add column for (within-participant standardized) baseline EEG (needed as covariate later) 
+# Add column for (within-participant standardized) baseline EEG, N2, P3 (needed as covariate later) 
 single_trial_data_clean <- single_trial_data_clean %>% 
   dplyr::group_by(participant_id, session) %>%
   dplyr::mutate(
     MFN_baseline_pre_200_0_FCz_standardized = scale(MFN_baseline_pre_200_0_FCz, center = TRUE, scale = TRUE),
-    Pe_baseline_pre_200_0_Pz_standardized   = scale(Pe_baseline_pre_200_0_Pz, center = TRUE, scale = TRUE))  %>%
+    Pe_baseline_pre_200_0_Pz_standardized   = scale(Pe_baseline_pre_200_0_Pz, center = TRUE, scale = TRUE),
+    N2_200_300_FCz_standardized             = scale(N2_200_300_FCz, center = TRUE, scale = TRUE),
+    P3_300_500_CPz_standardized             = scale(P3_300_500_CPz, center = TRUE, scale = TRUE))  %>%
   dplyr::ungroup()
 
 
@@ -911,6 +913,58 @@ From Frömer et al. (2020; "When effort matters..."): "For each ERP, we regresse
 
 ```{r LMM-ERN-CRN-covariates, cache = knitr_cache_enabled}
 
+# ERN check covariate P3
+LMM_ERN_P3 <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * P3_300_500_CPz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# CRN check covariate P3
+LMM_CRN_P3 <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * P3_300_500_CPz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# Display models in one table
+tab_model(LMM_ERN_P3, LMM_CRN_P3,
+  dv.labels = c("ERN [μV], covariate P3", "CRN [μV], covariate P3"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+
+# ERN check covariate N2
+LMM_ERN_N2 <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * N2_200_300_FCz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# CRN check covariate N2
+LMM_CRN_N2 <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * N2_200_300_FCz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# Display models in one table
+tab_model(LMM_ERN_N2, LMM_CRN_N2,
+  dv.labels = c("ERN [μV], covariate N2", "CRN [μV], covariate N2"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+
 # ERN check covariate baseline EEG
 LMM_ERN_baseline_EEG <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * MFN_baseline_pre_200_0_FCz_standardized  + 
   (1 + verum_sham | participant_id),
@@ -1123,13 +1177,13 @@ tab_model(LMM_ERN_unmedicated_OCD, LMM_CRN_unmedicated_OCD,
 **Covariates**
 <br><br>
 
-* **ERN group difference**: Remains a trend when including the covariate session, number of feedback faster, or stimulus type in the model. Turns non-significant when including the variable baseline EEG, number of errors or medication in the model. 
+* **ERN group difference**: Turns significant when including the covariate P3. Remains a trend when including the covariate session, number of feedback faster, or stimulus type in the model. Turns non-significant when including the variable N2, baseline EEG, number of errors or medication in the model. 
 
-* **CRN group difference**: Remains a trend when including the covariate baseline EEG, session, number of feedback faster, or stimulus type in the model. Turns non-significant when including the variable number of errors or medication in the model.
+* **CRN group difference**: Remains a trend when including the covariate P3, N2, baseline EEG, session, number of feedback faster, or stimulus type in the model. Turns non-significant when including the variable number of errors or medication in the model.
 
-* **ERN stimulation effect**: Remains a trend when including the covariate baseline EEG, session, or medication in the model. Turns non-significant when including the variable number of errors, number of feedback faster, or stimulus type in the model. 
+* **ERN stimulation effect**: Turns significant when including the covariate P3 or N2. Remains a trend when including the covariate baseline EEG, session, or medication in the model. Turns non-significant when including the variable number of errors, number of feedback faster, or stimulus type in the model. 
 
-* **CRN stimulation effect**: Remains significant when including the covariate baseline EEG, session, number of errors (almost sign.),  stimulus type, or medication in the model. Turns to a trend when including the variable number of feedback faster in the model (but only when allowing interactions with the covariate, not when only allowing its main effect). 
+* **CRN stimulation effect**: Remains significant when including the covariate P3, N2, baseline EEG, session, number of errors (almost sign.), stimulus type, or medication in the model. Turns to a trend when including the variable number of feedback faster in the model (but only when allowing interactions with the covariate, not when only allowing its main effect). 
 <br><br>
 
 **Subgroup analyses**
@@ -1237,6 +1291,57 @@ Is same as in non-nested models (tab LMM separately for ERN / CRN)
 #### Check covariates
 
 ```{r LMM-ERN-CRN-per-group-covariates, cache = knitr_cache_enabled}
+
+# ERN check covariate P3
+LMM_ERN_group_P3 <- lmer(MFN_0_100_FCz ~ group/stimulation * P3_300_500_CPz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# CRN check covariate P3
+LMM_CRN_group_P3 <- lmer(MFN_0_100_FCz ~ group/stimulation * P3_300_500_CPz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# Display models in one table
+tab_model(LMM_ERN_group_P3, LMM_CRN_group_P3,
+  dv.labels = c("ERN [μV], covariate P3", "CRN [μV], covariate P3"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+
+# ERN check covariate N2
+LMM_ERN_group_N2 <- lmer(MFN_0_100_FCz ~ group/stimulation * N2_200_300_FCz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# CRN check covariate N2
+LMM_CRN_group_N2 <- lmer(MFN_0_100_FCz ~ group/stimulation * N2_200_300_FCz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# Display models in one table
+tab_model(LMM_ERN_group_N2, LMM_CRN_group_N2,
+  dv.labels = c("ERN [μV], covariate N2", "CRN [μV], covariate N2"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
 
 
 # ERN check covariate baseline EEG
@@ -1430,7 +1535,7 @@ For further infos, see notes in section non-nested ERN-CRN models.
 
 * **CRN group difference**: See notes in section non-nested ERN-CRN models.
 
-* **ERN stimulation effect in HC/OCD**: For HC and OCD remains non-significant in all models.
+* **ERN stimulation effect in HC/OCD**: For HC and OCD remains non-significant in all models (turns to trend in both groups when including P3 as covariate).
 
 * **CRN stimulation effect in HC/OCD**: For HC remains non-significant in all models. For OCD remains significant in all models. 
 <br><br>
@@ -1498,6 +1603,36 @@ Notes for assumption check would be the same as written for the MFN model.
 #### Check covariates
 
 ```{r LMM-Pe-covariates, cache = knitr_cache_enabled}
+
+# Pe check covariate P3
+LMM_Pe_P3 <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * P3_300_500_CPz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) 
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_P3,
+  dv.labels = "Pe [μV], covariate P3", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+
+# Pe check covariate N2
+LMM_Pe_N2 <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * N2_200_300_FCz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) 
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_N2, 
+  dv.labels = "Pe [μV], covariate N2", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
 
 # Pe check covariate baseline EEG
 LMM_Pe_baseline_EEG <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * Pe_baseline_pre_200_0_Pz_standardized  + 
@@ -1626,11 +1761,10 @@ For further infos, see notes in section non-nested ERN-CRN models.
 
 * **Pe group difference**: Remains non-significant in all models. 
 
-* **Pe stimulation effect**: Remains significant when including the covariate session, number of errors, number of feedback faster. Turns trend when including the covariate baseline EEG. Turns non-significant when including the variable stimulus type or medication in the model. 
+* **Pe stimulation effect**: Remains significant when including the covariate P3, N2, session, number of errors, number of feedback faster. Turns trend when including the covariate baseline EEG. Turns non-significant when including the variable stimulus type or medication in the model. 
 
 * **Subgroup analysis**: When including only unmedicated participants or unmedicated patients, the stimulation effect on Pe remains significant. 
 <br><br>
-
 
 ### LMM for Pe (nested) {.tabset}
 
@@ -1675,6 +1809,36 @@ Is same as in non-nested model (tab LMM Pe)
 #### Check covariates
 
 ```{r LMM-Pe-per-group-covariates, cache = knitr_cache_enabled}
+
+# Pe check covariate P3
+LMM_Pe_group_P3 <- lmer(Pe_200_400_Pz ~ group/stimulation * P3_300_500_CPz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) 
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_group_P3,
+  dv.labels = "Pe [μV], covariate P3", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+
+# Pe check covariate N2
+LMM_Pe_group_N2 <- lmer(Pe_200_400_Pz ~ group/stimulation * N2_200_300_FCz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) 
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_group_N2, 
+  dv.labels = "Pe [μV], covariate N2", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
 
 # Pe check covariate baseline EEG
 LMM_Pe_group_baseline_EEG <- lmer(Pe_200_400_Pz ~ group/stimulation * Pe_baseline_pre_200_0_Pz_standardized  + 
@@ -1789,6 +1953,135 @@ For further infos, see notes in section non-nested ERN-CRN models.
 * **Pe group difference**: See notes in section non-nested model.
 
 * **Pe stimulation effect in HC/OCD**: For HC remains non-significant in all models. For OCD remains significant in all models, except for the model including the variable baseline EEG or stimulus type. 
+<br><br>
+
+### LMM for N2/P3 {.tabset}
+
+#### Model
+
+```{r LMM-N2-P3, cache = knitr_cache_enabled}
+
+# Add contrasts as numerical covariates via model matrix* (specify all possible contasts for now)
+model_matrix_N2_P3 <- model.matrix(~ stimulation * group * response_type * stimulus_type, single_trial_data_clean)
+
+
+# Attach the model matrix (4 columns) to the dataframe - only the new relevant columns
+single_trial_data_clean[, (ncol(single_trial_data_clean) + 1):(ncol(single_trial_data_clean) + 4)] <- model_matrix_N2_P3[,c(5,9,11,14)]
+
+
+# Assign descriptive names to the contrasts - only the new relevant columns
+names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 3):ncol(single_trial_data_clean)] <- c("incongruent_congruent", "verum_sham:incongruent_congruent", "incorrect_correct:incongruent_congruent", "verum_sham:incorrect_correct:incongruent_congruent")
+
+
+
+# N2 run final model (without correlations between random terms and random slope verum_sham:incongruent_congruent to achieve convergence) 
+LMM_N2 <- lmer(N2_200_300_FCz ~ verum_sham * OCD_HC * incorrect_correct * incongruent_congruent + 
+  (1 + verum_sham + incongruent_congruent + incorrect_correct + verum_sham:incorrect_correct + 
+     incorrect_correct:incongruent_congruent + verum_sham:incorrect_correct:incongruent_congruent || participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(LMM_N2) # Model does converge
+# isSingular(LMM_N2) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_N2)) # All terms explain variance (> 0.5%)
+
+
+
+# P3 run final model (without correlations between random terms and random slope verum_sham:incongruent_congruent to achieve convergence)  
+LMM_P3 <- lmer(P3_300_500_CPz ~ verum_sham * OCD_HC * incorrect_correct * incongruent_congruent + 
+  (1 + verum_sham + incongruent_congruent + incorrect_correct  + verum_sham:incorrect_correct + 
+     incorrect_correct:incongruent_congruent + verum_sham:incorrect_correct:incongruent_congruent || participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(LMM_P3) # Model does converge
+# isSingular(LMM_P3) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_P3)) # All terms explain variance (> 0.5%)
+
+
+
+# Display models in one table
+tab_model(LMM_N2,LMM_P3,
+  dv.labels = c("N2 [μV]","P3 [μV]"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+```
+<br><br>
+There is a stimulation effect on P3 (P3 more positive for verum than sham) and an effect of response type (see tab "ERP Visualization") on P3. There is an effect of stimulus type (N2 more neg for incongruent than congruent) for N2. There are no group differences or further interactions.
+<br><br>
+
+#### Assumption checks
+
+```{r LMM-N2-P3-assumptions, fig.width = 20, fig.height = 15, cache = knitr_cache_enabled}
+
+# N2 check model assumptions
+performance::check_model(LMM_N2, panel = TRUE)
+
+# In addition to plots, print verbal output for some assumption tests to facilitate conclusion
+print("# Check for heteroscedasticity")
+performance::check_heteroscedasticity(LMM_N2)
+
+print("# Check for influential observations (Cook's distance)")
+performance::check_outliers(LMM_N2, effects = "random")
+
+print("# Check for normal distributed random effects")
+performance::check_normality(LMM_N2, effects = "random")
+
+
+
+# P3 check model assumptions
+performance::check_model(LMM_P3, panel = TRUE)
+
+# In addition to plots, print verbal output for some assumption tests to facilitate conclusion
+print("# Check for heteroscedasticity")
+performance::check_heteroscedasticity(LMM_P3)
+
+print("# Check for influential observations (Cook's distance)")
+performance::check_outliers(LMM_P3, effects = "random")
+
+print("# Check for normal distributed random effects")
+performance::check_normality(LMM_P3, effects = "random")
+```
+
+* **Assumption 1: Independence of Data Points / Absence of collinearity -> Is OK?**
+    + Are predictors not highly correlated?
+    + Multicollinearity plot shows low and moderate correlations 
+
+* **Assumption 2: Normality of Residuals -> Is Not OK???** 
+    + Are residuals approximately normally distributed?
+    + Q-Q plot and density plot look not so great; Q-Q plot quite a bit off at the extremes 
+    + It is debated whether this is problematic at all; and violation does not seem so bad, so maybe not worry about it? 
+
+* **Assumption 3: Linearity -> Is OK** 
+    + Is the dependent variable linearly related to the fixed factors, random factors, and covariates?
+    + Plot of the residuals against the fitted values shows a random scatter pattern, no nonlinear or curvy pattern 
+
+* **Assumption 4: Homogeneity of Residual Variance (Heteroscedasticity) -> Is OK???**
+    + Have residuals constant variance across the range of the predicted values?
+    + Plot of the residuals against the fitted values shows an even spread around the centered line; but written output says this is not ok
+
+* **Assumption 5: Absence of Influential Data Points -> Is OK** 
+    + Are there are no influential values? 
+    + Cook's distance plot looks fine (for large N, Cook's distances should be below 1) and written output says there are no outliers 
+
+* **Assumption 6: Normality of Random Effects -> Is OK**
+    + Are random effects approximately normally distributed?
+    + Written output says this is (mostly) ok 
 <br><br>
 
 ## ANOVAs {.tabset}
