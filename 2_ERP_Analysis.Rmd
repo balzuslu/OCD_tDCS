@@ -1277,6 +1277,27 @@ tab_model(LMM_ERN_group, LMM_CRN_group,
   show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
+
+# # Alternatives to nested model for following-up interactions (with correction for multiple testing!)
+# emm_options(lmer.df = "Satterthwaite", lmerTest.limit = Inf)
+# 
+# # Alternative 1 (from JB)
+# follow <- emmeans(LMM_ERN, ~verum_sham:OCD_HC)
+# follow
+# contr <- list(verum_sham_HC = c(-1,1,0,0), verum_sham_OCD =c(0,0,-1,1), sham_HC_OCD =c(-1,0,1,0), verum_HC_OCD =c(0,-1,0,1))
+# pairwise <- contrast(follow, contr, adjust= "fdr")
+# my_table_template(pairwise)
+# 
+# # Alternative 2 
+# # Calculate pairwise comparisons (results completely identical with nested model)
+# LMM_ERN_pairwise_stimulation_by_group <- pairs(emmeans(LMM_ERN, "verum_sham", by = "OCD_HC"), adjust = "fdr")
+# LMM_ERN_pairwise_group_by_stimulation <- pairs(emmeans(LMM_ERN, "OCD_HC", by = "verum_sham"), adjust = "fdr")
+# # Get CIs for estimates (CIs not completely identical with nested model, also not with adjust = "none")
+# LMM_ERN_pairwise_stimulation_by_group_CI <- confint(LMM_ERN_pairwise_stimulation_by_group, adjust = "fdr", level = 0.95)[c(6,7)]
+# LMM_ERN_pairwise_group_by_stimulation_CI <- confint(LMM_ERN_pairwise_group_by_stimulation, adjust = "fdr", level = 0.95)[c(6,7)]
+# # Display table
+# my_table_template(cbind(LMM_ERN_pairwise_stimulation_by_group,LMM_ERN_pairwise_stimulation_by_group_CI))
+# my_table_template(cbind(LMM_ERN_pairwise_group_by_stimulation,LMM_ERN_pairwise_group_by_stimulation_CI))
 ```
 <br><br>
 For the separate groups, there is no significant effect of stimulation on ERN. According to the plots above it seemed that at least in the HC group, there is a smaller (i.e., less negative) ERN in the verum than in the sham condition. But this is not significant in the LMM.
