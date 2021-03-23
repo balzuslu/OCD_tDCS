@@ -1283,7 +1283,7 @@ tab_model(LMM_ERN_group, LMM_CRN_group,
 # # Alternatives to nested model for following-up interactions (with false discovery rate–adjusted p-values, Benjamini & Hochberg, 1995!)
 # emm_options(lmer.df = "Satterthwaite", lmerTest.limit = Inf)
 # 
-# # Alternative 1 (from JB 2021)
+# # Alternative 1 (from JB, 2021)
 # follow <- emmeans(LMM_ERN, ~verum_sham:OCD_HC)
 # follow
 # contr <- list(verum_sham_HC = c(-1,1,0,0), verum_sham_OCD =c(0,0,-1,1), sham_HC_OCD =c(-1,0,1,0), verum_HC_OCD =c(0,-1,0,1))
