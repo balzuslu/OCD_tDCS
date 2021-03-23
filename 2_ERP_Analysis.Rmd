@@ -909,7 +909,9 @@ Test against upper bound: t(`r round(upper$df, 2)`) = `r round(upper$"t value", 
 #### Check covariates
 
 The purpose of including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models including the interactions are presented below. Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. Continuous predictors were grand mean standardized (number of errors, number of feedback faster) or within-participant standardized (baseline EEG). <br><br>
-From Frömer et al. (2020; "When effort matters..."): "For each ERP, we regressed out the baseline activity at the same electrode sites (Alday et al., 2019). This approach accounts for variability prior to the effect of interest that can otherwise induce spurious effects due to noise or spill-over from previous stages of the trial. Although noise in the baseline is assumed to average to zero (across time points, as well as trials) when using traditional ERP-averaging approaches, this assumption does not necessarily hold for single-trial analyses, where a non-stationary baseline or unevenly distributed noise can easily lead to systematic biases in the subsequent time-series. To address these potential spurious effects, we follow recommendations to include the baseline as a nuisance regressor (Alday et al., 2019)."
+Inclusion of baseline activity as covariate was inspired by Frömer et al. (Nature Comm 2021; "For each ERP, we regressed out the baseline activity at the same electrode sites; baseline was included as a nuisance regressor (Alday et al., 2019)). Alday (2019) argues that including baseline activity as predictor is superior to baseline correction. Since I did baseline correction during preprocessing, adding it also as covariate is probably not advantageous. But for the response-locked ERPs in the flanker task it may be worth checking at least, since an early interval (-500 to -300 ms) was used for baseline correction and a later baseline interval (-200 to 0 ms) as covariate. So I keep the analysis with this covariate here. <br><br> 
+We also included trial-by-trial P3 and N2 amplitude (within-participant standardized) as a covariate. Thereby, we aimed to control for amplitude differences resulting from group or stimulation effects on stimulus-locked ERPs. Hence, we checked whether inclusion of P3/N2 as covariate changes the results of the stimulation or group effect on ERN/CRN (to control for the shift in the stimulus-locked ERP caused by group or stimulation that affects the ERN/CRN results). The model with the P3 will be reported as post hoc analysis (i.e., not stated in the preregistration), the N2 analysis is of no real interest and will not be reported. This additional analysis including P3 as predictor is justified by two papers (Klawohn et al., Psychophys., 2020; Meyer et al., Psychophys., 2017), reporting that the overlap of P300 with ERN might be problematic when trying to make inferences on effects of one of these components. Note that the P3 was quantified at CPz (since this is where this ERP typically emerges most; is also in line with the preregistration). However, since we actually aim to control for the P3 signal contained in the ERN, one could also use the P3 quantified at FCz as covariate (this value would rather reflect how much of the P3 is left in the FCz and thus affects the ERN). We decided to go with the first option. 
+
 
 ```{r LMM-ERN-CRN-covariates, cache = knitr_cache_enabled}
 
@@ -1277,6 +1279,27 @@ tab_model(LMM_ERN_group, LMM_CRN_group,
   show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
+
+# # Alternatives to nested model for following-up interactions (with false discovery rate–adjusted p-values, Benjamini & Hochberg, 1995!)
+# emm_options(lmer.df = "Satterthwaite", lmerTest.limit = Inf)
+# 
+# # Alternative 1 (from JB 2021)
+# follow <- emmeans(LMM_ERN, ~verum_sham:OCD_HC)
+# follow
+# contr <- list(verum_sham_HC = c(-1,1,0,0), verum_sham_OCD =c(0,0,-1,1), sham_HC_OCD =c(-1,0,1,0), verum_HC_OCD =c(0,-1,0,1))
+# pairwise <- contrast(follow, contr, adjust= "fdr")
+# my_table_template(pairwise)
+# 
+# # Alternative 2 
+# # Calculate pairwise comparisons (results completely identical with nested model)
+# LMM_ERN_pairwise_stimulation_by_group <- pairs(emmeans(LMM_ERN, "verum_sham", by = "OCD_HC"), adjust = "fdr")
+# LMM_ERN_pairwise_group_by_stimulation <- pairs(emmeans(LMM_ERN, "OCD_HC", by = "verum_sham"), adjust = "fdr")
+# # Get CIs for estimates (CIs not completely identical with nested model, also not with adjust = "none")
+# LMM_ERN_pairwise_stimulation_by_group_CI <- confint(LMM_ERN_pairwise_stimulation_by_group, adjust = "fdr", level = 0.95)[c(6,7)]
+# LMM_ERN_pairwise_group_by_stimulation_CI <- confint(LMM_ERN_pairwise_group_by_stimulation, adjust = "fdr", level = 0.95)[c(6,7)]
+# # Display table
+# my_table_template(cbind(LMM_ERN_pairwise_stimulation_by_group,LMM_ERN_pairwise_stimulation_by_group_CI))
+# my_table_template(cbind(LMM_ERN_pairwise_group_by_stimulation,LMM_ERN_pairwise_group_by_stimulation_CI))
 ```
 <br><br>
 For the separate groups, there is no significant effect of stimulation on ERN. According to the plots above it seemed that at least in the HC group, there is a smaller (i.e., less negative) ERN in the verum than in the sham condition. But this is not significant in the LMM.
@@ -1956,6 +1979,8 @@ For further infos, see notes in section non-nested ERN-CRN models.
 <br><br>
 
 ### LMM for N2/P3 {.tabset}
+
+We additionally checked whether there is a group difference of stimulation effect on stimulus-locked ERPs (P3, N2). The idea behind this was that the response-locked ERPs are superimposed on these stimulus-locked ERPs. hus, effects of group or stimulation on these stimulus-locked ERPs are of interest to us. We also included trial-by-trial P3 and N2 as a covariate (for results, see section "LMM for ERN/CRN", tab "Check covariates"). <br><br> 
 
 #### Model
 
