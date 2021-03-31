@@ -1173,6 +1173,40 @@ tab_model(LMM_ERN_unmedicated_OCD, LMM_CRN_unmedicated_OCD,
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
 )
+
+
+# # Plot predicted effects for interaction P3 and stimulation
+# plot_P3_stimulation <- plot_model(LMM_ERN_P3,
+#                                 type   = "pred",
+#                                 terms  = c("P3_300_500_CPz_standardized","verum_sham"),
+#                                 ci.lvl = .95) +
+#   labs(title = "ERN LMM: Plot interaction between P3 and stimulation", 
+#        x     = "P3 (standardized mean amplitude 300-500 ms at CPz [μV])", 
+#        y     = "ERN (mean amplitude 0-100 ms at FCz [μV])") +
+#   my_figure_theme +
+#   aes(color = group) + 
+#   scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("#ffad48", "#43b7c2")) +
+#   theme(axis.ticks.x = element_line()) + 
+#   scale_y_continuous(breaks=seq(-40, 40, 10), limits = c(-45,40), expand = c(0,0)) +
+#   scale_x_continuous(breaks=seq(-6, 4, 2),   limits = c(-6, 4),  expand = c(0,0)) 
+# plot_P3_stimulation
+# 
+# 
+# # Plot predicted effects for interaction P3 and group
+# plot_P3_group <- plot_model(LMM_ERN_P3,
+#                                 type   = "pred",
+#                                 terms  = c("P3_300_500_CPz_standardized","OCD_HC"),
+#                                 ci.lvl = .95) +
+#   labs(title = "ERN LMM: Plot interaction between P3 and group", 
+#        x     = "P3 (standardized mean amplitude 300-500 ms at CPz [μV])", 
+#        y     = "ERN (mean amplitude 0-100 ms at FCz [μV])") +
+#   my_figure_theme +
+#   aes(color = group) + 
+#   scale_color_manual(name = "Group", labels = c("HC","OCD"), values = c("#ffad48", "#43b7c2")) +
+#   theme(axis.ticks.x = element_line()) +
+#   scale_y_continuous(breaks=seq(-40, 40, 10), limits = c(-45,40), expand = c(0,0)) +
+#   scale_x_continuous(breaks=seq(-6, 4, 2),   limits = c(-6, 4),  expand = c(0,0))
+# plot_P3_group
 ```
 <br><br>
 
