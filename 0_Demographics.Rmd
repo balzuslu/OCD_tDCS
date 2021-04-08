@@ -32,6 +32,7 @@ library(knitr)      # for integrating computing and reporting in markdown
 library(kableExtra) # for customizing appearance of tables
 library(foreign)    # for reading in SPSS file
 library(tidyr)      # for gather and spread function
+library(lubridate)  # to convert seconds to minutes and seconds
 
 
 # Load functions
@@ -68,7 +69,8 @@ questionnaires   <- read.spss("./data/psychoEQExport.sav", to.data.frame = TRUE,
 # Select relevant variables
 participant_data <- participant_data[,c("Code","Alter","Geschlecht","Schulabschluss","Händigkeit","Komorbidität_1","Komorbidität_2",
                                         "Komorbidität_3","Medikamente_JaNein","SSRI","SNRI","Trizykl_Antidepressiva",
-                                        "Kombination_SSRI_Antidepressiva","YBOCS_gesamt","YBOCS_Gedanken","YBOCS_Handlungen","MADRS", "WST" )]
+                                        "Kombination_SSRI_Antidepressiva","YBOCS_gesamt","YBOCS_Gedanken","YBOCS_Handlungen","MADRS", "WST",
+                                        "Dauer_nach_tDCS_bis_Flanker_T1","Dauer_nach_tDCS_bis_Flanker_T2","Tage_zw_Sessions")]
 questionnaires   <- questionnaires[,c("CODE", "BD2SUMT0", "OCISUMT0", "STSSUMT0", "STTSUMT0")] 
 
 
@@ -202,3 +204,22 @@ my_table_template(rbind(demographics_per_group[c(1,2),], gender, education, hand
 
 ````
 <br><br>
+
+## Overview time intervals
+
+```{r time-intervals}
+
+# Create df with duration between stimulation and task in one column
+time <- demographics %>%
+  select(Dauer_nach_tDCS_bis_Flanker_T1,Dauer_nach_tDCS_bis_Flanker_T2) %>%
+  gather(key = Variable, value = seconds)
+
+interval_mean <- seconds_to_period(mean(time$seconds, na.rm = TRUE))
+interval_sd   <- seconds_to_period(sd(time$seconds, na.rm = TRUE))
+interval_min  <- seconds_to_period(min(time$seconds, na.rm = TRUE))
+interval_max  <- seconds_to_period(max(time$seconds, na.rm = TRUE))
+```
+
+Days between sessions: *M* = `r round(mean(demographics$Tage_zw_Sessions, na.rm = TRUE), digits = 2)` days, *SD* = `r round(sd(demographics$Tage_zw_Sessions, na.rm = TRUE), digits = 2)`, *range* = `r min(demographics$Tage_zw_Sessions)`- `r max(demographics$Tage_zw_Sessions)`.
+
+Duration between stimulation and task: *M* = `r interval_mean$minute`:`r round(interval_mean$second,digits=0)` min, *SD* = `r interval_sd$minute`:`r round(interval_sd$second,digits=0)`, *range* = `r interval_min$minute`:`r round(interval_min$second,digits=0)`- `r interval_max$minute`:`r round(interval_max$second,digits=0)`.
