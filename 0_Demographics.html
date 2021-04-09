@@ -483,7 +483,14 @@ questionnaires   &lt;- read.spss(&quot;./data/psychoEQExport.sav&quot;, to.data.
 participant_data &lt;- participant_data[,c(&quot;Code&quot;,&quot;Alter&quot;,&quot;Geschlecht&quot;,&quot;Schulabschluss&quot;,&quot;Händigkeit&quot;,&quot;Komorbidität_1&quot;,&quot;Komorbidität_2&quot;,
                                         &quot;Komorbidität_3&quot;,&quot;Medikamente_JaNein&quot;,&quot;SSRI&quot;,&quot;SNRI&quot;,&quot;Trizykl_Antidepressiva&quot;,
                                         &quot;Kombination_SSRI_Antidepressiva&quot;,&quot;YBOCS_gesamt&quot;,&quot;YBOCS_Gedanken&quot;,&quot;YBOCS_Handlungen&quot;,&quot;MADRS&quot;, &quot;WST&quot;,
-                                        &quot;Dauer_nach_tDCS_bis_Flanker_T1&quot;,&quot;Dauer_nach_tDCS_bis_Flanker_T2&quot;,&quot;Tage_zw_Sessions&quot;)]
+                                        &quot;Dauer_nach_tDCS_bis_Flanker_T1&quot;,&quot;Dauer_nach_tDCS_bis_Flanker_T2&quot;,&quot;Tage_zw_Sessions&quot;,
+                                        &quot;Jucken_T1&quot;,&quot;Kribbeln_T1&quot;,&quot;Brennen_T1&quot;,&quot;Wärme_Hitze_T1&quot;,&quot;Schmerz_T1&quot;,&quot;Kopfschmerzen_T1&quot;, &quot;Ermüdung_verringerte_Aufmerksamkeit_T1&quot;,
+                                        &quot;Konzentrationsschwierigkeit_T1&quot;,&quot;Stimmungsänderung_T1&quot;,&quot;Nervosität_T1&quot;,&quot;sonstiges_T1&quot;,&quot;Zeitpunkt_Empfindung_T1&quot;,
+                                        &quot;Auswirkung_Empfindung_auf_Leistung_T1&quot;,&quot;Lichtblitze_T1&quot;, &quot;Vermutete_Stimulationsart_T1&quot;
+                                        ,&quot;Jucken_T2&quot;,&quot;Kribbeln_T2&quot;,&quot;Brennen_T2&quot;,&quot;Wärme_Hitze_T2&quot;,&quot;Schmerz_T2&quot;,&quot;Kopfschmerzen_T2&quot;, &quot;Ermüdung_verringerte_Aufmerksamkeit_T2&quot;,
+                                        &quot;Konzentrationsschwierigkeit_T2&quot;,&quot;Stimmungsänderung_T2&quot;,&quot;Nervosität_T2&quot;,&quot;sonstiges_T2&quot;,&quot;Zeitpunkt_Empfindung_T2&quot;,
+                                        &quot;Auswirkung_Empfindung_auf_Leistung_T2&quot;,&quot;Lichtblitze_T2&quot;, &quot;Vermutete_Stimulationsart_T2&quot;,
+                                        &quot;Stimulationsbedingung_T1&quot;, &quot;Stimulationsbedingung_T2&quot;)]
 questionnaires   &lt;- questionnaires[,c(&quot;CODE&quot;, &quot;BD2SUMT0&quot;, &quot;OCISUMT0&quot;, &quot;STSSUMT0&quot;, &quot;STTSUMT0&quot;)] 
 
 
@@ -1343,8 +1350,8 @@ NA
 </table>
 <p><br><br></p>
 </div>
-<div id="overview-time-intervals" class="section level2">
-<h2>Overview time intervals</h2>
+<div id="overview-tdcs-time-intervals" class="section level2">
+<h2>Overview tDCS time intervals</h2>
 <pre class="r"><code># Create df with duration between stimulation and task in one column
 time &lt;- demographics %&gt;%
   select(Dauer_nach_tDCS_bis_Flanker_T1,Dauer_nach_tDCS_bis_Flanker_T2) %&gt;%
@@ -1355,10 +1362,1314 @@ interval_sd   &lt;- seconds_to_period(sd(time$seconds, na.rm = TRUE))
 interval_min  &lt;- seconds_to_period(min(time$seconds, na.rm = TRUE))
 interval_max  &lt;- seconds_to_period(max(time$seconds, na.rm = TRUE))</code></pre>
 <p>Days between sessions: <em>M</em> = 7.25 days, <em>SD</em> = 1.25, <em>range</em> = 5- 12.</p>
-<p>Duration between stimulation and task: <em>M</em> = 13:34 min, <em>SD</em> = 3:5, <em>range</em> = 7:55- 24:45.</p>
+<p>Duration between stimulation and task: <em>M</em> = 13:34 min, <em>SD</em> = 3:5, <em>range</em> = 7:55- 24:45. <br><br><br><br></p>
+</div>
+<div id="overview-tdcs-adverse-effects" class="section level2">
+<h2>Overview tDCS adverse effects</h2>
+<pre class="r"><code># Create overview adverse effects
+table_adverse_effects &lt;- demographics %&gt;% 
+  # Select the needed columns
+  dplyr::select(participant_id, Jucken_T1, Jucken_T2, Kribbeln_T1, Kribbeln_T2, Brennen_T1, Brennen_T2, Wärme_Hitze_T1, Wärme_Hitze_T2,
+         Schmerz_T1, Schmerz_T2, Kopfschmerzen_T1, Kopfschmerzen_T2, Ermüdung_verringerte_Aufmerksamkeit_T1, Ermüdung_verringerte_Aufmerksamkeit_T2, 
+         Konzentrationsschwierigkeit_T1, Konzentrationsschwierigkeit_T2, Stimmungsänderung_T1, Stimmungsänderung_T2, 
+         Nervosität_T1, Nervosität_T2, Auswirkung_Empfindung_auf_Leistung_T1, Auswirkung_Empfindung_auf_Leistung_T2,
+         Lichtblitze_T1, Lichtblitze_T2, Vermutete_Stimulationsart_T1, Vermutete_Stimulationsart_T2, Stimulationsbedingung_T1, Stimulationsbedingung_T2) %&gt;%
+  # Stack T1 and T2 for each adverse effect below each other (this also stacks all adverse effects in one column)
+  gather(adverse_effect, value, Jucken_T1:Jucken_T2, Kribbeln_T1:Kribbeln_T2, Brennen_T1:Brennen_T2, Wärme_Hitze_T1:Wärme_Hitze_T2,
+         Schmerz_T1:Schmerz_T2, Kopfschmerzen_T1:Kopfschmerzen_T2, Ermüdung_verringerte_Aufmerksamkeit_T1:Ermüdung_verringerte_Aufmerksamkeit_T2, 
+         Konzentrationsschwierigkeit_T1:Konzentrationsschwierigkeit_T2, Stimmungsänderung_T1:Stimmungsänderung_T2, 
+         Nervosität_T1:Nervosität_T2, Auswirkung_Empfindung_auf_Leistung_T1:Auswirkung_Empfindung_auf_Leistung_T2,
+         Lichtblitze_T1:Lichtblitze_T2, Vermutete_Stimulationsart_T1:Vermutete_Stimulationsart_T2, Stimulationsbedingung_T1:Stimulationsbedingung_T2) %&gt;%
+  # Create column for session and remove session from name of adverse effect
+  dplyr::mutate(session = substr(adverse_effect, nchar(adverse_effect) - 2 + 1, nchar(adverse_effect)), # extract substring of last 2 characters of adverse_effect
+         adverse_effect = substr(adverse_effect,1,nchar(adverse_effect)-3)) %&gt;% # remove substring of last 3 characters of adverse_effect
+  # Reshape table to show not all adverse effects  below each other in one column but have one column for each adverse effect
+  spread(key = adverse_effect, value = value) 
+
+
+# Create and display contingency tables
+my_table_template(prop.table(table(table_adverse_effects$Jucken, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = &quot;Jucken (%)&quot;, row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Kribbeln, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = &quot;Kribbeln (%)&quot;, row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Brennen, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = &quot;Brennen (%)&quot;, row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Wärme_Hitze, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = &quot;Wärme_Hitze (%)&quot;, row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Schmerz, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = &quot;Schmerz (%)&quot;, row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Kopfschmerzen, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = &quot;Kopfschmerzen (%)&quot;, row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Ermüdung_verringerte_Aufmerksamkeit, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = &quot;Ermüdung_verringerte_Aufmerksamkeit (%)&quot;, row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Konzentrationsschwierigkeit, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = &quot;Konzentrationsschwierigkeit (%)&quot;, row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Stimmungsänderung, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = &quot;Stimmungsänderung (%)&quot;, row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Nervosität, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = &quot;Nervosität (%)&quot;, row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Auswirkung_Empfindung_auf_Leistung, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = &quot;Auswirkung_Empfindung_auf_Leistung (%)&quot;, row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Lichtblitze, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = &quot;Lichtblitze (%)&quot;, row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Vermutete_Stimulationsart, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = &quot;Vermutete_Stimulationsart (%)&quot;, row_names = TRUE)
+
+
+# Calculate chi-squared tests
+chisq.test(table_adverse_effects$Jucken, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Kribbeln, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Brennen, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Wärme_Hitze, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Schmerz, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Kopfschmerzen, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Ermüdung_verringerte_Aufmerksamkeit, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Konzentrationsschwierigkeit, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Stimmungsänderung, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Nervosität, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Auswirkung_Empfindung_auf_Leistung, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Lichtblitze, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Vermutete_Stimulationsart, table_adverse_effects$Stimulationsbedingung)
+
+
+
+#### Double check: Treat rating as interval data and run t tests
+
+# Recode variables to numeric values
+table_adverse_effects_num &lt;- table_adverse_effects 
+table_adverse_effects_num[table_adverse_effects_num==&quot;keine&quot;]  &lt;- 0
+table_adverse_effects_num[table_adverse_effects_num==&quot;mild&quot;]   &lt;- 1
+table_adverse_effects_num[table_adverse_effects_num==&quot;moderat&quot;]&lt;- 2
+table_adverse_effects_num[table_adverse_effects_num==&quot;stark&quot;]  &lt;- 3
+table_adverse_effects_num[table_adverse_effects_num==&quot;überhaupt nicht&quot;]  &lt;- 0
+table_adverse_effects_num[table_adverse_effects_num==&quot;ein wenig&quot;]        &lt;- 1
+table_adverse_effects_num[table_adverse_effects_num==&quot;mäßig&quot;]            &lt;- 2
+table_adverse_effects_num[table_adverse_effects_num==&quot;sehr stark&quot;]       &lt;- 4
+table_adverse_effects_num[table_adverse_effects_num==&quot;ja&quot;]    &lt;- 1
+
+
+# Make column type numeric 
+table_adverse_effects_num[, c(3:13,16)] &lt;- sapply(table_adverse_effects_num[, c(3:13,16)], as.numeric)
+
+
+# Calculate means
+table_adverse_effects_num_means &lt;- table_adverse_effects_num %&gt;%
+  dplyr::group_by(Stimulationsbedingung) %&gt;%
+  dplyr::summarise_if(is.numeric, funs(mean,sd), na.rm = TRUE) %&gt;%
+  dplyr::ungroup()
+
+
+# Display means
+my_table_template(table_adverse_effects_num_means, caption = &quot;Mean of adverse effects, treated as interval data&quot;)
+
+
+# Calculate t tests (not adjusted for multiple testing)
+t.test(Jucken ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Kribbeln ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Brennen ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Wärme_Hitze ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE, na.action = &quot;na.pass&quot;) # exclusion of participant with missing value (P_03 excluded, due to missing value in T1)
+t.test(Schmerz ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE, na.action = &quot;na.pass&quot;) # exclusion of participant with missing value (P_01 excluded, due to missing value in T2)
+t.test(Kopfschmerzen ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Ermüdung_verringerte_Aufmerksamkeit ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Konzentrationsschwierigkeit ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Stimmungsänderung ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Nervosität ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Auswirkung_Empfindung_auf_Leistung ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Lichtblitze ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)</code></pre>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Jucken (%)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+sham
+</th>
+<th style="text-align:right;">
+verum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+keine
+</td>
+<td style="text-align:right;">
+55.36
+</td>
+<td style="text-align:right;">
+42.86
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mild
+</td>
+<td style="text-align:right;">
+23.21
+</td>
+<td style="text-align:right;">
+28.57
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+moderat
+</td>
+<td style="text-align:right;">
+16.07
+</td>
+<td style="text-align:right;">
+21.43
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stark
+</td>
+<td style="text-align:right;">
+5.36
+</td>
+<td style="text-align:right;">
+7.14
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Kribbeln (%)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+sham
+</th>
+<th style="text-align:right;">
+verum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+keine
+</td>
+<td style="text-align:right;">
+19.64
+</td>
+<td style="text-align:right;">
+14.29
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mild
+</td>
+<td style="text-align:right;">
+42.86
+</td>
+<td style="text-align:right;">
+44.64
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+moderat
+</td>
+<td style="text-align:right;">
+33.93
+</td>
+<td style="text-align:right;">
+35.71
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stark
+</td>
+<td style="text-align:right;">
+3.57
+</td>
+<td style="text-align:right;">
+5.36
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Brennen (%)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+sham
+</th>
+<th style="text-align:right;">
+verum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+keine
+</td>
+<td style="text-align:right;">
+58.93
+</td>
+<td style="text-align:right;">
+50.00
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mild
+</td>
+<td style="text-align:right;">
+26.79
+</td>
+<td style="text-align:right;">
+32.14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+moderat
+</td>
+<td style="text-align:right;">
+12.50
+</td>
+<td style="text-align:right;">
+12.50
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stark
+</td>
+<td style="text-align:right;">
+1.79
+</td>
+<td style="text-align:right;">
+5.36
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Wärme_Hitze (%)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+sham
+</th>
+<th style="text-align:right;">
+verum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+keine
+</td>
+<td style="text-align:right;">
+60.71
+</td>
+<td style="text-align:right;">
+69.09
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mild
+</td>
+<td style="text-align:right;">
+30.36
+</td>
+<td style="text-align:right;">
+27.27
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+moderat
+</td>
+<td style="text-align:right;">
+8.93
+</td>
+<td style="text-align:right;">
+3.64
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Schmerz (%)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+sham
+</th>
+<th style="text-align:right;">
+verum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+keine
+</td>
+<td style="text-align:right;">
+78.57
+</td>
+<td style="text-align:right;">
+81.82
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mild
+</td>
+<td style="text-align:right;">
+19.64
+</td>
+<td style="text-align:right;">
+16.36
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+moderat
+</td>
+<td style="text-align:right;">
+1.79
+</td>
+<td style="text-align:right;">
+1.82
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Kopfschmerzen (%)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+sham
+</th>
+<th style="text-align:right;">
+verum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+keine
+</td>
+<td style="text-align:right;">
+89.29
+</td>
+<td style="text-align:right;">
+89.29
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mild
+</td>
+<td style="text-align:right;">
+7.14
+</td>
+<td style="text-align:right;">
+8.93
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+moderat
+</td>
+<td style="text-align:right;">
+1.79
+</td>
+<td style="text-align:right;">
+1.79
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stark
+</td>
+<td style="text-align:right;">
+1.79
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Ermüdung_verringerte_Aufmerksamkeit (%)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+sham
+</th>
+<th style="text-align:right;">
+verum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+keine
+</td>
+<td style="text-align:right;">
+78.57
+</td>
+<td style="text-align:right;">
+80.36
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mild
+</td>
+<td style="text-align:right;">
+10.71
+</td>
+<td style="text-align:right;">
+12.50
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+moderat
+</td>
+<td style="text-align:right;">
+10.71
+</td>
+<td style="text-align:right;">
+5.36
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stark
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.79
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Konzentrationsschwierigkeit (%)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+sham
+</th>
+<th style="text-align:right;">
+verum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+keine
+</td>
+<td style="text-align:right;">
+78.57
+</td>
+<td style="text-align:right;">
+78.57
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mild
+</td>
+<td style="text-align:right;">
+16.07
+</td>
+<td style="text-align:right;">
+12.50
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+moderat
+</td>
+<td style="text-align:right;">
+5.36
+</td>
+<td style="text-align:right;">
+7.14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stark
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+1.79
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Stimmungsänderung (%)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+sham
+</th>
+<th style="text-align:right;">
+verum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+keine
+</td>
+<td style="text-align:right;">
+87.50
+</td>
+<td style="text-align:right;">
+89.29
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mild
+</td>
+<td style="text-align:right;">
+10.71
+</td>
+<td style="text-align:right;">
+5.36
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+moderat
+</td>
+<td style="text-align:right;">
+0.00
+</td>
+<td style="text-align:right;">
+3.57
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+stark
+</td>
+<td style="text-align:right;">
+1.79
+</td>
+<td style="text-align:right;">
+1.79
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Nervosität (%)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+sham
+</th>
+<th style="text-align:right;">
+verum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+keine
+</td>
+<td style="text-align:right;">
+85.71
+</td>
+<td style="text-align:right;">
+83.93
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mild
+</td>
+<td style="text-align:right;">
+10.71
+</td>
+<td style="text-align:right;">
+8.93
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+moderat
+</td>
+<td style="text-align:right;">
+3.57
+</td>
+<td style="text-align:right;">
+7.14
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Auswirkung_Empfindung_auf_Leistung (%)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+sham
+</th>
+<th style="text-align:right;">
+verum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+ein wenig
+</td>
+<td style="text-align:right;">
+12.50
+</td>
+<td style="text-align:right;">
+16.07
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+mäßig
+</td>
+<td style="text-align:right;">
+5.36
+</td>
+<td style="text-align:right;">
+7.14
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+überhaupt nicht
+</td>
+<td style="text-align:right;">
+82.14
+</td>
+<td style="text-align:right;">
+76.79
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Lichtblitze (%)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+sham
+</th>
+<th style="text-align:right;">
+verum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+ja
+</td>
+<td style="text-align:right;">
+5.36
+</td>
+<td style="text-align:right;">
+1.79
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+keine
+</td>
+<td style="text-align:right;">
+94.64
+</td>
+<td style="text-align:right;">
+98.21
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Vermutete_Stimulationsart (%)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:right;">
+sham
+</th>
+<th style="text-align:right;">
+verum
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+effektiv
+</td>
+<td style="text-align:right;">
+21.43
+</td>
+<td style="text-align:right;">
+26.79
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+ineffektiv
+</td>
+<td style="text-align:right;">
+10.71
+</td>
+<td style="text-align:right;">
+10.71
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+weiß nicht
+</td>
+<td style="text-align:right;">
+67.86
+</td>
+<td style="text-align:right;">
+62.50
+</td>
+</tr>
+</tbody>
+</table>
+<pre><code>
+    Pearson&#39;s Chi-squared test
+
+data:  table_adverse_effects$Jucken and table_adverse_effects$Stimulationsbedingung
+X-squared = 1.7727, df = 3, p-value = 0.6209
+
+
+    Pearson&#39;s Chi-squared test
+
+data:  table_adverse_effects$Kribbeln and table_adverse_effects$Stimulationsbedingung
+X-squared = 0.71973, df = 3, p-value = 0.8686
+
+
+    Pearson&#39;s Chi-squared test
+
+data:  table_adverse_effects$Brennen and table_adverse_effects$Stimulationsbedingung
+X-squared = 1.6826, df = 3, p-value = 0.6408
+
+
+    Pearson&#39;s Chi-squared test
+
+data:  table_adverse_effects$Wärme_Hitze and table_adverse_effects$Stimulationsbedingung
+X-squared = 1.6241, df = 2, p-value = 0.444
+
+
+    Pearson&#39;s Chi-squared test
+
+data:  table_adverse_effects$Schmerz and table_adverse_effects$Stimulationsbedingung
+X-squared = 0.20224, df = 2, p-value = 0.9038
+
+
+    Pearson&#39;s Chi-squared test
+
+data:  table_adverse_effects$Kopfschmerzen and table_adverse_effects$Stimulationsbedingung
+X-squared = 1.1111, df = 3, p-value = 0.7744
+
+
+    Pearson&#39;s Chi-squared test
+
+data:  table_adverse_effects$Ermüdung_verringerte_Aufmerksamkeit and table_adverse_effects$Stimulationsbedingung
+X-squared = 2.0882, df = 3, p-value = 0.5543
+
+
+    Pearson&#39;s Chi-squared test
+
+data:  table_adverse_effects$Konzentrationsschwierigkeit and table_adverse_effects$Stimulationsbedingung
+X-squared = 1.3929, df = 3, p-value = 0.7072
+
+
+    Pearson&#39;s Chi-squared test
+
+data:  table_adverse_effects$Stimmungsänderung and table_adverse_effects$Stimulationsbedingung
+X-squared = 3.0101, df = 3, p-value = 0.3901
+
+
+    Pearson&#39;s Chi-squared test
+
+data:  table_adverse_effects$Nervosität and table_adverse_effects$Stimulationsbedingung
+X-squared = 0.7681, df = 2, p-value = 0.6811
+
+
+    Pearson&#39;s Chi-squared test
+
+data:  table_adverse_effects$Auswirkung_Empfindung_auf_Leistung and table_adverse_effects$Stimulationsbedingung
+X-squared = 0.49398, df = 2, p-value = 0.7811
+
+
+    Pearson&#39;s Chi-squared test with Yates&#39; continuity correction
+
+data:  table_adverse_effects$Lichtblitze and table_adverse_effects$Stimulationsbedingung
+X-squared = 0.25926, df = 1, p-value = 0.6106
+
+
+    Pearson&#39;s Chi-squared test
+
+data:  table_adverse_effects$Vermutete_Stimulationsart and table_adverse_effects$Stimulationsbedingung
+X-squared = 0.45662, df = 2, p-value = 0.7959</code></pre>
+<table class="table table-striped table-condensed" style="font-size: 12px; width: auto !important; ">
+<caption style="font-size: initial !important;">
+Mean of adverse effects, treated as interval data
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+Stimulationsbedingung
+</th>
+<th style="text-align:right;">
+Auswirkung_Empfindung_auf_Leistung_mean
+</th>
+<th style="text-align:right;">
+Brennen_mean
+</th>
+<th style="text-align:right;">
+Ermüdung_verringerte_Aufmerksamkeit_mean
+</th>
+<th style="text-align:right;">
+Jucken_mean
+</th>
+<th style="text-align:right;">
+Konzentrationsschwierigkeit_mean
+</th>
+<th style="text-align:right;">
+Kopfschmerzen_mean
+</th>
+<th style="text-align:right;">
+Kribbeln_mean
+</th>
+<th style="text-align:right;">
+Lichtblitze_mean
+</th>
+<th style="text-align:right;">
+Nervosität_mean
+</th>
+<th style="text-align:right;">
+Schmerz_mean
+</th>
+<th style="text-align:right;">
+Stimmungsänderung_mean
+</th>
+<th style="text-align:right;">
+Wärme_Hitze_mean
+</th>
+<th style="text-align:right;">
+Auswirkung_Empfindung_auf_Leistung_sd
+</th>
+<th style="text-align:right;">
+Brennen_sd
+</th>
+<th style="text-align:right;">
+Ermüdung_verringerte_Aufmerksamkeit_sd
+</th>
+<th style="text-align:right;">
+Jucken_sd
+</th>
+<th style="text-align:right;">
+Konzentrationsschwierigkeit_sd
+</th>
+<th style="text-align:right;">
+Kopfschmerzen_sd
+</th>
+<th style="text-align:right;">
+Kribbeln_sd
+</th>
+<th style="text-align:right;">
+Lichtblitze_sd
+</th>
+<th style="text-align:right;">
+Nervosität_sd
+</th>
+<th style="text-align:right;">
+Schmerz_sd
+</th>
+<th style="text-align:right;">
+Stimmungsänderung_sd
+</th>
+<th style="text-align:right;">
+Wärme_Hitze_sd
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+sham
+</td>
+<td style="text-align:right;">
+0.23
+</td>
+<td style="text-align:right;">
+0.57
+</td>
+<td style="text-align:right;">
+0.32
+</td>
+<td style="text-align:right;">
+0.71
+</td>
+<td style="text-align:right;">
+0.27
+</td>
+<td style="text-align:right;">
+0.16
+</td>
+<td style="text-align:right;">
+1.21
+</td>
+<td style="text-align:right;">
+0.05
+</td>
+<td style="text-align:right;">
+0.18
+</td>
+<td style="text-align:right;">
+0.23
+</td>
+<td style="text-align:right;">
+0.16
+</td>
+<td style="text-align:right;">
+0.48
+</td>
+<td style="text-align:right;">
+0.54
+</td>
+<td style="text-align:right;">
+0.78
+</td>
+<td style="text-align:right;">
+0.66
+</td>
+<td style="text-align:right;">
+0.93
+</td>
+<td style="text-align:right;">
+0.56
+</td>
+<td style="text-align:right;">
+0.53
+</td>
+<td style="text-align:right;">
+0.80
+</td>
+<td style="text-align:right;">
+0.23
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+<td style="text-align:right;">
+0.47
+</td>
+<td style="text-align:right;">
+0.50
+</td>
+<td style="text-align:right;">
+0.66
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+verum
+</td>
+<td style="text-align:right;">
+0.30
+</td>
+<td style="text-align:right;">
+0.73
+</td>
+<td style="text-align:right;">
+0.29
+</td>
+<td style="text-align:right;">
+0.93
+</td>
+<td style="text-align:right;">
+0.32
+</td>
+<td style="text-align:right;">
+0.12
+</td>
+<td style="text-align:right;">
+1.32
+</td>
+<td style="text-align:right;">
+0.02
+</td>
+<td style="text-align:right;">
+0.23
+</td>
+<td style="text-align:right;">
+0.20
+</td>
+<td style="text-align:right;">
+0.18
+</td>
+<td style="text-align:right;">
+0.35
+</td>
+<td style="text-align:right;">
+0.60
+</td>
+<td style="text-align:right;">
+0.88
+</td>
+<td style="text-align:right;">
+0.65
+</td>
+<td style="text-align:right;">
+0.97
+</td>
+<td style="text-align:right;">
+0.69
+</td>
+<td style="text-align:right;">
+0.38
+</td>
+<td style="text-align:right;">
+0.79
+</td>
+<td style="text-align:right;">
+0.13
+</td>
+<td style="text-align:right;">
+0.57
+</td>
+<td style="text-align:right;">
+0.45
+</td>
+<td style="text-align:right;">
+0.58
+</td>
+<td style="text-align:right;">
+0.55
+</td>
+</tr>
+</tbody>
+</table>
+<pre><code>
+    Paired t-test
+
+data:  Jucken by Stimulationsbedingung
+t = -1.8476, df = 55, p-value = 0.07003
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.44671029  0.01813886
+sample estimates:
+mean of the differences 
+             -0.2142857 
+
+
+    Paired t-test
+
+data:  Kribbeln by Stimulationsbedingung
+t = -0.84638, df = 55, p-value = 0.401
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.3608350  0.1465493
+sample estimates:
+mean of the differences 
+             -0.1071429 
+
+
+    Paired t-test
+
+data:  Brennen by Stimulationsbedingung
+t = -1.1967, df = 55, p-value = 0.2366
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.4298604  0.1084318
+sample estimates:
+mean of the differences 
+             -0.1607143 
+
+
+    Paired t-test
+
+data:  Wärme_Hitze by Stimulationsbedingung
+t = 1.6299, df = 54, p-value = 0.1089
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.02927917  0.28382462
+sample estimates:
+mean of the differences 
+              0.1272727 
+
+
+    Paired t-test
+
+data:  Schmerz by Stimulationsbedingung
+t = 0.49656, df = 54, p-value = 0.6215
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.1104548  0.1831821
+sample estimates:
+mean of the differences 
+             0.03636364 
+
+
+    Paired t-test
+
+data:  Kopfschmerzen by Stimulationsbedingung
+t = 0.49663, df = 55, p-value = 0.6214
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.1084045  0.1798330
+sample estimates:
+mean of the differences 
+             0.03571429 
+
+
+    Paired t-test
+
+data:  Ermüdung_verringerte_Aufmerksamkeit by Stimulationsbedingung
+t = 0.40519, df = 55, p-value = 0.6869
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.1409263  0.2123549
+sample estimates:
+mean of the differences 
+             0.03571429 
+
+
+    Paired t-test
+
+data:  Konzentrationsschwierigkeit by Stimulationsbedingung
+t = -0.7718, df = 55, p-value = 0.4435
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.19267509  0.08553223
+sample estimates:
+mean of the differences 
+            -0.05357143 
+
+
+    Paired t-test
+
+data:  Stimmungsänderung by Stimulationsbedingung
+t = -0.18409, df = 55, p-value = 0.8546
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.2122576  0.1765433
+sample estimates:
+mean of the differences 
+            -0.01785714 
+
+
+    Paired t-test
+
+data:  Nervosität by Stimulationsbedingung
+t = -0.59654, df = 55, p-value = 0.5533
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.2335420  0.1263992
+sample estimates:
+mean of the differences 
+            -0.05357143 
+
+
+    Paired t-test
+
+data:  Auswirkung_Empfindung_auf_Leistung by Stimulationsbedingung
+t = -0.78174, df = 55, p-value = 0.4377
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.2545416  0.1116845
+sample estimates:
+mean of the differences 
+            -0.07142857 
+
+
+    Paired t-test
+
+data:  Lichtblitze by Stimulationsbedingung
+t = 1, df = 55, p-value = 0.3217
+alternative hypothesis: true difference in means is not equal to 0
+95 percent confidence interval:
+ -0.03585874  0.10728731
+sample estimates:
+mean of the differences 
+             0.03571429 </code></pre>
+<p><br><br></p>
+<p>The stimulation was well tolerated with minimal adverse effects. The most frequent adverse effects were transient tingling, itching, and burning sensation. Adverse effects were not significantly different between verum and sham stimulation. (This holds true when evaluating rating as ordinal data with chi-square test or as interval data with t test). Also, participants were indeed blind to stimulation condition.</p>
 </div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIkRlbW9ncmFwaGljcyINCm91dHB1dDogDQogIGh0bWxfZG9jdW1lbnQNCg0KLS0tDQoNCjwhLS0gU2V0IGdlbmVyYWwgc2V0dGluZ3MgLS0+DQoNCmBgYHtyIHNldHVwLCBpbmNsdWRlID0gRkFMU0V9DQoNCiMgU2V0IGdlbmVyYWwgc2V0dGluZ3MgZm9yIG1hcmtkb3duIGZpbGUNCmtuaXRyOjpvcHRzX2NodW5rJHNldCgNCiAgbWVzc2FnZSA9IEZBTFNFLA0KICB3YXJuaW5nID0gRkFMU0UsDQogIGNvbW1lbnQgPSAiIiwNCiAgcmVzdWx0cyA9ICJob2xkIg0KKQ0KDQoNCiMgQ2xlYXIgZW52aXJvbm1lbnQNCnJtKGxpc3QgPSBscygpKQ0KDQoNCiMgRW5hYmxlL2Rpc2FibGUgY2FjaGluZyBvZiB0aW1lLWNvbnN1bWluZyBjb2RlIGNodW5rcw0Ka25pdHJfY2FjaGVfZW5hYmxlZCA9IFRSVUUNCg0KDQojIExvYWQgcGFja2FnZXMNCmxpYnJhcnkoZHBseXIpICAgICAgIyBmb3IgZGF0YSBtYW5pcHVsYXRpb24NCmxpYnJhcnkoa25pdHIpICAgICAgIyBmb3IgaW50ZWdyYXRpbmcgY29tcHV0aW5nIGFuZCByZXBvcnRpbmcgaW4gbWFya2Rvd24NCmxpYnJhcnkoa2FibGVFeHRyYSkgIyBmb3IgY3VzdG9taXppbmcgYXBwZWFyYW5jZSBvZiB0YWJsZXMNCmxpYnJhcnkoZm9yZWlnbikgICAgIyBmb3IgcmVhZGluZyBpbiBTUFNTIGZpbGUNCmxpYnJhcnkodGlkeXIpICAgICAgIyBmb3IgZ2F0aGVyIGFuZCBzcHJlYWQgZnVuY3Rpb24NCmxpYnJhcnkobHVicmlkYXRlKSAgIyB0byBjb252ZXJ0IHNlY29uZHMgdG8gbWludXRlcyBhbmQgc2Vjb25kcw0KDQoNCiMgTG9hZCBmdW5jdGlvbnMNCnNvdXJjZSgiLi9mdW5jdGlvbnMvbXlfdGFibGVfdGVtcGxhdGUuUiIpICMgRnVuY3Rpb24gdG8gY3JlYXRlIHRhYmxlIHRlbXBsYXRlDQoNCg0KIyBUdXJuIG9mZiBzY2llbnRpZmljIG5vdGF0aW9uDQpvcHRpb25zKHNjaXBlbiA9IDk5OSkNCmBgYA0KPGJyPjxicj4gDQoNCiMjIFNhbXBsZSBPdmVydmlldw0KKioqDQoNCiogTiA9IDU2IChOIEhDID0gMjgsIE4gT0NEID0gMjgpDQoNCiogT0NEIGFuZCBIQyBtYXRjaGVkIGZvciBnZW5kZXIsIGFnZSwgZWR1Y2F0aW9uIGxldmVsLCBhbmQgaGFuZGVkbmVzcyANCg0KKiBOYXRpdmUgR2VybWFuIHNwZWFrZXJzIHdpdGggbm9ybWFsIG9yIGNvcnJlY3RlZC10by1ub3JtYWwgdmlzaW9uDQoNCiogUGF0aWVudHMgd2l0aCBPQ0Qgd2VyZSByZWNydWl0ZWQgZnJvbSB0aGUgb3V0cGF0aWVudCBjbGluaWMgYXQgSHVtYm9sZHQtVW5pdmVyc2l0w6R0IHp1IEJlcmxpbi4gQWxsIHBhdGllbnRzIHdlcmUgaW50ZXJ2aWV3ZWQgYW5kIGRpYWdub3NlZCBieSB0cmFpbmVkIHBzeWNob2xvZ2lzdHMgdXNpbmcgdGhlIFN0cnVjdHVyZWQgQ2xpbmljYWwgSW50ZXJ2aWV3IGZvciBEU00tSVYgKFNDSUQtSTsgV2l0dGNoZW4gZXQgYWwuLCAxOTk3KSBhbmQgbWV0IHRoZSBEU00tSVYgY3JpdGVyaWEgZm9yIE9DRCBhcyBwcmltYXJ5IGRpc29yZGVyLiANCg0KKiBFeGNsdXNpb24gY3JpdGVyaWEgDQogIC0gZ2VuZXJhbDogaGlzdG9yeSBvZiBhbnkgbmV1cm9sb2dpY2FsIGRpc29yZGVyLCBjdXJyZW50IG9yIGxpZmV0aW1lIGRpYWdub3NpcyBvZiBhIHN1YnN0YW5jZS1yZWxhdGVkIGRpc29yZGVyLCBzY2hpem9waHJlbmlhIHNwZWN0cnVtIGRpc29yZGVyLCBiaXBvbGFyIGRpc29yZGVyLCB1c2Ugb2YgYmVuem9kaWF6ZXBpbmVzIGR1cmluZyB0aGUgbGFzdCB3ZWVrIG9yIG9mIG5ldXJvbGVwdGljIG1lZGljYXRpb24gZHVyaW5nIGxhc3QgdGhyZWUgbW9udGhzLCBhbmQgZ2VuZXJhbCBleGNsdXNpb24gY3JpdGVyaWEgZm9yIHREQ1MgKGUuZy4sIGFueSBtZXRhbCBvciBlbGVjdHJvbmljIGltcGxhbnRzIGluIHRoZSBoZWFkIG9yIHVwcGVyIGJvZHksIHNraW4gZGlzb3JkZXIgb3Igc2tpbiBjb25kaXRpb24gYXQgb3IgbmVhciBzdGltdWxhdGlvbiBsb2NhdGlvbnMsIHByZWduYW5jeSkNCiAgLSBIQzogc2VsZi1yZXBvcnRlZCBoaXN0b3J5IG9mIGFueSBjdXJyZW50IG9yIHBhc3QgYXhpcyBJIGRpc29yZGVyIG9yIHBzeWNob3RoZXJhcGV1dGljIHRyZWF0bWVudA0KDQpgYGB7ciBkZW1vZ3JhcGhpY3N9DQoNCiMgTG9hZCBkYXRhIA0KcGFydGljaXBhbnRfZGF0YSA8LSByZWFkLnNwc3MoIi4vZGF0YS9Qcm9iYW5kZW5kYXRlbi5zYXYiLCB0by5kYXRhLmZyYW1lID0gVFJVRSkNCnF1ZXN0aW9ubmFpcmVzICAgPC0gcmVhZC5zcHNzKCIuL2RhdGEvcHN5Y2hvRVFFeHBvcnQuc2F2IiwgdG8uZGF0YS5mcmFtZSA9IFRSVUUsIGFkZC51bmRlY2xhcmVkLmxldmVscyA9ICJubyIpICMgYWRkLnVuZGVjbGFyZWQubGV2ZWxzIHJlcXVpcmVkIHRvIHByZXZlbnQgaXJyZWxldmFudCB3YXJuaW5nIG1lc3NhZ2UNCg0KDQojIFNlbGVjdCByZWxldmFudCB2YXJpYWJsZXMNCnBhcnRpY2lwYW50X2RhdGEgPC0gcGFydGljaXBhbnRfZGF0YVssYygiQ29kZSIsIkFsdGVyIiwiR2VzY2hsZWNodCIsIlNjaHVsYWJzY2hsdXNzIiwiSMOkbmRpZ2tlaXQiLCJLb21vcmJpZGl0w6R0XzEiLCJLb21vcmJpZGl0w6R0XzIiLA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJLb21vcmJpZGl0w6R0XzMiLCJNZWRpa2FtZW50ZV9KYU5laW4iLCJTU1JJIiwiU05SSSIsIlRyaXp5a2xfQW50aWRlcHJlc3NpdmEiLA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJLb21iaW5hdGlvbl9TU1JJX0FudGlkZXByZXNzaXZhIiwiWUJPQ1NfZ2VzYW10IiwiWUJPQ1NfR2VkYW5rZW4iLCJZQk9DU19IYW5kbHVuZ2VuIiwiTUFEUlMiLCAiV1NUIiwNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiRGF1ZXJfbmFjaF90RENTX2Jpc19GbGFua2VyX1QxIiwiRGF1ZXJfbmFjaF90RENTX2Jpc19GbGFua2VyX1QyIiwiVGFnZV96d19TZXNzaW9ucyIpXQ0KcXVlc3Rpb25uYWlyZXMgICA8LSBxdWVzdGlvbm5haXJlc1ssYygiQ09ERSIsICJCRDJTVU1UMCIsICJPQ0lTVU1UMCIsICJTVFNTVU1UMCIsICJTVFRTVU1UMCIpXSANCg0KDQojIE1lcmdlIGRhdGFmcmFtZXMgYW5kIHJlbmFtZSBjb2x1bW5zDQpwYXJ0aWNpcGFudF9kYXRhJENvZGUgPC0gZ3N1YigiICIsICIiLCBwYXJ0aWNpcGFudF9kYXRhJENvZGUgLCBmaXhlZCA9IFRSVUUpICMgZGVsZXRlIGVtcHR5IHNwYWNlcyBmcm9tIHN0cmluZyB0byBlbmFibGUgbWVyZ2luZw0KZGVtb2dyYXBoaWNzIDwtIGxlZnRfam9pbihwYXJ0aWNpcGFudF9kYXRhLCBxdWVzdGlvbm5haXJlcywgYnkgPSBjKCJDb2RlIiA9ICJDT0RFIikpICU+JQ0KICAjIFJlbmFtZSBzb21lIGNvbHVtbnMNCiAgZHBseXI6OnJlbmFtZShwYXJ0aWNpcGFudF9pZCA9IENvZGUsDQogICAgICAgICAgICAgICAgQkRJX1RvdGFsICAgICAgPSBCRDJTVU1UMCwgDQogICAgICAgICAgICAgICAgT0NJX1RvdGFsICAgICAgPSBPQ0lTVU1UMCwgDQogICAgICAgICAgICAgICAgU1RBSV9TdGF0ZSAgICAgPSBTVFNTVU1UMCwgDQogICAgICAgICAgICAgICAgU1RBSV9UcmFpdCAgICAgPSBTVFRTVU1UMCkgJT4lDQogICMgQWRkIGdyb3VwIHZhcmlhYmxlDQogIGRwbHlyOjptdXRhdGUoZ3JvdXAgPSBhcy5mYWN0b3IoaWZlbHNlKHN1YnN0cihwYXJ0aWNpcGFudF9pZCwxMywxMykgPT0gIkMiLCAiSEMiLCAiT0NEIikpKSAgIA0KDQoNCiMgRXhjbHVkZSBQXzAyIChkdWUgdG8gcmV0YWluZXIpIGFuZCBDXzAyIChhcyBwcmVyZWdpc3RlcmVkOiBwYXRpZW50cyBhcmUgZXhjbHVkZWQgd2l0aCB0aGVpciBtYXRjaCkNCmRlbW9ncmFwaGljcyA8LSBkZW1vZ3JhcGhpY3NbZGVtb2dyYXBoaWNzJHBhcnRpY2lwYW50X2lkICE9ICJNb2RFUk5fdERDU19QMDIiICYgZGVtb2dyYXBoaWNzJHBhcnRpY2lwYW50X2lkICE9ICJNb2RFUk5fdERDU19DMDIiLF0NCg0KDQojIENfMTIgcmVwZWF0ZWQgdGhlIFdTVCBhdCBUMiwgYmVjYXVzZSBzY29yZSBhdCBUMSB3YXMgdmVyeSBsb3cgKDIyKTsgc2NvcmUgYWNoaWV2ZWQgYXQgVDIgd2FzIDI1OyB3ZSB3aWxsIHVzZSB0aGlzIHNjb3JlIA0KZGVtb2dyYXBoaWNzW2RlbW9ncmFwaGljcyRwYXJ0aWNpcGFudF9pZCA9PSAiTW9kRVJOX3REQ1NfQzEyIixdJFdTVCA8LSAyNQ0KDQoNCg0KDQojIyMgSGFuZGxlIG51bWVyaWMgdmFyaWFibGVzDQoNCiMgQ2FsY3VsYXRlIE0gYW5kIFNEIHBlciBncm91cCANCmRlbW9ncmFwaGljc19wZXJfZ3JvdXBfTV9TRCA8LSBkZW1vZ3JhcGhpY3MgJT4lDQogIGRwbHlyOjpncm91cF9ieShncm91cCkgJT4lDQogICMgQ2FsY3VsYXRlIE0gYW5kIFNEIG9mIHRoZSB2YXJpYWJsZXMNCiAgZHBseXI6OnN1bW1hcml6ZShhY3Jvc3MoYyhBbHRlcixXU1QsWUJPQ1NfZ2VzYW10LFlCT0NTX0dlZGFua2VuLFlCT0NTX0hhbmRsdW5nZW4sTUFEUlMsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgQkRJX1RvdGFsLE9DSV9Ub3RhbCxTVEFJX1N0YXRlLFNUQUlfVHJhaXQpLCBsaXN0KG1lYW4sc2QpLCBuYS5ybSA9IFRSVUUpKSAlPiUNCiAgIyBSZXNoYXBlIHRhYmxlIHRvIGhhdmUgb25lIGNvbHVtbiBwZXIgZ3JvdXANCiAgZ2F0aGVyKGtleSA9IGtleSwgdmFsdWUgPSB2YWx1ZSwgMjpuY29sKC4pLCBmYWN0b3Jfa2V5ID0gVFJVRSkgJT4lIA0KICBzcHJlYWQoa2V5ID0gbmFtZXMoLilbMV0sIHZhbHVlID0gInZhbHVlIikgJT4lDQogICMgQWRkIHZhcmlhYmxlIGNvbHVtbg0KICBkcGx5cjo6bXV0YXRlKFZhcmlhYmxlID0gYygiQWx0ZXIiLCAiIiwgIldTVCIsICIiLCAiWUJPQ1NfVG90YWwiLCAiIiwgIllCT0NTX0dlZGFua2VuIiwgIiIsICJZQk9DU19IYW5kbHVuZ2VuIiwgIiIsICAiTUFEUlMiLCAiIiwgIkJESV9Ub3RhbCIsICIiLCAiT0NJX1RvdGFsIiwgIiIsICJTVEFJX1N0YXRlIiwgIiIsICJTVEFJX1RyYWl0IiwgIiIpKSAlPiUNCiAgIyBBZGQgTS9TRCBjb2x1bW4NCiAgZHBseXI6Om11dGF0ZShNX1NEX29yX24gPSBjKCJNIiwgIlNEIiwgIk0iLCAiU0QiLCAiTSIsICJTRCIsICJNIiwgIlNEIiwgIk0iLCAiU0QiLCAiTSIsICJTRCIsICJNIiwgIlNEIiwgIk0iLCAiU0QiLCAiTSIsICJTRCIsICJNIiwgIlNEIikpICU+JQ0KICAjIFJlb3JkZXIgY29sdW1ucw0KICBkcGx5cjo6c2VsZWN0KFZhcmlhYmxlLCBNX1NEX29yX24sIEhDLCBPQ0QpICU+JQ0KICBkcGx5cjo6dW5ncm91cCgpDQoNCg0KIyBDYWxjdWxhdGUgdCB0ZXN0cw0KZGVtb2dyYXBoaWNzX3Blcl9ncm91cF90X3Rlc3QgPC0gZGVtb2dyYXBoaWNzICU+JSANCiAgc2VsZWN0KEFsdGVyLFdTVCxCRElfVG90YWwsT0NJX1RvdGFsLFNUQUlfU3RhdGUsU1RBSV9UcmFpdCwgZ3JvdXApICU+JSANCiAgZ2F0aGVyKGtleSA9IFZhcmlhYmxlLCB2YWx1ZSA9IHZhbHVlLCAtZ3JvdXApICU+JSANCiAgZ3JvdXBfYnkoZ3JvdXAsIFZhcmlhYmxlKSAlPiUgDQogIGRwbHlyOjpzdW1tYXJpc2UodmFsdWUgPSBsaXN0KHZhbHVlKSkgJT4lIA0KICBzcHJlYWQoZ3JvdXAsIHZhbHVlKSAlPiUNCiAgZHBseXI6OnVuZ3JvdXAoKSAlPiUNCiAgZHBseXI6Omdyb3VwX2J5KFZhcmlhYmxlKSAlPiUgDQogIGRwbHlyOjptdXRhdGUoZGYgPSB0LnRlc3QodW5saXN0KEhDKSwgdW5saXN0KE9DRCkpJHBhcmFtZXRlciwNCiAgICAgICAgIHRfb3JfY2hpX3NxX3ZhbHVlID0gdC50ZXN0KHVubGlzdChIQyksIHVubGlzdChPQ0QpKSRzdGF0aXN0aWMsIA0KICAgICAgICAgcF92YWx1ZSA9IHQudGVzdCh1bmxpc3QoSEMpLCB1bmxpc3QoT0NEKSkkcC52YWx1ZSkgJT4lDQogIGRwbHlyOjpzZWxlY3QoLWMoSEMsIE9DRCkpICAlPiUNCiAgZHBseXI6OnVuZ3JvdXAoKQ0KDQoNCiMgTWVyZ2UgTV9TRCBhbmQgdCB0ZXN0IGluZm9zDQpkZW1vZ3JhcGhpY3NfcGVyX2dyb3VwIDwtIGxlZnRfam9pbihkZW1vZ3JhcGhpY3NfcGVyX2dyb3VwX01fU0QsIGRlbW9ncmFwaGljc19wZXJfZ3JvdXBfdF90ZXN0LCBieSA9ICJWYXJpYWJsZSIpDQoNCg0KDQoNCiMjIyBIYW5kbGUgY291bnQgdmFyaWFibGVzDQoNCiMgQ2FsY3VsYXRlIENoaS1zcXVhcmVkIHRlc3RzDQpnZW5kZXJfdGVzdCAgICAgPC0gY2hpc3EudGVzdChkZW1vZ3JhcGhpY3MkR2VzY2hsZWNodCwgZGVtb2dyYXBoaWNzJGdyb3VwKQ0KZWR1Y2F0aW9uX3Rlc3QgIDwtIGNoaXNxLnRlc3QoZGVtb2dyYXBoaWNzJFNjaHVsYWJzY2hsdXNzLCBkZW1vZ3JhcGhpY3MkZ3JvdXApDQpoYW5kZWRuZXNzX3Rlc3QgPC0gY2hpc3EudGVzdChkZW1vZ3JhcGhpY3MkIkjDpG5kaWdrZWl0IiwgZGVtb2dyYXBoaWNzJGdyb3VwKQ0KDQoNCiMgRXh0cmFjdCBjb3VudHMgZm9yIGdlbmRlcg0KZ2VuZGVyIDwtIGRlbW9ncmFwaGljcyAlPiUgZ3JvdXBfYnkoZ3JvdXApICU+JSBjb3VudChHZXNjaGxlY2h0KSAlPiUgDQogICMgUmVzaGFwZSB0YWJsZSB0byBoYXZlIG9uZSBjb2x1bW4gcGVyIGdyb3VwDQogIHNwcmVhZChrZXkgPSBuYW1lcyguKVsxXSwgdmFsdWUgPSBuKSAlPiUNCiAgIyBBZGQgY2hpIHNxdWFyZSByZXN1bHRzDQogIGRwbHlyOjptdXRhdGUoZGYgPSBpZmVsc2Uocm93X251bWJlcigpPT0xLCBnZW5kZXJfdGVzdCRwYXJhbWV0ZXIsIE5BKSwNCiAgICAgICAgICAgICAgICB0X29yX2NoaV9zcV92YWx1ZSA9IGlmZWxzZShyb3dfbnVtYmVyKCk9PTEsIGdlbmRlcl90ZXN0JHN0YXRpc3RpYywgTkEpLA0KICAgICAgICAgICAgICAgIHBfdmFsdWUgPSBpZmVsc2Uocm93X251bWJlcigpPT0xLCBnZW5kZXJfdGVzdCRwLnZhbHVlLCBOQSkpICU+JQ0KICAjIEFkZCBmaXJzdCBjb2x1bW4NCiAgZHBseXI6Om11dGF0ZShWYXJpYWJsZSA9IGMoIkdlc2NobGVjaHQiLCAiIikpICU+JQ0KICAjIFNlbGVjdCBhbmQgcmVvcmRlciBjb2x1bW5zDQogIGRwbHlyOjpzZWxlY3QoVmFyaWFibGUsIGV2ZXJ5dGhpbmcoKSkgJT4lDQogICMgUmVuYW1lIG9uZSBjb2x1bW4gdG8gbWFrZSByYmluZCB3aXJoIGNvbHVtbnMgYWJvdmUgcG9zc2libGUNCiAgZHBseXI6OnJlbmFtZShNX1NEX29yX24gPSBHZXNjaGxlY2h0KSAgJT4lDQogIGRwbHlyOjp1bmdyb3VwKCkNCg0KDQojIEV4dHJhY3QgY291bnRzIGZvciBlZHVjYXRpb24NCmVkdWNhdGlvbiA8LSBkZW1vZ3JhcGhpY3MgJT4lIGdyb3VwX2J5KGdyb3VwKSAlPiUgY291bnQoU2NodWxhYnNjaGx1c3MsIC5kcm9wID0gRkFMU0UpICU+JSANCiAgIyBSZXNoYXBlIHRhYmxlIHRvIGhhdmUgb25lIGNvbHVtbiBwZXIgZ3JvdXANCiAgc3ByZWFkKGtleSA9IG5hbWVzKC4pWzFdLCB2YWx1ZSA9IG4pICU+JQ0KICAjIEFkZCBjaGkgc3F1YXJlIHJlc3VsdHMNCiAgZHBseXI6Om11dGF0ZShkZiA9IGlmZWxzZShyb3dfbnVtYmVyKCk9PTEsIGVkdWNhdGlvbl90ZXN0JHBhcmFtZXRlciwgTkEpLA0KICAgICAgICAgICAgICAgIHRfb3JfY2hpX3NxX3ZhbHVlID0gaWZlbHNlKHJvd19udW1iZXIoKT09MSwgZWR1Y2F0aW9uX3Rlc3Qkc3RhdGlzdGljLCBOQSksDQogICAgICAgICAgICAgICAgcF92YWx1ZSA9IGlmZWxzZShyb3dfbnVtYmVyKCk9PTEsIGVkdWNhdGlvbl90ZXN0JHAudmFsdWUsIE5BKSkgJT4lDQogICMgQWRkIGZpcnN0IGNvbHVtbg0KICBkcGx5cjo6bXV0YXRlKFZhcmlhYmxlID0gYygiU2NodWxhYnNjaGx1c3MiLCAiIiwgIiIgLCAiIiwgIiIgLCAiIikpICU+JQ0KICAjIFNlbGVjdCBhbmQgcmVvcmRlciBjb2x1bW5zDQogIGRwbHlyOjpzZWxlY3QoVmFyaWFibGUsIGV2ZXJ5dGhpbmcoKSkgJT4lDQogICMgUmVuYW1lIG9uZSBjb2x1bW4gdG8gbWFrZSByYmluZCB3aXJoIGNvbHVtbnMgYWJvdmUgcG9zc2libGUNCiAgZHBseXI6OnJlbmFtZShNX1NEX29yX24gPSBTY2h1bGFic2NobHVzcykgICU+JQ0KICBkcGx5cjo6dW5ncm91cCgpDQoNCg0KIyBFeHRyYWN0IGNvdW50cyBmb3IgaGFuZGVkbmVzcw0KaGFuZGVkbmVzcyA8LSBkZW1vZ3JhcGhpY3MgJT4lIGdyb3VwX2J5KGdyb3VwKSAlPiUgY291bnQoSMOkbmRpZ2tlaXQsIC5kcm9wID0gRkFMU0UpICU+JSANCiAgIyBSZXNoYXBlIHRhYmxlIHRvIGhhdmUgb25lIGNvbHVtbiBwZXIgZ3JvdXANCiAgc3ByZWFkKGtleSA9IG5hbWVzKC4pWzFdLCB2YWx1ZSA9IG4pICU+JQ0KICAjIEFkZCBjaGkgc3F1YXJlIHJlc3VsdHMNCiAgZHBseXI6Om11dGF0ZShkZiA9IGlmZWxzZShyb3dfbnVtYmVyKCk9PTEsIGhhbmRlZG5lc3NfdGVzdCRwYXJhbWV0ZXIsIE5BKSwNCiAgICAgICAgICAgICAgICB0X29yX2NoaV9zcV92YWx1ZSA9IGlmZWxzZShyb3dfbnVtYmVyKCk9PTEsIGhhbmRlZG5lc3NfdGVzdCRzdGF0aXN0aWMsIE5BKSwNCiAgICAgICAgICAgICAgICBwX3ZhbHVlID0gaWZlbHNlKHJvd19udW1iZXIoKT09MSwgaGFuZGVkbmVzc190ZXN0JHAudmFsdWUsIE5BKSkgJT4lDQogICMgQWRkIGZpcnN0IGNvbHVtbg0KICBkcGx5cjo6bXV0YXRlKFZhcmlhYmxlID0gYygiSMOkbmRpZ2tlaXQiLCAiIiwgIiIpKSAlPiUNCiAgIyBTZWxlY3QgYW5kIHJlb3JkZXIgY29sdW1ucw0KICBkcGx5cjo6c2VsZWN0KFZhcmlhYmxlLCBldmVyeXRoaW5nKCkpICU+JQ0KICAjIFJlbmFtZSBvbmUgY29sdW1uIHRvIG1ha2UgcmJpbmQgd2lyaCBjb2x1bW5zIGFib3ZlIHBvc3NpYmxlDQogIGRwbHlyOjpyZW5hbWUoTV9TRF9vcl9uID0gSMOkbmRpZ2tlaXQpICAlPiUNCiAgZHBseXI6OnVuZ3JvdXAoKQ0KDQoNCg0KIyBEaXNwbGF5IHRhYmxlDQpteV90YWJsZV90ZW1wbGF0ZShyYmluZChkZW1vZ3JhcGhpY3NfcGVyX2dyb3VwW2MoMSwyKSxdLCBnZW5kZXIsIGVkdWNhdGlvbiwgaGFuZGVkbmVzcywgZGVtb2dyYXBoaWNzX3Blcl9ncm91cFtjKDM6bnJvdyhkZW1vZ3JhcGhpY3NfcGVyX2dyb3VwKSksXSksIGNhcHRpb24gPSAiRGVtb2dyYXBoaWMgYW5kIENsaW5pY2FsIFZhcmlhYmxlcyIpDQoNCmBgYGANCjxicj48YnI+DQoNCiMjIE92ZXJ2aWV3IHRpbWUgaW50ZXJ2YWxzDQoNCmBgYHtyIHRpbWUtaW50ZXJ2YWxzfQ0KDQojIENyZWF0ZSBkZiB3aXRoIGR1cmF0aW9uIGJldHdlZW4gc3RpbXVsYXRpb24gYW5kIHRhc2sgaW4gb25lIGNvbHVtbg0KdGltZSA8LSBkZW1vZ3JhcGhpY3MgJT4lDQogIHNlbGVjdChEYXVlcl9uYWNoX3REQ1NfYmlzX0ZsYW5rZXJfVDEsRGF1ZXJfbmFjaF90RENTX2Jpc19GbGFua2VyX1QyKSAlPiUNCiAgZ2F0aGVyKGtleSA9IFZhcmlhYmxlLCB2YWx1ZSA9IHNlY29uZHMpDQoNCmludGVydmFsX21lYW4gPC0gc2Vjb25kc190b19wZXJpb2QobWVhbih0aW1lJHNlY29uZHMsIG5hLnJtID0gVFJVRSkpDQppbnRlcnZhbF9zZCAgIDwtIHNlY29uZHNfdG9fcGVyaW9kKHNkKHRpbWUkc2Vjb25kcywgbmEucm0gPSBUUlVFKSkNCmludGVydmFsX21pbiAgPC0gc2Vjb25kc190b19wZXJpb2QobWluKHRpbWUkc2Vjb25kcywgbmEucm0gPSBUUlVFKSkNCmludGVydmFsX21heCAgPC0gc2Vjb25kc190b19wZXJpb2QobWF4KHRpbWUkc2Vjb25kcywgbmEucm0gPSBUUlVFKSkNCmBgYA0KDQpEYXlzIGJldHdlZW4gc2Vzc2lvbnM6ICpNKiA9IGByIHJvdW5kKG1lYW4oZGVtb2dyYXBoaWNzJFRhZ2VfendfU2Vzc2lvbnMsIG5hLnJtID0gVFJVRSksIGRpZ2l0cyA9IDIpYCBkYXlzLCAqU0QqID0gYHIgcm91bmQoc2QoZGVtb2dyYXBoaWNzJFRhZ2VfendfU2Vzc2lvbnMsIG5hLnJtID0gVFJVRSksIGRpZ2l0cyA9IDIpYCwgKnJhbmdlKiA9IGByIG1pbihkZW1vZ3JhcGhpY3MkVGFnZV96d19TZXNzaW9ucylgLSBgciBtYXgoZGVtb2dyYXBoaWNzJFRhZ2VfendfU2Vzc2lvbnMpYC4NCg0KRHVyYXRpb24gYmV0d2VlbiBzdGltdWxhdGlvbiBhbmQgdGFzazogKk0qID0gYHIgaW50ZXJ2YWxfbWVhbiRtaW51dGVgOmByIHJvdW5kKGludGVydmFsX21lYW4kc2Vjb25kLGRpZ2l0cz0wKWAgbWluLCAqU0QqID0gYHIgaW50ZXJ2YWxfc2QkbWludXRlYDpgciByb3VuZChpbnRlcnZhbF9zZCRzZWNvbmQsZGlnaXRzPTApYCwgKnJhbmdlKiA9IGByIGludGVydmFsX21pbiRtaW51dGVgOmByIHJvdW5kKGludGVydmFsX21pbiRzZWNvbmQsZGlnaXRzPTApYC0gYHIgaW50ZXJ2YWxfbWF4JG1pbnV0ZWA6YHIgcm91bmQoaW50ZXJ2YWxfbWF4JHNlY29uZCxkaWdpdHM9MClgLg==</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIkRlbW9ncmFwaGljcyINCm91dHB1dDogDQogIGh0bWxfZG9jdW1lbnQNCg0KLS0tDQoNCjwhLS0gU2V0IGdlbmVyYWwgc2V0dGluZ3MgLS0+DQoNCmBgYHtyIHNldHVwLCBpbmNsdWRlID0gRkFMU0V9DQoNCiMgU2V0IGdlbmVyYWwgc2V0dGluZ3MgZm9yIG1hcmtkb3duIGZpbGUNCmtuaXRyOjpvcHRzX2NodW5rJHNldCgNCiAgbWVzc2FnZSA9IEZBTFNFLA0KICB3YXJuaW5nID0gRkFMU0UsDQogIGNvbW1lbnQgPSAiIiwNCiAgcmVzdWx0cyA9ICJob2xkIg0KKQ0KDQoNCiMgQ2xlYXIgZW52aXJvbm1lbnQNCnJtKGxpc3QgPSBscygpKQ0KDQoNCiMgRW5hYmxlL2Rpc2FibGUgY2FjaGluZyBvZiB0aW1lLWNvbnN1bWluZyBjb2RlIGNodW5rcw0Ka25pdHJfY2FjaGVfZW5hYmxlZCA9IFRSVUUNCg0KDQojIExvYWQgcGFja2FnZXMNCmxpYnJhcnkoZHBseXIpICAgICAgIyBmb3IgZGF0YSBtYW5pcHVsYXRpb24NCmxpYnJhcnkoa25pdHIpICAgICAgIyBmb3IgaW50ZWdyYXRpbmcgY29tcHV0aW5nIGFuZCByZXBvcnRpbmcgaW4gbWFya2Rvd24NCmxpYnJhcnkoa2FibGVFeHRyYSkgIyBmb3IgY3VzdG9taXppbmcgYXBwZWFyYW5jZSBvZiB0YWJsZXMNCmxpYnJhcnkoZm9yZWlnbikgICAgIyBmb3IgcmVhZGluZyBpbiBTUFNTIGZpbGUNCmxpYnJhcnkodGlkeXIpICAgICAgIyBmb3IgZ2F0aGVyIGFuZCBzcHJlYWQgZnVuY3Rpb24NCmxpYnJhcnkobHVicmlkYXRlKSAgIyB0byBjb252ZXJ0IHNlY29uZHMgdG8gbWludXRlcyBhbmQgc2Vjb25kcw0KDQoNCiMgTG9hZCBmdW5jdGlvbnMNCnNvdXJjZSgiLi9mdW5jdGlvbnMvbXlfdGFibGVfdGVtcGxhdGUuUiIpICMgRnVuY3Rpb24gdG8gY3JlYXRlIHRhYmxlIHRlbXBsYXRlDQoNCg0KIyBUdXJuIG9mZiBzY2llbnRpZmljIG5vdGF0aW9uDQpvcHRpb25zKHNjaXBlbiA9IDk5OSkNCmBgYA0KPGJyPjxicj4gDQoNCiMjIFNhbXBsZSBPdmVydmlldw0KKioqDQoNCiogTiA9IDU2IChOIEhDID0gMjgsIE4gT0NEID0gMjgpDQoNCiogT0NEIGFuZCBIQyBtYXRjaGVkIGZvciBnZW5kZXIsIGFnZSwgZWR1Y2F0aW9uIGxldmVsLCBhbmQgaGFuZGVkbmVzcyANCg0KKiBOYXRpdmUgR2VybWFuIHNwZWFrZXJzIHdpdGggbm9ybWFsIG9yIGNvcnJlY3RlZC10by1ub3JtYWwgdmlzaW9uDQoNCiogUGF0aWVudHMgd2l0aCBPQ0Qgd2VyZSByZWNydWl0ZWQgZnJvbSB0aGUgb3V0cGF0aWVudCBjbGluaWMgYXQgSHVtYm9sZHQtVW5pdmVyc2l0w6R0IHp1IEJlcmxpbi4gQWxsIHBhdGllbnRzIHdlcmUgaW50ZXJ2aWV3ZWQgYW5kIGRpYWdub3NlZCBieSB0cmFpbmVkIHBzeWNob2xvZ2lzdHMgdXNpbmcgdGhlIFN0cnVjdHVyZWQgQ2xpbmljYWwgSW50ZXJ2aWV3IGZvciBEU00tSVYgKFNDSUQtSTsgV2l0dGNoZW4gZXQgYWwuLCAxOTk3KSBhbmQgbWV0IHRoZSBEU00tSVYgY3JpdGVyaWEgZm9yIE9DRCBhcyBwcmltYXJ5IGRpc29yZGVyLiANCg0KKiBFeGNsdXNpb24gY3JpdGVyaWEgDQogIC0gZ2VuZXJhbDogaGlzdG9yeSBvZiBhbnkgbmV1cm9sb2dpY2FsIGRpc29yZGVyLCBjdXJyZW50IG9yIGxpZmV0aW1lIGRpYWdub3NpcyBvZiBhIHN1YnN0YW5jZS1yZWxhdGVkIGRpc29yZGVyLCBzY2hpem9waHJlbmlhIHNwZWN0cnVtIGRpc29yZGVyLCBiaXBvbGFyIGRpc29yZGVyLCB1c2Ugb2YgYmVuem9kaWF6ZXBpbmVzIGR1cmluZyB0aGUgbGFzdCB3ZWVrIG9yIG9mIG5ldXJvbGVwdGljIG1lZGljYXRpb24gZHVyaW5nIGxhc3QgdGhyZWUgbW9udGhzLCBhbmQgZ2VuZXJhbCBleGNsdXNpb24gY3JpdGVyaWEgZm9yIHREQ1MgKGUuZy4sIGFueSBtZXRhbCBvciBlbGVjdHJvbmljIGltcGxhbnRzIGluIHRoZSBoZWFkIG9yIHVwcGVyIGJvZHksIHNraW4gZGlzb3JkZXIgb3Igc2tpbiBjb25kaXRpb24gYXQgb3IgbmVhciBzdGltdWxhdGlvbiBsb2NhdGlvbnMsIHByZWduYW5jeSkNCiAgLSBIQzogc2VsZi1yZXBvcnRlZCBoaXN0b3J5IG9mIGFueSBjdXJyZW50IG9yIHBhc3QgYXhpcyBJIGRpc29yZGVyIG9yIHBzeWNob3RoZXJhcGV1dGljIHRyZWF0bWVudA0KDQpgYGB7ciBkZW1vZ3JhcGhpY3N9DQoNCiMgTG9hZCBkYXRhIA0KcGFydGljaXBhbnRfZGF0YSA8LSByZWFkLnNwc3MoIi4vZGF0YS9Qcm9iYW5kZW5kYXRlbi5zYXYiLCB0by5kYXRhLmZyYW1lID0gVFJVRSkNCnF1ZXN0aW9ubmFpcmVzICAgPC0gcmVhZC5zcHNzKCIuL2RhdGEvcHN5Y2hvRVFFeHBvcnQuc2F2IiwgdG8uZGF0YS5mcmFtZSA9IFRSVUUsIGFkZC51bmRlY2xhcmVkLmxldmVscyA9ICJubyIpICMgYWRkLnVuZGVjbGFyZWQubGV2ZWxzIHJlcXVpcmVkIHRvIHByZXZlbnQgaXJyZWxldmFudCB3YXJuaW5nIG1lc3NhZ2UNCg0KDQojIFNlbGVjdCByZWxldmFudCB2YXJpYWJsZXMNCnBhcnRpY2lwYW50X2RhdGEgPC0gcGFydGljaXBhbnRfZGF0YVssYygiQ29kZSIsIkFsdGVyIiwiR2VzY2hsZWNodCIsIlNjaHVsYWJzY2hsdXNzIiwiSMOkbmRpZ2tlaXQiLCJLb21vcmJpZGl0w6R0XzEiLCJLb21vcmJpZGl0w6R0XzIiLA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJLb21vcmJpZGl0w6R0XzMiLCJNZWRpa2FtZW50ZV9KYU5laW4iLCJTU1JJIiwiU05SSSIsIlRyaXp5a2xfQW50aWRlcHJlc3NpdmEiLA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJLb21iaW5hdGlvbl9TU1JJX0FudGlkZXByZXNzaXZhIiwiWUJPQ1NfZ2VzYW10IiwiWUJPQ1NfR2VkYW5rZW4iLCJZQk9DU19IYW5kbHVuZ2VuIiwiTUFEUlMiLCAiV1NUIiwNCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAiRGF1ZXJfbmFjaF90RENTX2Jpc19GbGFua2VyX1QxIiwiRGF1ZXJfbmFjaF90RENTX2Jpc19GbGFua2VyX1QyIiwiVGFnZV96d19TZXNzaW9ucyIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIkp1Y2tlbl9UMSIsIktyaWJiZWxuX1QxIiwiQnJlbm5lbl9UMSIsIlfDpHJtZV9IaXR6ZV9UMSIsIlNjaG1lcnpfVDEiLCJLb3Bmc2NobWVyemVuX1QxIiwgIkVybcO8ZHVuZ192ZXJyaW5nZXJ0ZV9BdWZtZXJrc2Fta2VpdF9UMSIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIktvbnplbnRyYXRpb25zc2Nod2llcmlna2VpdF9UMSIsIlN0aW1tdW5nc8OkbmRlcnVuZ19UMSIsIk5lcnZvc2l0w6R0X1QxIiwic29uc3RpZ2VzX1QxIiwiWmVpdHB1bmt0X0VtcGZpbmR1bmdfVDEiLA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJBdXN3aXJrdW5nX0VtcGZpbmR1bmdfYXVmX0xlaXN0dW5nX1QxIiwiTGljaHRibGl0emVfVDEiLCAiVmVybXV0ZXRlX1N0aW11bGF0aW9uc2FydF9UMSINCiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAsIkp1Y2tlbl9UMiIsIktyaWJiZWxuX1QyIiwiQnJlbm5lbl9UMiIsIlfDpHJtZV9IaXR6ZV9UMiIsIlNjaG1lcnpfVDIiLCJLb3Bmc2NobWVyemVuX1QyIiwgIkVybcO8ZHVuZ192ZXJyaW5nZXJ0ZV9BdWZtZXJrc2Fta2VpdF9UMiIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIktvbnplbnRyYXRpb25zc2Nod2llcmlna2VpdF9UMiIsIlN0aW1tdW5nc8OkbmRlcnVuZ19UMiIsIk5lcnZvc2l0w6R0X1QyIiwic29uc3RpZ2VzX1QyIiwiWmVpdHB1bmt0X0VtcGZpbmR1bmdfVDIiLA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICJBdXN3aXJrdW5nX0VtcGZpbmR1bmdfYXVmX0xlaXN0dW5nX1QyIiwiTGljaHRibGl0emVfVDIiLCAiVmVybXV0ZXRlX1N0aW11bGF0aW9uc2FydF9UMiIsDQogICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIlN0aW11bGF0aW9uc2JlZGluZ3VuZ19UMSIsICJTdGltdWxhdGlvbnNiZWRpbmd1bmdfVDIiKV0NCnF1ZXN0aW9ubmFpcmVzICAgPC0gcXVlc3Rpb25uYWlyZXNbLGMoIkNPREUiLCAiQkQyU1VNVDAiLCAiT0NJU1VNVDAiLCAiU1RTU1VNVDAiLCAiU1RUU1VNVDAiKV0gDQoNCg0KIyBNZXJnZSBkYXRhZnJhbWVzIGFuZCByZW5hbWUgY29sdW1ucw0KcGFydGljaXBhbnRfZGF0YSRDb2RlIDwtIGdzdWIoIiAiLCAiIiwgcGFydGljaXBhbnRfZGF0YSRDb2RlICwgZml4ZWQgPSBUUlVFKSAjIGRlbGV0ZSBlbXB0eSBzcGFjZXMgZnJvbSBzdHJpbmcgdG8gZW5hYmxlIG1lcmdpbmcNCmRlbW9ncmFwaGljcyA8LSBsZWZ0X2pvaW4ocGFydGljaXBhbnRfZGF0YSwgcXVlc3Rpb25uYWlyZXMsIGJ5ID0gYygiQ29kZSIgPSAiQ09ERSIpKSAlPiUNCiAgIyBSZW5hbWUgc29tZSBjb2x1bW5zDQogIGRwbHlyOjpyZW5hbWUocGFydGljaXBhbnRfaWQgPSBDb2RlLA0KICAgICAgICAgICAgICAgIEJESV9Ub3RhbCAgICAgID0gQkQyU1VNVDAsIA0KICAgICAgICAgICAgICAgIE9DSV9Ub3RhbCAgICAgID0gT0NJU1VNVDAsIA0KICAgICAgICAgICAgICAgIFNUQUlfU3RhdGUgICAgID0gU1RTU1VNVDAsIA0KICAgICAgICAgICAgICAgIFNUQUlfVHJhaXQgICAgID0gU1RUU1VNVDApICU+JQ0KICAjIEFkZCBncm91cCB2YXJpYWJsZQ0KICBkcGx5cjo6bXV0YXRlKGdyb3VwID0gYXMuZmFjdG9yKGlmZWxzZShzdWJzdHIocGFydGljaXBhbnRfaWQsMTMsMTMpID09ICJDIiwgIkhDIiwgIk9DRCIpKSkgICANCg0KDQojIEV4Y2x1ZGUgUF8wMiAoZHVlIHRvIHJldGFpbmVyKSBhbmQgQ18wMiAoYXMgcHJlcmVnaXN0ZXJlZDogcGF0aWVudHMgYXJlIGV4Y2x1ZGVkIHdpdGggdGhlaXIgbWF0Y2gpDQpkZW1vZ3JhcGhpY3MgPC0gZGVtb2dyYXBoaWNzW2RlbW9ncmFwaGljcyRwYXJ0aWNpcGFudF9pZCAhPSAiTW9kRVJOX3REQ1NfUDAyIiAmIGRlbW9ncmFwaGljcyRwYXJ0aWNpcGFudF9pZCAhPSAiTW9kRVJOX3REQ1NfQzAyIixdDQoNCg0KIyBDXzEyIHJlcGVhdGVkIHRoZSBXU1QgYXQgVDIsIGJlY2F1c2Ugc2NvcmUgYXQgVDEgd2FzIHZlcnkgbG93ICgyMik7IHNjb3JlIGFjaGlldmVkIGF0IFQyIHdhcyAyNTsgd2Ugd2lsbCB1c2UgdGhpcyBzY29yZSANCmRlbW9ncmFwaGljc1tkZW1vZ3JhcGhpY3MkcGFydGljaXBhbnRfaWQgPT0gIk1vZEVSTl90RENTX0MxMiIsXSRXU1QgPC0gMjUNCg0KDQoNCg0KIyMjIEhhbmRsZSBudW1lcmljIHZhcmlhYmxlcw0KDQojIENhbGN1bGF0ZSBNIGFuZCBTRCBwZXIgZ3JvdXAgDQpkZW1vZ3JhcGhpY3NfcGVyX2dyb3VwX01fU0QgPC0gZGVtb2dyYXBoaWNzICU+JQ0KICBkcGx5cjo6Z3JvdXBfYnkoZ3JvdXApICU+JQ0KICAjIENhbGN1bGF0ZSBNIGFuZCBTRCBvZiB0aGUgdmFyaWFibGVzDQogIGRwbHlyOjpzdW1tYXJpemUoYWNyb3NzKGMoQWx0ZXIsV1NULFlCT0NTX2dlc2FtdCxZQk9DU19HZWRhbmtlbixZQk9DU19IYW5kbHVuZ2VuLE1BRFJTLA0KICAgICAgICAgICAgICAgICAgICAgICAgICAgIEJESV9Ub3RhbCxPQ0lfVG90YWwsU1RBSV9TdGF0ZSxTVEFJX1RyYWl0KSwgbGlzdChtZWFuLHNkKSwgbmEucm0gPSBUUlVFKSkgJT4lDQogICMgUmVzaGFwZSB0YWJsZSB0byBoYXZlIG9uZSBjb2x1bW4gcGVyIGdyb3VwDQogIGdhdGhlcihrZXkgPSBrZXksIHZhbHVlID0gdmFsdWUsIDI6bmNvbCguKSwgZmFjdG9yX2tleSA9IFRSVUUpICU+JSANCiAgc3ByZWFkKGtleSA9IG5hbWVzKC4pWzFdLCB2YWx1ZSA9ICJ2YWx1ZSIpICU+JQ0KICAjIEFkZCB2YXJpYWJsZSBjb2x1bW4NCiAgZHBseXI6Om11dGF0ZShWYXJpYWJsZSA9IGMoIkFsdGVyIiwgIiIsICJXU1QiLCAiIiwgIllCT0NTX1RvdGFsIiwgIiIsICJZQk9DU19HZWRhbmtlbiIsICIiLCAiWUJPQ1NfSGFuZGx1bmdlbiIsICIiLCAgIk1BRFJTIiwgIiIsICJCRElfVG90YWwiLCAiIiwgIk9DSV9Ub3RhbCIsICIiLCAiU1RBSV9TdGF0ZSIsICIiLCAiU1RBSV9UcmFpdCIsICIiKSkgJT4lDQogICMgQWRkIE0vU0QgY29sdW1uDQogIGRwbHlyOjptdXRhdGUoTV9TRF9vcl9uID0gYygiTSIsICJTRCIsICJNIiwgIlNEIiwgIk0iLCAiU0QiLCAiTSIsICJTRCIsICJNIiwgIlNEIiwgIk0iLCAiU0QiLCAiTSIsICJTRCIsICJNIiwgIlNEIiwgIk0iLCAiU0QiLCAiTSIsICJTRCIpKSAlPiUNCiAgIyBSZW9yZGVyIGNvbHVtbnMNCiAgZHBseXI6OnNlbGVjdChWYXJpYWJsZSwgTV9TRF9vcl9uLCBIQywgT0NEKSAlPiUNCiAgZHBseXI6OnVuZ3JvdXAoKQ0KDQoNCiMgQ2FsY3VsYXRlIHQgdGVzdHMNCmRlbW9ncmFwaGljc19wZXJfZ3JvdXBfdF90ZXN0IDwtIGRlbW9ncmFwaGljcyAlPiUgDQogIHNlbGVjdChBbHRlcixXU1QsQkRJX1RvdGFsLE9DSV9Ub3RhbCxTVEFJX1N0YXRlLFNUQUlfVHJhaXQsIGdyb3VwKSAlPiUgDQogIGdhdGhlcihrZXkgPSBWYXJpYWJsZSwgdmFsdWUgPSB2YWx1ZSwgLWdyb3VwKSAlPiUgDQogIGdyb3VwX2J5KGdyb3VwLCBWYXJpYWJsZSkgJT4lIA0KICBkcGx5cjo6c3VtbWFyaXNlKHZhbHVlID0gbGlzdCh2YWx1ZSkpICU+JSANCiAgc3ByZWFkKGdyb3VwLCB2YWx1ZSkgJT4lDQogIGRwbHlyOjp1bmdyb3VwKCkgJT4lDQogIGRwbHlyOjpncm91cF9ieShWYXJpYWJsZSkgJT4lIA0KICBkcGx5cjo6bXV0YXRlKGRmID0gdC50ZXN0KHVubGlzdChIQyksIHVubGlzdChPQ0QpKSRwYXJhbWV0ZXIsDQogICAgICAgICB0X29yX2NoaV9zcV92YWx1ZSA9IHQudGVzdCh1bmxpc3QoSEMpLCB1bmxpc3QoT0NEKSkkc3RhdGlzdGljLCANCiAgICAgICAgIHBfdmFsdWUgPSB0LnRlc3QodW5saXN0KEhDKSwgdW5saXN0KE9DRCkpJHAudmFsdWUpICU+JQ0KICBkcGx5cjo6c2VsZWN0KC1jKEhDLCBPQ0QpKSAgJT4lDQogIGRwbHlyOjp1bmdyb3VwKCkNCg0KDQojIE1lcmdlIE1fU0QgYW5kIHQgdGVzdCBpbmZvcw0KZGVtb2dyYXBoaWNzX3Blcl9ncm91cCA8LSBsZWZ0X2pvaW4oZGVtb2dyYXBoaWNzX3Blcl9ncm91cF9NX1NELCBkZW1vZ3JhcGhpY3NfcGVyX2dyb3VwX3RfdGVzdCwgYnkgPSAiVmFyaWFibGUiKQ0KDQoNCg0KDQojIyMgSGFuZGxlIGNvdW50IHZhcmlhYmxlcw0KDQojIENhbGN1bGF0ZSBDaGktc3F1YXJlZCB0ZXN0cw0KZ2VuZGVyX3Rlc3QgICAgIDwtIGNoaXNxLnRlc3QoZGVtb2dyYXBoaWNzJEdlc2NobGVjaHQsIGRlbW9ncmFwaGljcyRncm91cCkNCmVkdWNhdGlvbl90ZXN0ICA8LSBjaGlzcS50ZXN0KGRlbW9ncmFwaGljcyRTY2h1bGFic2NobHVzcywgZGVtb2dyYXBoaWNzJGdyb3VwKQ0KaGFuZGVkbmVzc190ZXN0IDwtIGNoaXNxLnRlc3QoZGVtb2dyYXBoaWNzJCJIw6RuZGlna2VpdCIsIGRlbW9ncmFwaGljcyRncm91cCkNCg0KDQojIEV4dHJhY3QgY291bnRzIGZvciBnZW5kZXINCmdlbmRlciA8LSBkZW1vZ3JhcGhpY3MgJT4lIGdyb3VwX2J5KGdyb3VwKSAlPiUgY291bnQoR2VzY2hsZWNodCkgJT4lIA0KICAjIFJlc2hhcGUgdGFibGUgdG8gaGF2ZSBvbmUgY29sdW1uIHBlciBncm91cA0KICBzcHJlYWQoa2V5ID0gbmFtZXMoLilbMV0sIHZhbHVlID0gbikgJT4lDQogICMgQWRkIGNoaSBzcXVhcmUgcmVzdWx0cw0KICBkcGx5cjo6bXV0YXRlKGRmID0gaWZlbHNlKHJvd19udW1iZXIoKT09MSwgZ2VuZGVyX3Rlc3QkcGFyYW1ldGVyLCBOQSksDQogICAgICAgICAgICAgICAgdF9vcl9jaGlfc3FfdmFsdWUgPSBpZmVsc2Uocm93X251bWJlcigpPT0xLCBnZW5kZXJfdGVzdCRzdGF0aXN0aWMsIE5BKSwNCiAgICAgICAgICAgICAgICBwX3ZhbHVlID0gaWZlbHNlKHJvd19udW1iZXIoKT09MSwgZ2VuZGVyX3Rlc3QkcC52YWx1ZSwgTkEpKSAlPiUNCiAgIyBBZGQgZmlyc3QgY29sdW1uDQogIGRwbHlyOjptdXRhdGUoVmFyaWFibGUgPSBjKCJHZXNjaGxlY2h0IiwgIiIpKSAlPiUNCiAgIyBTZWxlY3QgYW5kIHJlb3JkZXIgY29sdW1ucw0KICBkcGx5cjo6c2VsZWN0KFZhcmlhYmxlLCBldmVyeXRoaW5nKCkpICU+JQ0KICAjIFJlbmFtZSBvbmUgY29sdW1uIHRvIG1ha2UgcmJpbmQgd2lyaCBjb2x1bW5zIGFib3ZlIHBvc3NpYmxlDQogIGRwbHlyOjpyZW5hbWUoTV9TRF9vcl9uID0gR2VzY2hsZWNodCkgICU+JQ0KICBkcGx5cjo6dW5ncm91cCgpDQoNCg0KIyBFeHRyYWN0IGNvdW50cyBmb3IgZWR1Y2F0aW9uDQplZHVjYXRpb24gPC0gZGVtb2dyYXBoaWNzICU+JSBncm91cF9ieShncm91cCkgJT4lIGNvdW50KFNjaHVsYWJzY2hsdXNzLCAuZHJvcCA9IEZBTFNFKSAlPiUgDQogICMgUmVzaGFwZSB0YWJsZSB0byBoYXZlIG9uZSBjb2x1bW4gcGVyIGdyb3VwDQogIHNwcmVhZChrZXkgPSBuYW1lcyguKVsxXSwgdmFsdWUgPSBuKSAlPiUNCiAgIyBBZGQgY2hpIHNxdWFyZSByZXN1bHRzDQogIGRwbHlyOjptdXRhdGUoZGYgPSBpZmVsc2Uocm93X251bWJlcigpPT0xLCBlZHVjYXRpb25fdGVzdCRwYXJhbWV0ZXIsIE5BKSwNCiAgICAgICAgICAgICAgICB0X29yX2NoaV9zcV92YWx1ZSA9IGlmZWxzZShyb3dfbnVtYmVyKCk9PTEsIGVkdWNhdGlvbl90ZXN0JHN0YXRpc3RpYywgTkEpLA0KICAgICAgICAgICAgICAgIHBfdmFsdWUgPSBpZmVsc2Uocm93X251bWJlcigpPT0xLCBlZHVjYXRpb25fdGVzdCRwLnZhbHVlLCBOQSkpICU+JQ0KICAjIEFkZCBmaXJzdCBjb2x1bW4NCiAgZHBseXI6Om11dGF0ZShWYXJpYWJsZSA9IGMoIlNjaHVsYWJzY2hsdXNzIiwgIiIsICIiICwgIiIsICIiICwgIiIpKSAlPiUNCiAgIyBTZWxlY3QgYW5kIHJlb3JkZXIgY29sdW1ucw0KICBkcGx5cjo6c2VsZWN0KFZhcmlhYmxlLCBldmVyeXRoaW5nKCkpICU+JQ0KICAjIFJlbmFtZSBvbmUgY29sdW1uIHRvIG1ha2UgcmJpbmQgd2lyaCBjb2x1bW5zIGFib3ZlIHBvc3NpYmxlDQogIGRwbHlyOjpyZW5hbWUoTV9TRF9vcl9uID0gU2NodWxhYnNjaGx1c3MpICAlPiUNCiAgZHBseXI6OnVuZ3JvdXAoKQ0KDQoNCiMgRXh0cmFjdCBjb3VudHMgZm9yIGhhbmRlZG5lc3MNCmhhbmRlZG5lc3MgPC0gZGVtb2dyYXBoaWNzICU+JSBncm91cF9ieShncm91cCkgJT4lIGNvdW50KEjDpG5kaWdrZWl0LCAuZHJvcCA9IEZBTFNFKSAlPiUgDQogICMgUmVzaGFwZSB0YWJsZSB0byBoYXZlIG9uZSBjb2x1bW4gcGVyIGdyb3VwDQogIHNwcmVhZChrZXkgPSBuYW1lcyguKVsxXSwgdmFsdWUgPSBuKSAlPiUNCiAgIyBBZGQgY2hpIHNxdWFyZSByZXN1bHRzDQogIGRwbHlyOjptdXRhdGUoZGYgPSBpZmVsc2Uocm93X251bWJlcigpPT0xLCBoYW5kZWRuZXNzX3Rlc3QkcGFyYW1ldGVyLCBOQSksDQogICAgICAgICAgICAgICAgdF9vcl9jaGlfc3FfdmFsdWUgPSBpZmVsc2Uocm93X251bWJlcigpPT0xLCBoYW5kZWRuZXNzX3Rlc3Qkc3RhdGlzdGljLCBOQSksDQogICAgICAgICAgICAgICAgcF92YWx1ZSA9IGlmZWxzZShyb3dfbnVtYmVyKCk9PTEsIGhhbmRlZG5lc3NfdGVzdCRwLnZhbHVlLCBOQSkpICU+JQ0KICAjIEFkZCBmaXJzdCBjb2x1bW4NCiAgZHBseXI6Om11dGF0ZShWYXJpYWJsZSA9IGMoIkjDpG5kaWdrZWl0IiwgIiIsICIiKSkgJT4lDQogICMgU2VsZWN0IGFuZCByZW9yZGVyIGNvbHVtbnMNCiAgZHBseXI6OnNlbGVjdChWYXJpYWJsZSwgZXZlcnl0aGluZygpKSAlPiUNCiAgIyBSZW5hbWUgb25lIGNvbHVtbiB0byBtYWtlIHJiaW5kIHdpcmggY29sdW1ucyBhYm92ZSBwb3NzaWJsZQ0KICBkcGx5cjo6cmVuYW1lKE1fU0Rfb3JfbiA9IEjDpG5kaWdrZWl0KSAgJT4lDQogIGRwbHlyOjp1bmdyb3VwKCkNCg0KDQoNCiMgRGlzcGxheSB0YWJsZQ0KbXlfdGFibGVfdGVtcGxhdGUocmJpbmQoZGVtb2dyYXBoaWNzX3Blcl9ncm91cFtjKDEsMiksXSwgZ2VuZGVyLCBlZHVjYXRpb24sIGhhbmRlZG5lc3MsIGRlbW9ncmFwaGljc19wZXJfZ3JvdXBbYygzOm5yb3coZGVtb2dyYXBoaWNzX3Blcl9ncm91cCkpLF0pLCBjYXB0aW9uID0gIkRlbW9ncmFwaGljIGFuZCBDbGluaWNhbCBWYXJpYWJsZXMiKQ0KDQpgYGBgDQo8YnI+PGJyPg0KDQojIyBPdmVydmlldyB0RENTIHRpbWUgaW50ZXJ2YWxzDQoNCmBgYHtyIHREQ1MtdGltZS1pbnRlcnZhbHN9DQoNCiMgQ3JlYXRlIGRmIHdpdGggZHVyYXRpb24gYmV0d2VlbiBzdGltdWxhdGlvbiBhbmQgdGFzayBpbiBvbmUgY29sdW1uDQp0aW1lIDwtIGRlbW9ncmFwaGljcyAlPiUNCiAgc2VsZWN0KERhdWVyX25hY2hfdERDU19iaXNfRmxhbmtlcl9UMSxEYXVlcl9uYWNoX3REQ1NfYmlzX0ZsYW5rZXJfVDIpICU+JQ0KICBnYXRoZXIoa2V5ID0gVmFyaWFibGUsIHZhbHVlID0gc2Vjb25kcykNCg0KaW50ZXJ2YWxfbWVhbiA8LSBzZWNvbmRzX3RvX3BlcmlvZChtZWFuKHRpbWUkc2Vjb25kcywgbmEucm0gPSBUUlVFKSkNCmludGVydmFsX3NkICAgPC0gc2Vjb25kc190b19wZXJpb2Qoc2QodGltZSRzZWNvbmRzLCBuYS5ybSA9IFRSVUUpKQ0KaW50ZXJ2YWxfbWluICA8LSBzZWNvbmRzX3RvX3BlcmlvZChtaW4odGltZSRzZWNvbmRzLCBuYS5ybSA9IFRSVUUpKQ0KaW50ZXJ2YWxfbWF4ICA8LSBzZWNvbmRzX3RvX3BlcmlvZChtYXgodGltZSRzZWNvbmRzLCBuYS5ybSA9IFRSVUUpKQ0KYGBgDQoNCkRheXMgYmV0d2VlbiBzZXNzaW9uczogKk0qID0gYHIgcm91bmQobWVhbihkZW1vZ3JhcGhpY3MkVGFnZV96d19TZXNzaW9ucywgbmEucm0gPSBUUlVFKSwgZGlnaXRzID0gMilgIGRheXMsICpTRCogPSBgciByb3VuZChzZChkZW1vZ3JhcGhpY3MkVGFnZV96d19TZXNzaW9ucywgbmEucm0gPSBUUlVFKSwgZGlnaXRzID0gMilgLCAqcmFuZ2UqID0gYHIgbWluKGRlbW9ncmFwaGljcyRUYWdlX3p3X1Nlc3Npb25zKWAtIGByIG1heChkZW1vZ3JhcGhpY3MkVGFnZV96d19TZXNzaW9ucylgLg0KDQpEdXJhdGlvbiBiZXR3ZWVuIHN0aW11bGF0aW9uIGFuZCB0YXNrOiAqTSogPSBgciBpbnRlcnZhbF9tZWFuJG1pbnV0ZWA6YHIgcm91bmQoaW50ZXJ2YWxfbWVhbiRzZWNvbmQsZGlnaXRzPTApYCBtaW4sICpTRCogPSBgciBpbnRlcnZhbF9zZCRtaW51dGVgOmByIHJvdW5kKGludGVydmFsX3NkJHNlY29uZCxkaWdpdHM9MClgLCAqcmFuZ2UqID0gYHIgaW50ZXJ2YWxfbWluJG1pbnV0ZWA6YHIgcm91bmQoaW50ZXJ2YWxfbWluJHNlY29uZCxkaWdpdHM9MClgLSBgciBpbnRlcnZhbF9tYXgkbWludXRlYDpgciByb3VuZChpbnRlcnZhbF9tYXgkc2Vjb25kLGRpZ2l0cz0wKWAuDQo8YnI+PGJyPjxicj48YnI+DQoNCiMjIE92ZXJ2aWV3IHREQ1MgYWR2ZXJzZSBlZmZlY3RzDQoNCmBgYHtyIHREQ1MtYWR2ZXJzZS1lZmZlY3RzfQ0KDQojIENyZWF0ZSBvdmVydmlldyBhZHZlcnNlIGVmZmVjdHMNCnRhYmxlX2FkdmVyc2VfZWZmZWN0cyA8LSBkZW1vZ3JhcGhpY3MgJT4lIA0KICAjIFNlbGVjdCB0aGUgbmVlZGVkIGNvbHVtbnMNCiAgZHBseXI6OnNlbGVjdChwYXJ0aWNpcGFudF9pZCwgSnVja2VuX1QxLCBKdWNrZW5fVDIsIEtyaWJiZWxuX1QxLCBLcmliYmVsbl9UMiwgQnJlbm5lbl9UMSwgQnJlbm5lbl9UMiwgV8Okcm1lX0hpdHplX1QxLCBXw6RybWVfSGl0emVfVDIsDQogICAgICAgICBTY2htZXJ6X1QxLCBTY2htZXJ6X1QyLCBLb3Bmc2NobWVyemVuX1QxLCBLb3Bmc2NobWVyemVuX1QyLCBFcm3DvGR1bmdfdmVycmluZ2VydGVfQXVmbWVya3NhbWtlaXRfVDEsIEVybcO8ZHVuZ192ZXJyaW5nZXJ0ZV9BdWZtZXJrc2Fta2VpdF9UMiwgDQogICAgICAgICBLb256ZW50cmF0aW9uc3NjaHdpZXJpZ2tlaXRfVDEsIEtvbnplbnRyYXRpb25zc2Nod2llcmlna2VpdF9UMiwgU3RpbW11bmdzw6RuZGVydW5nX1QxLCBTdGltbXVuZ3PDpG5kZXJ1bmdfVDIsIA0KICAgICAgICAgTmVydm9zaXTDpHRfVDEsIE5lcnZvc2l0w6R0X1QyLCBBdXN3aXJrdW5nX0VtcGZpbmR1bmdfYXVmX0xlaXN0dW5nX1QxLCBBdXN3aXJrdW5nX0VtcGZpbmR1bmdfYXVmX0xlaXN0dW5nX1QyLA0KICAgICAgICAgTGljaHRibGl0emVfVDEsIExpY2h0YmxpdHplX1QyLCBWZXJtdXRldGVfU3RpbXVsYXRpb25zYXJ0X1QxLCBWZXJtdXRldGVfU3RpbXVsYXRpb25zYXJ0X1QyLCBTdGltdWxhdGlvbnNiZWRpbmd1bmdfVDEsIFN0aW11bGF0aW9uc2JlZGluZ3VuZ19UMikgJT4lDQogICMgU3RhY2sgVDEgYW5kIFQyIGZvciBlYWNoIGFkdmVyc2UgZWZmZWN0IGJlbG93IGVhY2ggb3RoZXIgKHRoaXMgYWxzbyBzdGFja3MgYWxsIGFkdmVyc2UgZWZmZWN0cyBpbiBvbmUgY29sdW1uKQ0KICBnYXRoZXIoYWR2ZXJzZV9lZmZlY3QsIHZhbHVlLCBKdWNrZW5fVDE6SnVja2VuX1QyLCBLcmliYmVsbl9UMTpLcmliYmVsbl9UMiwgQnJlbm5lbl9UMTpCcmVubmVuX1QyLCBXw6RybWVfSGl0emVfVDE6V8Okcm1lX0hpdHplX1QyLA0KICAgICAgICAgU2NobWVyel9UMTpTY2htZXJ6X1QyLCBLb3Bmc2NobWVyemVuX1QxOktvcGZzY2htZXJ6ZW5fVDIsIEVybcO8ZHVuZ192ZXJyaW5nZXJ0ZV9BdWZtZXJrc2Fta2VpdF9UMTpFcm3DvGR1bmdfdmVycmluZ2VydGVfQXVmbWVya3NhbWtlaXRfVDIsIA0KICAgICAgICAgS29uemVudHJhdGlvbnNzY2h3aWVyaWdrZWl0X1QxOktvbnplbnRyYXRpb25zc2Nod2llcmlna2VpdF9UMiwgU3RpbW11bmdzw6RuZGVydW5nX1QxOlN0aW1tdW5nc8OkbmRlcnVuZ19UMiwgDQogICAgICAgICBOZXJ2b3NpdMOkdF9UMTpOZXJ2b3NpdMOkdF9UMiwgQXVzd2lya3VuZ19FbXBmaW5kdW5nX2F1Zl9MZWlzdHVuZ19UMTpBdXN3aXJrdW5nX0VtcGZpbmR1bmdfYXVmX0xlaXN0dW5nX1QyLA0KICAgICAgICAgTGljaHRibGl0emVfVDE6TGljaHRibGl0emVfVDIsIFZlcm11dGV0ZV9TdGltdWxhdGlvbnNhcnRfVDE6VmVybXV0ZXRlX1N0aW11bGF0aW9uc2FydF9UMiwgU3RpbXVsYXRpb25zYmVkaW5ndW5nX1QxOlN0aW11bGF0aW9uc2JlZGluZ3VuZ19UMikgJT4lDQogICMgQ3JlYXRlIGNvbHVtbiBmb3Igc2Vzc2lvbiBhbmQgcmVtb3ZlIHNlc3Npb24gZnJvbSBuYW1lIG9mIGFkdmVyc2UgZWZmZWN0DQogIGRwbHlyOjptdXRhdGUoc2Vzc2lvbiA9IHN1YnN0cihhZHZlcnNlX2VmZmVjdCwgbmNoYXIoYWR2ZXJzZV9lZmZlY3QpIC0gMiArIDEsIG5jaGFyKGFkdmVyc2VfZWZmZWN0KSksICMgZXh0cmFjdCBzdWJzdHJpbmcgb2YgbGFzdCAyIGNoYXJhY3RlcnMgb2YgYWR2ZXJzZV9lZmZlY3QNCiAgICAgICAgIGFkdmVyc2VfZWZmZWN0ID0gc3Vic3RyKGFkdmVyc2VfZWZmZWN0LDEsbmNoYXIoYWR2ZXJzZV9lZmZlY3QpLTMpKSAlPiUgIyByZW1vdmUgc3Vic3RyaW5nIG9mIGxhc3QgMyBjaGFyYWN0ZXJzIG9mIGFkdmVyc2VfZWZmZWN0DQogICMgUmVzaGFwZSB0YWJsZSB0byBzaG93IG5vdCBhbGwgYWR2ZXJzZSBlZmZlY3RzICBiZWxvdyBlYWNoIG90aGVyIGluIG9uZSBjb2x1bW4gYnV0IGhhdmUgb25lIGNvbHVtbiBmb3IgZWFjaCBhZHZlcnNlIGVmZmVjdA0KICBzcHJlYWQoa2V5ID0gYWR2ZXJzZV9lZmZlY3QsIHZhbHVlID0gdmFsdWUpIA0KDQoNCiMgQ3JlYXRlIGFuZCBkaXNwbGF5IGNvbnRpbmdlbmN5IHRhYmxlcw0KbXlfdGFibGVfdGVtcGxhdGUocHJvcC50YWJsZSh0YWJsZSh0YWJsZV9hZHZlcnNlX2VmZmVjdHMkSnVja2VuLCB0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbXVsYXRpb25zYmVkaW5ndW5nKSwgbWFyZ2luPTIpKjEwMCwgY2FwdGlvbiA9ICJKdWNrZW4gKCUpIiwgcm93X25hbWVzID0gVFJVRSkNCm15X3RhYmxlX3RlbXBsYXRlKHByb3AudGFibGUodGFibGUodGFibGVfYWR2ZXJzZV9lZmZlY3RzJEtyaWJiZWxuLCB0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbXVsYXRpb25zYmVkaW5ndW5nKSwgbWFyZ2luPTIpKjEwMCwgY2FwdGlvbiA9ICJLcmliYmVsbiAoJSkiLCByb3dfbmFtZXMgPSBUUlVFKQ0KbXlfdGFibGVfdGVtcGxhdGUocHJvcC50YWJsZSh0YWJsZSh0YWJsZV9hZHZlcnNlX2VmZmVjdHMkQnJlbm5lbiwgdGFibGVfYWR2ZXJzZV9lZmZlY3RzJFN0aW11bGF0aW9uc2JlZGluZ3VuZyksIG1hcmdpbj0yKSoxMDAsIGNhcHRpb24gPSAiQnJlbm5lbiAoJSkiLCByb3dfbmFtZXMgPSBUUlVFKQ0KbXlfdGFibGVfdGVtcGxhdGUocHJvcC50YWJsZSh0YWJsZSh0YWJsZV9hZHZlcnNlX2VmZmVjdHMkV8Okcm1lX0hpdHplLCB0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbXVsYXRpb25zYmVkaW5ndW5nKSwgbWFyZ2luPTIpKjEwMCwgY2FwdGlvbiA9ICJXw6RybWVfSGl0emUgKCUpIiwgcm93X25hbWVzID0gVFJVRSkNCm15X3RhYmxlX3RlbXBsYXRlKHByb3AudGFibGUodGFibGUodGFibGVfYWR2ZXJzZV9lZmZlY3RzJFNjaG1lcnosIHRhYmxlX2FkdmVyc2VfZWZmZWN0cyRTdGltdWxhdGlvbnNiZWRpbmd1bmcpLCBtYXJnaW49MikqMTAwLCBjYXB0aW9uID0gIlNjaG1lcnogKCUpIiwgcm93X25hbWVzID0gVFJVRSkNCm15X3RhYmxlX3RlbXBsYXRlKHByb3AudGFibGUodGFibGUodGFibGVfYWR2ZXJzZV9lZmZlY3RzJEtvcGZzY2htZXJ6ZW4sIHRhYmxlX2FkdmVyc2VfZWZmZWN0cyRTdGltdWxhdGlvbnNiZWRpbmd1bmcpLCBtYXJnaW49MikqMTAwLCBjYXB0aW9uID0gIktvcGZzY2htZXJ6ZW4gKCUpIiwgcm93X25hbWVzID0gVFJVRSkNCm15X3RhYmxlX3RlbXBsYXRlKHByb3AudGFibGUodGFibGUodGFibGVfYWR2ZXJzZV9lZmZlY3RzJEVybcO8ZHVuZ192ZXJyaW5nZXJ0ZV9BdWZtZXJrc2Fta2VpdCwgdGFibGVfYWR2ZXJzZV9lZmZlY3RzJFN0aW11bGF0aW9uc2JlZGluZ3VuZyksIG1hcmdpbj0yKSoxMDAsIGNhcHRpb24gPSAiRXJtw7xkdW5nX3ZlcnJpbmdlcnRlX0F1Zm1lcmtzYW1rZWl0ICglKSIsIHJvd19uYW1lcyA9IFRSVUUpDQpteV90YWJsZV90ZW1wbGF0ZShwcm9wLnRhYmxlKHRhYmxlKHRhYmxlX2FkdmVyc2VfZWZmZWN0cyRLb256ZW50cmF0aW9uc3NjaHdpZXJpZ2tlaXQsIHRhYmxlX2FkdmVyc2VfZWZmZWN0cyRTdGltdWxhdGlvbnNiZWRpbmd1bmcpLCBtYXJnaW49MikqMTAwLCBjYXB0aW9uID0gIktvbnplbnRyYXRpb25zc2Nod2llcmlna2VpdCAoJSkiLCByb3dfbmFtZXMgPSBUUlVFKQ0KbXlfdGFibGVfdGVtcGxhdGUocHJvcC50YWJsZSh0YWJsZSh0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbW11bmdzw6RuZGVydW5nLCB0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbXVsYXRpb25zYmVkaW5ndW5nKSwgbWFyZ2luPTIpKjEwMCwgY2FwdGlvbiA9ICJTdGltbXVuZ3PDpG5kZXJ1bmcgKCUpIiwgcm93X25hbWVzID0gVFJVRSkNCm15X3RhYmxlX3RlbXBsYXRlKHByb3AudGFibGUodGFibGUodGFibGVfYWR2ZXJzZV9lZmZlY3RzJE5lcnZvc2l0w6R0LCB0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbXVsYXRpb25zYmVkaW5ndW5nKSwgbWFyZ2luPTIpKjEwMCwgY2FwdGlvbiA9ICJOZXJ2b3NpdMOkdCAoJSkiLCByb3dfbmFtZXMgPSBUUlVFKQ0KbXlfdGFibGVfdGVtcGxhdGUocHJvcC50YWJsZSh0YWJsZSh0YWJsZV9hZHZlcnNlX2VmZmVjdHMkQXVzd2lya3VuZ19FbXBmaW5kdW5nX2F1Zl9MZWlzdHVuZywgdGFibGVfYWR2ZXJzZV9lZmZlY3RzJFN0aW11bGF0aW9uc2JlZGluZ3VuZyksIG1hcmdpbj0yKSoxMDAsIGNhcHRpb24gPSAiQXVzd2lya3VuZ19FbXBmaW5kdW5nX2F1Zl9MZWlzdHVuZyAoJSkiLCByb3dfbmFtZXMgPSBUUlVFKQ0KbXlfdGFibGVfdGVtcGxhdGUocHJvcC50YWJsZSh0YWJsZSh0YWJsZV9hZHZlcnNlX2VmZmVjdHMkTGljaHRibGl0emUsIHRhYmxlX2FkdmVyc2VfZWZmZWN0cyRTdGltdWxhdGlvbnNiZWRpbmd1bmcpLCBtYXJnaW49MikqMTAwLCBjYXB0aW9uID0gIkxpY2h0YmxpdHplICglKSIsIHJvd19uYW1lcyA9IFRSVUUpDQpteV90YWJsZV90ZW1wbGF0ZShwcm9wLnRhYmxlKHRhYmxlKHRhYmxlX2FkdmVyc2VfZWZmZWN0cyRWZXJtdXRldGVfU3RpbXVsYXRpb25zYXJ0LCB0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbXVsYXRpb25zYmVkaW5ndW5nKSwgbWFyZ2luPTIpKjEwMCwgY2FwdGlvbiA9ICJWZXJtdXRldGVfU3RpbXVsYXRpb25zYXJ0ICglKSIsIHJvd19uYW1lcyA9IFRSVUUpDQoNCg0KIyBDYWxjdWxhdGUgY2hpLXNxdWFyZWQgdGVzdHMNCmNoaXNxLnRlc3QodGFibGVfYWR2ZXJzZV9lZmZlY3RzJEp1Y2tlbiwgdGFibGVfYWR2ZXJzZV9lZmZlY3RzJFN0aW11bGF0aW9uc2JlZGluZ3VuZykNCmNoaXNxLnRlc3QodGFibGVfYWR2ZXJzZV9lZmZlY3RzJEtyaWJiZWxuLCB0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbXVsYXRpb25zYmVkaW5ndW5nKQ0KY2hpc3EudGVzdCh0YWJsZV9hZHZlcnNlX2VmZmVjdHMkQnJlbm5lbiwgdGFibGVfYWR2ZXJzZV9lZmZlY3RzJFN0aW11bGF0aW9uc2JlZGluZ3VuZykNCmNoaXNxLnRlc3QodGFibGVfYWR2ZXJzZV9lZmZlY3RzJFfDpHJtZV9IaXR6ZSwgdGFibGVfYWR2ZXJzZV9lZmZlY3RzJFN0aW11bGF0aW9uc2JlZGluZ3VuZykNCmNoaXNxLnRlc3QodGFibGVfYWR2ZXJzZV9lZmZlY3RzJFNjaG1lcnosIHRhYmxlX2FkdmVyc2VfZWZmZWN0cyRTdGltdWxhdGlvbnNiZWRpbmd1bmcpDQpjaGlzcS50ZXN0KHRhYmxlX2FkdmVyc2VfZWZmZWN0cyRLb3Bmc2NobWVyemVuLCB0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbXVsYXRpb25zYmVkaW5ndW5nKQ0KY2hpc3EudGVzdCh0YWJsZV9hZHZlcnNlX2VmZmVjdHMkRXJtw7xkdW5nX3ZlcnJpbmdlcnRlX0F1Zm1lcmtzYW1rZWl0LCB0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbXVsYXRpb25zYmVkaW5ndW5nKQ0KY2hpc3EudGVzdCh0YWJsZV9hZHZlcnNlX2VmZmVjdHMkS29uemVudHJhdGlvbnNzY2h3aWVyaWdrZWl0LCB0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbXVsYXRpb25zYmVkaW5ndW5nKQ0KY2hpc3EudGVzdCh0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbW11bmdzw6RuZGVydW5nLCB0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbXVsYXRpb25zYmVkaW5ndW5nKQ0KY2hpc3EudGVzdCh0YWJsZV9hZHZlcnNlX2VmZmVjdHMkTmVydm9zaXTDpHQsIHRhYmxlX2FkdmVyc2VfZWZmZWN0cyRTdGltdWxhdGlvbnNiZWRpbmd1bmcpDQpjaGlzcS50ZXN0KHRhYmxlX2FkdmVyc2VfZWZmZWN0cyRBdXN3aXJrdW5nX0VtcGZpbmR1bmdfYXVmX0xlaXN0dW5nLCB0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbXVsYXRpb25zYmVkaW5ndW5nKQ0KY2hpc3EudGVzdCh0YWJsZV9hZHZlcnNlX2VmZmVjdHMkTGljaHRibGl0emUsIHRhYmxlX2FkdmVyc2VfZWZmZWN0cyRTdGltdWxhdGlvbnNiZWRpbmd1bmcpDQpjaGlzcS50ZXN0KHRhYmxlX2FkdmVyc2VfZWZmZWN0cyRWZXJtdXRldGVfU3RpbXVsYXRpb25zYXJ0LCB0YWJsZV9hZHZlcnNlX2VmZmVjdHMkU3RpbXVsYXRpb25zYmVkaW5ndW5nKQ0KDQoNCg0KIyMjIyBEb3VibGUgY2hlY2s6IFRyZWF0IHJhdGluZyBhcyBpbnRlcnZhbCBkYXRhIGFuZCBydW4gdCB0ZXN0cw0KDQojIFJlY29kZSB2YXJpYWJsZXMgdG8gbnVtZXJpYyB2YWx1ZXMNCnRhYmxlX2FkdmVyc2VfZWZmZWN0c19udW0gPC0gdGFibGVfYWR2ZXJzZV9lZmZlY3RzIA0KdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bVt0YWJsZV9hZHZlcnNlX2VmZmVjdHNfbnVtPT0ia2VpbmUiXSAgPC0gMA0KdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bVt0YWJsZV9hZHZlcnNlX2VmZmVjdHNfbnVtPT0ibWlsZCJdICAgPC0gMQ0KdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bVt0YWJsZV9hZHZlcnNlX2VmZmVjdHNfbnVtPT0ibW9kZXJhdCJdPC0gMg0KdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bVt0YWJsZV9hZHZlcnNlX2VmZmVjdHNfbnVtPT0ic3RhcmsiXSAgPC0gMw0KdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bVt0YWJsZV9hZHZlcnNlX2VmZmVjdHNfbnVtPT0iw7xiZXJoYXVwdCBuaWNodCJdICA8LSAwDQp0YWJsZV9hZHZlcnNlX2VmZmVjdHNfbnVtW3RhYmxlX2FkdmVyc2VfZWZmZWN0c19udW09PSJlaW4gd2VuaWciXSAgICAgICAgPC0gMQ0KdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bVt0YWJsZV9hZHZlcnNlX2VmZmVjdHNfbnVtPT0ibcOkw59pZyJdICAgICAgICAgICAgPC0gMg0KdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bVt0YWJsZV9hZHZlcnNlX2VmZmVjdHNfbnVtPT0ic2VociBzdGFyayJdICAgICAgIDwtIDQNCnRhYmxlX2FkdmVyc2VfZWZmZWN0c19udW1bdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bT09ImphIl0gICAgPC0gMQ0KDQoNCiMgTWFrZSBjb2x1bW4gdHlwZSBudW1lcmljIA0KdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bVssIGMoMzoxMywxNildIDwtIHNhcHBseSh0YWJsZV9hZHZlcnNlX2VmZmVjdHNfbnVtWywgYygzOjEzLDE2KV0sIGFzLm51bWVyaWMpDQoNCg0KIyBDYWxjdWxhdGUgbWVhbnMNCnRhYmxlX2FkdmVyc2VfZWZmZWN0c19udW1fbWVhbnMgPC0gdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bSAlPiUNCiAgZHBseXI6Omdyb3VwX2J5KFN0aW11bGF0aW9uc2JlZGluZ3VuZykgJT4lDQogIGRwbHlyOjpzdW1tYXJpc2VfaWYoaXMubnVtZXJpYywgZnVucyhtZWFuLHNkKSwgbmEucm0gPSBUUlVFKSAlPiUNCiAgZHBseXI6OnVuZ3JvdXAoKQ0KDQoNCiMgRGlzcGxheSBtZWFucw0KbXlfdGFibGVfdGVtcGxhdGUodGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bV9tZWFucywgY2FwdGlvbiA9ICJNZWFuIG9mIGFkdmVyc2UgZWZmZWN0cywgdHJlYXRlZCBhcyBpbnRlcnZhbCBkYXRhIikNCg0KDQojIENhbGN1bGF0ZSB0IHRlc3RzIChub3QgYWRqdXN0ZWQgZm9yIG11bHRpcGxlIHRlc3RpbmcpDQp0LnRlc3QoSnVja2VuIH4gU3RpbXVsYXRpb25zYmVkaW5ndW5nLCB0YWJsZV9hZHZlcnNlX2VmZmVjdHNfbnVtLCBwYWlyZWQgPSBUUlVFKQ0KdC50ZXN0KEtyaWJiZWxuIH4gU3RpbXVsYXRpb25zYmVkaW5ndW5nLCB0YWJsZV9hZHZlcnNlX2VmZmVjdHNfbnVtLCBwYWlyZWQgPSBUUlVFKQ0KdC50ZXN0KEJyZW5uZW4gfiBTdGltdWxhdGlvbnNiZWRpbmd1bmcsIHRhYmxlX2FkdmVyc2VfZWZmZWN0c19udW0sIHBhaXJlZCA9IFRSVUUpDQp0LnRlc3QoV8Okcm1lX0hpdHplIH4gU3RpbXVsYXRpb25zYmVkaW5ndW5nLCB0YWJsZV9hZHZlcnNlX2VmZmVjdHNfbnVtLCBwYWlyZWQgPSBUUlVFLCBuYS5hY3Rpb24gPSAibmEucGFzcyIpICMgZXhjbHVzaW9uIG9mIHBhcnRpY2lwYW50IHdpdGggbWlzc2luZyB2YWx1ZSAoUF8wMyBleGNsdWRlZCwgZHVlIHRvIG1pc3NpbmcgdmFsdWUgaW4gVDEpDQp0LnRlc3QoU2NobWVyeiB+IFN0aW11bGF0aW9uc2JlZGluZ3VuZywgdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bSwgcGFpcmVkID0gVFJVRSwgbmEuYWN0aW9uID0gIm5hLnBhc3MiKSAjIGV4Y2x1c2lvbiBvZiBwYXJ0aWNpcGFudCB3aXRoIG1pc3NpbmcgdmFsdWUgKFBfMDEgZXhjbHVkZWQsIGR1ZSB0byBtaXNzaW5nIHZhbHVlIGluIFQyKQ0KdC50ZXN0KEtvcGZzY2htZXJ6ZW4gfiBTdGltdWxhdGlvbnNiZWRpbmd1bmcsIHRhYmxlX2FkdmVyc2VfZWZmZWN0c19udW0sIHBhaXJlZCA9IFRSVUUpDQp0LnRlc3QoRXJtw7xkdW5nX3ZlcnJpbmdlcnRlX0F1Zm1lcmtzYW1rZWl0IH4gU3RpbXVsYXRpb25zYmVkaW5ndW5nLCB0YWJsZV9hZHZlcnNlX2VmZmVjdHNfbnVtLCBwYWlyZWQgPSBUUlVFKQ0KdC50ZXN0KEtvbnplbnRyYXRpb25zc2Nod2llcmlna2VpdCB+IFN0aW11bGF0aW9uc2JlZGluZ3VuZywgdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bSwgcGFpcmVkID0gVFJVRSkNCnQudGVzdChTdGltbXVuZ3PDpG5kZXJ1bmcgfiBTdGltdWxhdGlvbnNiZWRpbmd1bmcsIHRhYmxlX2FkdmVyc2VfZWZmZWN0c19udW0sIHBhaXJlZCA9IFRSVUUpDQp0LnRlc3QoTmVydm9zaXTDpHQgfiBTdGltdWxhdGlvbnNiZWRpbmd1bmcsIHRhYmxlX2FkdmVyc2VfZWZmZWN0c19udW0sIHBhaXJlZCA9IFRSVUUpDQp0LnRlc3QoQXVzd2lya3VuZ19FbXBmaW5kdW5nX2F1Zl9MZWlzdHVuZyB+IFN0aW11bGF0aW9uc2JlZGluZ3VuZywgdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bSwgcGFpcmVkID0gVFJVRSkNCnQudGVzdChMaWNodGJsaXR6ZSB+IFN0aW11bGF0aW9uc2JlZGluZ3VuZywgdGFibGVfYWR2ZXJzZV9lZmZlY3RzX251bSwgcGFpcmVkID0gVFJVRSkNCg0KYGBgDQo8YnI+PGJyPg0KDQpUaGUgc3RpbXVsYXRpb24gd2FzIHdlbGwgdG9sZXJhdGVkIHdpdGggbWluaW1hbCBhZHZlcnNlIGVmZmVjdHMuIFRoZSBtb3N0IGZyZXF1ZW50IGFkdmVyc2UgZWZmZWN0cyB3ZXJlIHRyYW5zaWVudCB0aW5nbGluZywgaXRjaGluZywgYW5kIGJ1cm5pbmcgc2Vuc2F0aW9uLiBBZHZlcnNlIGVmZmVjdHMgd2VyZSBub3Qgc2lnbmlmaWNhbnRseSBkaWZmZXJlbnQgYmV0d2VlbiB2ZXJ1bSBhbmQgc2hhbSBzdGltdWxhdGlvbi4gKFRoaXMgaG9sZHMgdHJ1ZSB3aGVuIGV2YWx1YXRpbmcgcmF0aW5nIGFzIG9yZGluYWwgZGF0YSB3aXRoIGNoaS1zcXVhcmUgdGVzdCBvciBhcyBpbnRlcnZhbCBkYXRhIHdpdGggdCB0ZXN0KS4gQWxzbywgcGFydGljaXBhbnRzIHdlcmUgaW5kZWVkIGJsaW5kIHRvIHN0aW11bGF0aW9uIGNvbmRpdGlvbi4g</div>
 
 
 </div>

@@ -70,7 +70,14 @@ questionnaires   <- read.spss("./data/psychoEQExport.sav", to.data.frame = TRUE,
 participant_data <- participant_data[,c("Code","Alter","Geschlecht","Schulabschluss","Händigkeit","Komorbidität_1","Komorbidität_2",
                                         "Komorbidität_3","Medikamente_JaNein","SSRI","SNRI","Trizykl_Antidepressiva",
                                         "Kombination_SSRI_Antidepressiva","YBOCS_gesamt","YBOCS_Gedanken","YBOCS_Handlungen","MADRS", "WST",
-                                        "Dauer_nach_tDCS_bis_Flanker_T1","Dauer_nach_tDCS_bis_Flanker_T2","Tage_zw_Sessions")]
+                                        "Dauer_nach_tDCS_bis_Flanker_T1","Dauer_nach_tDCS_bis_Flanker_T2","Tage_zw_Sessions",
+                                        "Jucken_T1","Kribbeln_T1","Brennen_T1","Wärme_Hitze_T1","Schmerz_T1","Kopfschmerzen_T1", "Ermüdung_verringerte_Aufmerksamkeit_T1",
+                                        "Konzentrationsschwierigkeit_T1","Stimmungsänderung_T1","Nervosität_T1","sonstiges_T1","Zeitpunkt_Empfindung_T1",
+                                        "Auswirkung_Empfindung_auf_Leistung_T1","Lichtblitze_T1", "Vermutete_Stimulationsart_T1"
+                                        ,"Jucken_T2","Kribbeln_T2","Brennen_T2","Wärme_Hitze_T2","Schmerz_T2","Kopfschmerzen_T2", "Ermüdung_verringerte_Aufmerksamkeit_T2",
+                                        "Konzentrationsschwierigkeit_T2","Stimmungsänderung_T2","Nervosität_T2","sonstiges_T2","Zeitpunkt_Empfindung_T2",
+                                        "Auswirkung_Empfindung_auf_Leistung_T2","Lichtblitze_T2", "Vermutete_Stimulationsart_T2",
+                                        "Stimulationsbedingung_T1", "Stimulationsbedingung_T2")]
 questionnaires   <- questionnaires[,c("CODE", "BD2SUMT0", "OCISUMT0", "STSSUMT0", "STTSUMT0")] 
 
 
@@ -205,9 +212,9 @@ my_table_template(rbind(demographics_per_group[c(1,2),], gender, education, hand
 ````
 <br><br>
 
-## Overview time intervals
+## Overview tDCS time intervals
 
-```{r time-intervals}
+```{r tDCS-time-intervals}
 
 # Create df with duration between stimulation and task in one column
 time <- demographics %>%
@@ -223,3 +230,111 @@ interval_max  <- seconds_to_period(max(time$seconds, na.rm = TRUE))
 Days between sessions: *M* = `r round(mean(demographics$Tage_zw_Sessions, na.rm = TRUE), digits = 2)` days, *SD* = `r round(sd(demographics$Tage_zw_Sessions, na.rm = TRUE), digits = 2)`, *range* = `r min(demographics$Tage_zw_Sessions)`- `r max(demographics$Tage_zw_Sessions)`.
 
 Duration between stimulation and task: *M* = `r interval_mean$minute`:`r round(interval_mean$second,digits=0)` min, *SD* = `r interval_sd$minute`:`r round(interval_sd$second,digits=0)`, *range* = `r interval_min$minute`:`r round(interval_min$second,digits=0)`- `r interval_max$minute`:`r round(interval_max$second,digits=0)`.
+<br><br><br><br>
+
+## Overview tDCS adverse effects
+
+```{r tDCS-adverse-effects}
+
+# Create overview adverse effects
+table_adverse_effects <- demographics %>% 
+  # Select the needed columns
+  dplyr::select(participant_id, Jucken_T1, Jucken_T2, Kribbeln_T1, Kribbeln_T2, Brennen_T1, Brennen_T2, Wärme_Hitze_T1, Wärme_Hitze_T2,
+         Schmerz_T1, Schmerz_T2, Kopfschmerzen_T1, Kopfschmerzen_T2, Ermüdung_verringerte_Aufmerksamkeit_T1, Ermüdung_verringerte_Aufmerksamkeit_T2, 
+         Konzentrationsschwierigkeit_T1, Konzentrationsschwierigkeit_T2, Stimmungsänderung_T1, Stimmungsänderung_T2, 
+         Nervosität_T1, Nervosität_T2, Auswirkung_Empfindung_auf_Leistung_T1, Auswirkung_Empfindung_auf_Leistung_T2,
+         Lichtblitze_T1, Lichtblitze_T2, Vermutete_Stimulationsart_T1, Vermutete_Stimulationsart_T2, Stimulationsbedingung_T1, Stimulationsbedingung_T2) %>%
+  # Stack T1 and T2 for each adverse effect below each other (this also stacks all adverse effects in one column)
+  gather(adverse_effect, value, Jucken_T1:Jucken_T2, Kribbeln_T1:Kribbeln_T2, Brennen_T1:Brennen_T2, Wärme_Hitze_T1:Wärme_Hitze_T2,
+         Schmerz_T1:Schmerz_T2, Kopfschmerzen_T1:Kopfschmerzen_T2, Ermüdung_verringerte_Aufmerksamkeit_T1:Ermüdung_verringerte_Aufmerksamkeit_T2, 
+         Konzentrationsschwierigkeit_T1:Konzentrationsschwierigkeit_T2, Stimmungsänderung_T1:Stimmungsänderung_T2, 
+         Nervosität_T1:Nervosität_T2, Auswirkung_Empfindung_auf_Leistung_T1:Auswirkung_Empfindung_auf_Leistung_T2,
+         Lichtblitze_T1:Lichtblitze_T2, Vermutete_Stimulationsart_T1:Vermutete_Stimulationsart_T2, Stimulationsbedingung_T1:Stimulationsbedingung_T2) %>%
+  # Create column for session and remove session from name of adverse effect
+  dplyr::mutate(session = substr(adverse_effect, nchar(adverse_effect) - 2 + 1, nchar(adverse_effect)), # extract substring of last 2 characters of adverse_effect
+         adverse_effect = substr(adverse_effect,1,nchar(adverse_effect)-3)) %>% # remove substring of last 3 characters of adverse_effect
+  # Reshape table to show not all adverse effects  below each other in one column but have one column for each adverse effect
+  spread(key = adverse_effect, value = value) 
+
+
+# Create and display contingency tables
+my_table_template(prop.table(table(table_adverse_effects$Jucken, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = "Jucken (%)", row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Kribbeln, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = "Kribbeln (%)", row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Brennen, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = "Brennen (%)", row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Wärme_Hitze, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = "Wärme_Hitze (%)", row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Schmerz, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = "Schmerz (%)", row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Kopfschmerzen, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = "Kopfschmerzen (%)", row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Ermüdung_verringerte_Aufmerksamkeit, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = "Ermüdung_verringerte_Aufmerksamkeit (%)", row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Konzentrationsschwierigkeit, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = "Konzentrationsschwierigkeit (%)", row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Stimmungsänderung, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = "Stimmungsänderung (%)", row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Nervosität, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = "Nervosität (%)", row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Auswirkung_Empfindung_auf_Leistung, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = "Auswirkung_Empfindung_auf_Leistung (%)", row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Lichtblitze, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = "Lichtblitze (%)", row_names = TRUE)
+my_table_template(prop.table(table(table_adverse_effects$Vermutete_Stimulationsart, table_adverse_effects$Stimulationsbedingung), margin=2)*100, caption = "Vermutete_Stimulationsart (%)", row_names = TRUE)
+
+
+# Calculate chi-squared tests
+chisq.test(table_adverse_effects$Jucken, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Kribbeln, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Brennen, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Wärme_Hitze, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Schmerz, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Kopfschmerzen, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Ermüdung_verringerte_Aufmerksamkeit, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Konzentrationsschwierigkeit, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Stimmungsänderung, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Nervosität, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Auswirkung_Empfindung_auf_Leistung, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Lichtblitze, table_adverse_effects$Stimulationsbedingung)
+chisq.test(table_adverse_effects$Vermutete_Stimulationsart, table_adverse_effects$Stimulationsbedingung)
+
+
+
+#### Double check: Treat rating as interval data and run t tests
+
+# Recode variables to numeric values
+table_adverse_effects_num <- table_adverse_effects 
+table_adverse_effects_num[table_adverse_effects_num=="keine"]  <- 0
+table_adverse_effects_num[table_adverse_effects_num=="mild"]   <- 1
+table_adverse_effects_num[table_adverse_effects_num=="moderat"]<- 2
+table_adverse_effects_num[table_adverse_effects_num=="stark"]  <- 3
+table_adverse_effects_num[table_adverse_effects_num=="überhaupt nicht"]  <- 0
+table_adverse_effects_num[table_adverse_effects_num=="ein wenig"]        <- 1
+table_adverse_effects_num[table_adverse_effects_num=="mäßig"]            <- 2
+table_adverse_effects_num[table_adverse_effects_num=="sehr stark"]       <- 4
+table_adverse_effects_num[table_adverse_effects_num=="ja"]    <- 1
+
+
+# Make column type numeric 
+table_adverse_effects_num[, c(3:13,16)] <- sapply(table_adverse_effects_num[, c(3:13,16)], as.numeric)
+
+
+# Calculate means
+table_adverse_effects_num_means <- table_adverse_effects_num %>%
+  dplyr::group_by(Stimulationsbedingung) %>%
+  dplyr::summarise_if(is.numeric, funs(mean,sd), na.rm = TRUE) %>%
+  dplyr::ungroup()
+
+
+# Display means
+my_table_template(table_adverse_effects_num_means, caption = "Mean of adverse effects, treated as interval data")
+
+
+# Calculate t tests (not adjusted for multiple testing)
+t.test(Jucken ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Kribbeln ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Brennen ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Wärme_Hitze ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE, na.action = "na.pass") # exclusion of participant with missing value (P_03 excluded, due to missing value in T1)
+t.test(Schmerz ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE, na.action = "na.pass") # exclusion of participant with missing value (P_01 excluded, due to missing value in T2)
+t.test(Kopfschmerzen ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Ermüdung_verringerte_Aufmerksamkeit ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Konzentrationsschwierigkeit ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Stimmungsänderung ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Nervosität ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Auswirkung_Empfindung_auf_Leistung ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+t.test(Lichtblitze ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
+
+```
+<br><br>
+
+The stimulation was well tolerated with minimal adverse effects. The most frequent adverse effects were transient tingling, itching, and burning sensation. Adverse effects were not significantly different between verum and sham stimulation. (This holds true when evaluating rating as ordinal data with chi-square test or as interval data with t test). Also, participants were indeed blind to stimulation condition. 
