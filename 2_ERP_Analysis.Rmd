@@ -193,41 +193,45 @@ Trials were excluded from all analyses if RT was shorter than 100 ms or longer t
 
 ```{r excluded-trials}
 
-# Calculate percentage of excluded trials per group
+# Calculate percentage of excluded trials per participant
 excluded_trials_per_participant <- single_trial_data %>%
   dplyr::group_by(group, participant_id, session) %>%
   dplyr::summarize(
     invalid_rt   = sum(!is.na(rt_invalid) & rt_invalid != FALSE) / length(participant_id) * 100,
     misses       = sum(response_type == "miss") / length(participant_id) * 100,
     EEG_artifact = sum(is.nan(MFN_0_100_FCz)) / length(participant_id) * 100 # is.nan -> trials lost due trigger miss have NA and thus do not count here
-   )  %>%
-  dplyr::ungroup() %>%
-  dplyr::group_by(group) %>%
+   ) %>%
+  dplyr::ungroup() 
+
+
+# Summarize percentage of excluded trials per participant over groups
+excluded_trials_per_participant_over_groups <- excluded_trials_per_participant %>%
   # Calculate M and SD of the variables
-  dplyr::summarize(across(-c(participant_id, session), list(mean,sd,min,max)))  %>%
-  dplyr::ungroup()
+  dplyr::summarize(across(-c(group, participant_id, session), list(mean,sd,min,max)))  
 
 
-# Display percentage of excluded trials per group
-my_table_template(excluded_trials_per_participant,
-  caption = "Excluded Trials (M and SD in %) per Group", 
-  col_names = c("Group", "M", "SD", "min", "max", "M", "SD", "min", "max", "M", "SD", "min", "max"),
-  header_above_config = c(" " = 1, "RT < 100 / > 800 ms" = 4, "Misses" = 4, "EEG artifact" = 4)
+# Summarize percentage of excluded trials per participant per group 
+excluded_trials_per_participant_per_group <- excluded_trials_per_participant %>%
+  # Calculate M and SD of the variables
+  dplyr::group_by(group) %>%
+  dplyr::summarize(across(-c(participant_id, session), list(mean,sd,min,max))) %>%
+  dplyr::ungroup()   
+
+
+# Display percentage of excluded trials per participant over groups
+my_table_template(excluded_trials_per_participant_over_groups,
+  caption = "Excluded Trials (M and SD in %) per Participant", 
+  col_names = c("M", "SD", "min", "max", "M", "SD", "min", "max", "M", "SD", "min", "max"),
+  header_above_config = c("RT < 100 / > 800 ms" = 4, "Misses" = 4, "EEG artifact" = 4)
 )
 
 
-# Calculate percentage of excluded trials in total
-excluded_trials_in_total <- single_trial_data %>%
-  dplyr::summarize(
-    invalid_rt   = sum(!is.na(rt_invalid) & rt_invalid != FALSE) / nrow(single_trial_data) * 100,
-    misses       = sum(response_type == "miss") / nrow(single_trial_data) * 100,
-    EEG_artifact = sum(is.nan(MFN_0_100_FCz)) / nrow(single_trial_data) * 100
-   )
-
-
-# Display percentage of excluded trials in total
-my_table_template(excluded_trials_in_total,
-  caption = "Excluded Trials (in %) in Total") 
+# Display percentage of excluded trials per participant per group
+my_table_template(excluded_trials_per_participant_per_group,
+  caption = "Excluded Trials (M and SD in %) per Participant per Group", 
+  col_names = c("Group", "M", "SD", "min", "max", "M", "SD", "min", "max", "M", "SD", "min", "max"),
+  header_above_config = c(" " = 1, "RT < 100 / > 800 ms" = 4, "Misses" = 4, "EEG artifact" = 4)
+)
 
 
 # Detect ERP outliers (ERP deviates more than 2/3 SD below/above group mean per condition)
