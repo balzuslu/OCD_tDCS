@@ -376,9 +376,9 @@ For CRN (right plot), the optimal lambda is `r round(optlambda_CRN, digits = 2)`
 
 ```{r permutation-split-half-reliability, cache = knitr_cache_enabled}
 
-# Calculate permutation-based split-half internal consistency
+# Calculate permutation-based split-half internal consistency for ERN/CRN
 # use ""invisible(capture.output())" to avoid having ugly console output in html
-invisible(capture.output(split_half_reliability <- splithalf(data = single_trial_data_clean,
+invisible(capture.output(split_half_reliability_MFN <- splithalf(data = single_trial_data_clean,
                                     outcome = "RT",
                                     score = "average",
                                     permutations = 5000,
@@ -388,12 +388,30 @@ invisible(capture.output(split_half_reliability <- splithalf(data = single_trial
                                     var.participant = "participant_id",
                                     var.condition = "response_type",
                                     conditionlist = c("correct","incorrect"),
-                                    average = "mean")))
+                                    average = "mean",
+                                    round.to = 3)))
 
 # Display permutation-based split-half internal consistency
-my_table_template(split_half_reliability$final_estimates, caption = "Permutation-based split-half reliability")
+my_table_template(split_half_reliability_MFN$final_estimates, caption = "Permutation-based split-half reliability ERN/CRN", digits = 3)
+
+
+# Calculate permutation-based split-half internal consistency for Pe
+# use ""invisible(capture.output())" to avoid having ugly console output in html
+invisible(capture.output(split_half_reliability_Pe <- splithalf(data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+                                    outcome = "RT",
+                                    score = "average",
+                                    permutations = 5000,
+                                    halftype = "random",
+                                    var.RT = "Pe_200_400_Pz",
+                                    var.trialnum = "trial",
+                                    var.participant = "participant_id",
+                                    average = "mean",
+                                    round.to = 3)))
+
+# Display permutation-based split-half internal consistency
+my_table_template(split_half_reliability_Pe$final_estimates, caption = "Permutation-based split-half reliability Pe", digits = 3)
 ```
-The internal consitency of ERN and CRN was estimated using a permutation-based split-half approach (Parsons 2020) with 5000 random splits. The (Spearman-Brown corrected) split-half internal consistency of ERN and CRN are excellent. The columns SB_low and SB_high represent 95% confience intervall limits. The spearman-brown corrected reliability estimate for the ERN was .96, 95% CI [.93, .97], for CRN 1, 95% CI [.99, 1]. The splithalf package was built to deal with RTs. However, the principle should also apply to ERP values, so the results should be correct. However, I also calculated the odd-even split-half reliabilty to compare the results (see below).
+The internal consitency of ERN and CRN was estimated using a permutation-based split-half approach (Parsons 2020) with 5000 random splits. The (Spearman-Brown corrected) split-half internal consistency of ERN, CRN, and Pe are excellent. The columns SB_low and SB_high represent 95% confidence intervall limits. The spearman-brown corrected reliability estimate for the ERN was .955, 95% CI [.932, .972], for CRN .995, 95% CI [.993, .997], for Pe .940, 95% CI [.912, .963]. The splithalf package was built to deal with RTs. However, the principle should also apply to ERP values, so the results should be correct. However, I also calculated the odd-even split-half reliabilty to compare the results (see below).
 <br><br>
 
 ```{r odd-even-split-half-reliability}
@@ -410,10 +428,11 @@ internal_consistency_CRN <- single_trial_data_clean[single_trial_data_clean$resp
   dplyr::ungroup()
 
 
-# Calculate mean ERN for odd and even trials per participant and session
+# Calculate mean ERN/Pe for odd and even trials per participant and session
 internal_consistency_ERN <- single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",] %>%
   dplyr::group_by(participant_id, session, oddeven) %>% 
-  dplyr::summarise(mean_ERN = mean(MFN_0_100_FCz, na.rm=TRUE)
+  dplyr::summarise(mean_ERN = mean(MFN_0_100_FCz, na.rm=TRUE),
+                   mean_Pe  = mean(Pe_200_400_Pz, na.rm=TRUE)
 )  %>%
   dplyr::ungroup()
 
@@ -421,21 +440,23 @@ internal_consistency_ERN <- single_trial_data_clean[single_trial_data_clean$resp
 # Correlating scores from even and odd items
 r_CRN <- cor.test(internal_consistency_CRN$mean_CRN[internal_consistency_CRN$oddeven==1], internal_consistency_CRN$mean_CRN[internal_consistency_CRN$oddeven==0])
 r_ERN <- cor.test(internal_consistency_ERN$mean_ERN[internal_consistency_ERN$oddeven==1], internal_consistency_ERN$mean_ERN[internal_consistency_ERN$oddeven==0])
+r_Pe  <- cor.test(internal_consistency_ERN$mean_Pe[internal_consistency_ERN$oddeven==1],  internal_consistency_ERN$mean_Pe[internal_consistency_ERN$oddeven==0])
 
 
 # Adjusting with the Spearman-Brown prophecy formula
 r_CRN_SB <- (2 * r_CRN$estimate) / (1 + r_CRN$estimate)
 r_ERN_SB <- (2 * r_ERN$estimate) / (1 + r_ERN$estimate)
+r_Pe_SB  <- (2 * r_Pe$estimate)  / (1 + r_Pe$estimate)
 
 
 # Display odd-even split-half reliability
-oddeven_split_half_reliability <- matrix(c(r_CRN$estimate, r_ERN$estimate, r_CRN$conf.int[1], r_ERN$conf.int[1], 
-                                           r_CRN$conf.int[2], r_ERN$conf.int[2], r_CRN_SB, r_ERN_SB), ncol=4)
+oddeven_split_half_reliability <- matrix(c(r_CRN$estimate, r_ERN$estimate, r_Pe$estimate, r_CRN$conf.int[1], r_ERN$conf.int[1], r_Pe$conf.int[1], 
+                                           r_CRN$conf.int[2], r_ERN$conf.int[2], r_Pe$conf.int[2], r_CRN_SB, r_ERN_SB, r_Pe_SB), ncol=4)
 colnames(oddeven_split_half_reliability) <- c("splithalf_raw", "splithalf_CI_lower_limit", "splithalf_CI_upper_limit", "splithalf_spearmanbrown")
-rownames(oddeven_split_half_reliability) <- c("CRN", "ERN")
-my_table_template(oddeven_split_half_reliability, row_names = TRUE, caption = "Odd-even split-half reliability")
+rownames(oddeven_split_half_reliability) <- c("CRN", "ERN", "Pe")
+my_table_template(oddeven_split_half_reliability, row_names = TRUE, caption = "Odd-even split-half reliability", digits = 3)
 ```
-Odd-even reliability for the ERN/CRN is also excellent. 
+Odd-even reliability for the ERN/CRN/Pe is also good to excellent. 
 <br><br>
 
 ## Descriptive Statistics {.tabset}
