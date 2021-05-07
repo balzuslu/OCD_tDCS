@@ -45,6 +45,7 @@ library(tidyr)      # for reshape function
 library(readr)      # for raincloud plots
 library(lavaan)     # for raincloud plots
 library(splithalf)  # for permutation-based split-half reliability
+library(TOSTER)     # for equivalence test on t test
 
 
 # Load functions
@@ -929,6 +930,36 @@ Test against upper bound: t(`r round(upper$df, 2)`) = `r round(upper$"t value", 
 
 *°would still lead to the same conclusion*
 *°° also used mean amplitude*
+<br><br><br>
+
+##### **Equivalence test based on standardized effect size boundaries and t test**
+
+```{r ERN-equivalence-test-TOSTER}
+ 
+# Create aggrated dataframe for equivalence test
+ equivalence_data <- single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",] %>%
+  dplyr::group_by(participant_id, stimulation) %>%
+  dplyr::summarize(
+    MFN = mean(MFN_0_100_FCz, na.rm = TRUE)
+   )  %>%
+  dplyr::ungroup()%>%
+  dplyr::select(participant_id,stimulation, MFN)
+ equivalence_data <-  split(equivalence_data, equivalence_data$stimulation)
+ equivalence_data <-  left_join(equivalence_data$verum, equivalence_data$sham, by = "participant_id")
+
+ 
+ # Run equivalence test
+TOSTpaired(n = 56, 
+           m1 = mean(equivalence_data$MFN.x), 
+           m2 = mean(equivalence_data$MFN.y), 
+           sd1 = sd(equivalence_data$MFN.x), 
+           sd2 = sd(equivalence_data$MFN.y), 
+           r12 = cor.test(equivalence_data$MFN.x,equivalence_data$MFN.y)$estimate, 
+           low_eqbound_dz = -0.38, 
+           high_eqbound_dz = 0.38, 
+           alpha = 0.05, 
+           plot = TRUE, verbose = TRUE)
+```
 <br><br>
 
 #### Check covariates
