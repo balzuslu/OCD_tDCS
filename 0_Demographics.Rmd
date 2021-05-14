@@ -67,7 +67,7 @@ questionnaires   <- read.spss("./data/psychoEQExport.sav", to.data.frame = TRUE,
 
 
 # Select relevant variables
-participant_data <- participant_data[,c("Code","Alter","Geschlecht","Schulabschluss","Händigkeit","Komorbidität_1","Komorbidität_2",
+participant_data <- participant_data[,c("Code","Alter","Geschlecht","Schulabschluss","Schuljahre","Händigkeit","Komorbidität_1","Komorbidität_2",
                                         "Komorbidität_3","Medikamente_JaNein","SSRI","SNRI","Trizykl_Antidepressiva",
                                         "Kombination_SSRI_Antidepressiva","YBOCS_gesamt","YBOCS_Gedanken","YBOCS_Handlungen","MADRS", "WST",
                                         "Dauer_nach_tDCS_bis_Flanker_T1","Dauer_nach_tDCS_bis_Flanker_T2","Tage_zw_Sessions",
@@ -103,22 +103,37 @@ demographics[demographics$participant_id == "ModERN_tDCS_C12",]$WST <- 25
 
 
 
-
 ### Handle numeric variables
+
+# Transform WST scores (range 24-37) to IQ scores
+demographics[demographics$WST == 24,]$WST <- 89
+demographics[demographics$WST == 25,]$WST <- 90
+demographics[demographics$WST == 27,]$WST <- 93
+demographics[demographics$WST == 28,]$WST <- 95
+demographics[demographics$WST == 29,]$WST <- 97
+demographics[demographics$WST == 30,]$WST <- 99
+demographics[demographics$WST == 31,]$WST <- 101
+demographics[demographics$WST == 32,]$WST <- 104
+demographics[demographics$WST == 33,]$WST <- 107
+demographics[demographics$WST == 34,]$WST <- 110
+demographics[demographics$WST == 35,]$WST <- 114
+demographics[demographics$WST == 36,]$WST <- 118
+demographics[demographics$WST == 37,]$WST <- 122
+
 
 # Calculate M and SD per group 
 demographics_per_group_M_SD <- demographics %>%
   dplyr::group_by(group) %>%
   # Calculate M and SD of the variables
-  dplyr::summarize(across(c(Alter,WST,YBOCS_gesamt,YBOCS_Gedanken,YBOCS_Handlungen,MADRS,
+  dplyr::summarize(across(c(Alter,Schuljahre,WST,YBOCS_gesamt,YBOCS_Gedanken,YBOCS_Handlungen,MADRS,
                             BDI_Total,OCI_Total,STAI_State,STAI_Trait), list(mean,sd), na.rm = TRUE)) %>%
   # Reshape table to have one column per group
   gather(key = key, value = value, 2:ncol(.), factor_key = TRUE) %>% 
   spread(key = names(.)[1], value = "value") %>%
   # Add variable column
-  dplyr::mutate(Variable = c("Alter", "", "WST", "", "YBOCS_Total", "", "YBOCS_Gedanken", "", "YBOCS_Handlungen", "",  "MADRS", "", "BDI_Total", "", "OCI_Total", "", "STAI_State", "", "STAI_Trait", "")) %>%
+  dplyr::mutate(Variable = c("Alter", "","Schuljahre", "", "WST", "", "YBOCS_Total", "", "YBOCS_Gedanken", "", "YBOCS_Handlungen", "",  "MADRS", "", "BDI_Total", "", "OCI_Total", "", "STAI_State", "", "STAI_Trait", "")) %>%
   # Add M/SD column
-  dplyr::mutate(M_SD_or_n = c("M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD")) %>%
+  dplyr::mutate(M_SD_or_n = c("M", "SD","M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD", "M", "SD")) %>%
   # Reorder columns
   dplyr::select(Variable, M_SD_or_n, HC, OCD) %>%
   dplyr::ungroup()
@@ -126,16 +141,16 @@ demographics_per_group_M_SD <- demographics %>%
 
 # Calculate t tests
 demographics_per_group_t_test <- demographics %>% 
-  select(Alter,WST,BDI_Total,OCI_Total,STAI_State,STAI_Trait, group) %>% 
+  select(Alter,Schuljahre,WST,BDI_Total,OCI_Total,STAI_State,STAI_Trait, group) %>% 
   gather(key = Variable, value = value, -group) %>% 
   group_by(group, Variable) %>% 
   dplyr::summarise(value = list(value)) %>% 
   spread(group, value) %>%
   dplyr::ungroup() %>%
   dplyr::group_by(Variable) %>% 
-  dplyr::mutate(df = t.test(unlist(HC), unlist(OCD))$parameter,
-         t_or_chi_sq_value = t.test(unlist(HC), unlist(OCD))$statistic, 
-         p_value = t.test(unlist(HC), unlist(OCD))$p.value) %>%
+  dplyr::mutate(df = t.test(unlist(HC), unlist(OCD), var.equal=TRUE)$parameter,
+         t_or_chi_sq_value = t.test(unlist(HC), unlist(OCD), var.equal=TRUE)$statistic, 
+         p_value = t.test(unlist(HC), unlist(OCD), var.equal=TRUE)$p.value) %>%
   dplyr::select(-c(HC, OCD))  %>%
   dplyr::ungroup()
 
@@ -207,7 +222,7 @@ handedness <- demographics %>% group_by(group) %>% count(Händigkeit, .drop = FA
 
 
 # Display table
-my_table_template(rbind(demographics_per_group[c(1,2),], gender, education, handedness, demographics_per_group[c(3:nrow(demographics_per_group)),]), caption = "Demographic and Clinical Variables")
+my_table_template(rbind(demographics_per_group[c(1,2),], gender, education, handedness, demographics_per_group[c(3:nrow(demographics_per_group)),]), caption = "Demographic and Clinical Variables", digits = 2)
 
 ````
 <br><br>
@@ -289,6 +304,22 @@ chisq.test(table_adverse_effects$Lichtblitze, table_adverse_effects$Stimulations
 chisq.test(table_adverse_effects$Vermutete_Stimulationsart, table_adverse_effects$Stimulationsbedingung)
 
 
+# # Calculate Fisher's exact tests
+# fisher.test(table_adverse_effects$Jucken, table_adverse_effects$Stimulationsbedingung)
+# fisher.test(table_adverse_effects$Kribbeln, table_adverse_effects$Stimulationsbedingung)
+# fisher.test(table_adverse_effects$Brennen, table_adverse_effects$Stimulationsbedingung)
+# fisher.test(table_adverse_effects$Wärme_Hitze, table_adverse_effects$Stimulationsbedingung)
+# fisher.test(table_adverse_effects$Schmerz, table_adverse_effects$Stimulationsbedingung)
+# fisher.test(table_adverse_effects$Kopfschmerzen, table_adverse_effects$Stimulationsbedingung)
+# fisher.test(table_adverse_effects$Ermüdung_verringerte_Aufmerksamkeit, table_adverse_effects$Stimulationsbedingung)
+# fisher.test(table_adverse_effects$Konzentrationsschwierigkeit, table_adverse_effects$Stimulationsbedingung)
+# fisher.test(table_adverse_effects$Stimmungsänderung, table_adverse_effects$Stimulationsbedingung)
+# fisher.test(table_adverse_effects$Nervosität, table_adverse_effects$Stimulationsbedingung)
+# fisher.test(table_adverse_effects$Auswirkung_Empfindung_auf_Leistung, table_adverse_effects$Stimulationsbedingung)
+# fisher.test(table_adverse_effects$Lichtblitze, table_adverse_effects$Stimulationsbedingung)
+# fisher.test(table_adverse_effects$Vermutete_Stimulationsart, table_adverse_effects$Stimulationsbedingung)
+
+
 
 #### Double check: Treat rating as interval data and run t tests
 
@@ -334,6 +365,26 @@ t.test(Nervosität ~ Stimulationsbedingung, table_adverse_effects_num, paired = 
 t.test(Auswirkung_Empfindung_auf_Leistung ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
 t.test(Lichtblitze ~ Stimulationsbedingung, table_adverse_effects_num, paired = TRUE)
 
+
+# Calculate t tests (adjusted for multiple testing)
+t1 <- pairwise.t.test(table_adverse_effects_num$Jucken, table_adverse_effects_num$Stimulationsbedingung, paired = TRUE)
+t2 <- pairwise.t.test(table_adverse_effects_num$Kribbeln, table_adverse_effects_num$Stimulationsbedingung, paired = TRUE)
+t3 <- pairwise.t.test(table_adverse_effects_num$Brennen, table_adverse_effects_num$Stimulationsbedingung, paired = TRUE)
+t4 <- pairwise.t.test(table_adverse_effects_num$Wärme_Hitze, table_adverse_effects_num$Stimulationsbedingung, paired = TRUE, na.action = "na.pass") # exclusion of participant with missing value (P_03 excluded, due to missing value in T1)
+t5 <- pairwise.t.test(table_adverse_effects_num$Schmerz, table_adverse_effects_num$Stimulationsbedingung, paired = TRUE, na.action = "na.pass") # exclusion of participant with missing value (P_01 excluded, due to missing value in T2)
+t6 <- pairwise.t.test(table_adverse_effects_num$Kopfschmerzen, table_adverse_effects_num$Stimulationsbedingung, paired = TRUE)
+t7 <- pairwise.t.test(table_adverse_effects_num$Ermüdung_verringerte_Aufmerksamkeit, table_adverse_effects_num$Stimulationsbedingung, paired = TRUE)
+t8 <- pairwise.t.test(table_adverse_effects_num$Konzentrationsschwierigkeit, table_adverse_effects_num$Stimulationsbedingung, paired = TRUE)
+t9 <- pairwise.t.test(table_adverse_effects_num$Stimmungsänderung, table_adverse_effects_num$Stimulationsbedingung, paired = TRUE)
+t10 <- pairwise.t.test(table_adverse_effects_num$Nervosität, table_adverse_effects_num$Stimulationsbedingung, paired = TRUE)
+t11 <- pairwise.t.test(table_adverse_effects_num$Auswirkung_Empfindung_auf_Leistung, table_adverse_effects_num$Stimulationsbedingung, paired = TRUE)
+t12 <- pairwise.t.test(table_adverse_effects_num$Lichtblitze, table_adverse_effects_num$Stimulationsbedingung, paired = TRUE)
+
+
+# Adjust p values for multiple testing
+print("# False discovery rate adjusted p values")
+p_values <- c(t1$p.value,t2$p.value,t3$p.value,t4$p.value,t5$p.value,t6$p.value,t7$p.value,t8$p.value,t9$p.value,t10$p.value)
+p.adjust(p_values, method = "fdr")
 ```
 <br><br>
 
