@@ -86,6 +86,13 @@
       "Repository": "CRAN",
       "Hash": "e031418365a7f7a766181ab5a41a5716"
     },
+    "RLRsim": {
+      "Package": "RLRsim",
+      "Version": "3.1-6",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "5fef3431747cb9581a542af685138a2a"
+    },
     "Rcpp": {
       "Package": "Rcpp",
       "Version": "1.0.5",
@@ -113,6 +120,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "fbe4ac267bf42a91e495cc68ad3f8b63"
+    },
+    "TOSTER": {
+      "Package": "TOSTER",
+      "Version": "0.3.4",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "2720df88c67856de2aecaf5533475302"
     },
     "abind": {
       "Package": "abind",
@@ -158,10 +172,17 @@
     },
     "bayestestR": {
       "Package": "bayestestR",
-      "Version": "0.7.5",
+      "Version": "0.9.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "2f563445239278e312d0ac8d86031716"
+      "Hash": "af326db9a2494422ede70ee4b7676297"
+    },
+    "binom": {
+      "Package": "binom",
+      "Version": "1.1-1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "0ae44a9cee07cf7af8af200557daf204"
     },
     "boot": {
       "Package": "boot",
@@ -562,10 +583,10 @@
     },
     "insight": {
       "Package": "insight",
-      "Version": "0.10.0",
+      "Version": "0.14.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "585d3881370939bcb2df66a08076640f"
+      "Hash": "c50bfd28b6ab8bfa5ba996d88c86dc2a"
     },
     "isoband": {
       "Package": "isoband",
@@ -573,6 +594,20 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "6e58bd3d6b3dd82a944cd6f05ade228f"
+    },
+    "iterators": {
+      "Package": "iterators",
+      "Version": "1.0.13",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "64778782a89480e9a644f69aad9a2877"
+    },
+    "jmvcore": {
+      "Package": "jmvcore",
+      "Version": "1.2.23",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "8305d4b7d3c85fb0478026d92561a5cc"
     },
     "jsonlite": {
       "Package": "jsonlite",
@@ -657,6 +692,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "f04948de84602afc23bfa9f5427e954d"
+    },
+    "lubridate": {
+      "Package": "lubridate",
+      "Version": "1.7.10",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "1ebfdc8a3cfe8fe19184f5481972b092"
     },
     "magrittr": {
       "Package": "magrittr",
@@ -793,10 +835,10 @@
     },
     "parameters": {
       "Package": "parameters",
-      "Version": "0.9.0",
+      "Version": "0.13.0",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "bc3f7632c02cd0cc8e4b898d5cb1eb10"
+      "Hash": "fbf297210397ae386c5ddc2714df1c77"
     },
     "patchwork": {
       "Package": "patchwork",
@@ -821,10 +863,10 @@
     },
     "performance": {
       "Package": "performance",
-      "Version": "0.5.1",
+      "Version": "0.7.1",
       "Source": "Repository",
       "Repository": "CRAN",
-      "Hash": "cd29affa9c6f85f8964a9c7368b06d96"
+      "Hash": "579c2d82e6b62b90ab3d701e94edee47"
     },
     "pillar": {
       "Package": "pillar",
@@ -860,6 +902,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "b08edf378e0e38959a6983e3d5902795"
+    },
+    "plotrix": {
+      "Package": "plotrix",
+      "Version": "3.8-1",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "cd2248636c86e6716cd7ae086536cecc"
     },
     "plyr": {
       "Package": "plyr",
@@ -1056,6 +1105,13 @@
       "Source": "Repository",
       "Repository": "CRAN",
       "Hash": "9ce2cf8e4f6e69f3308a668da5d665e6"
+    },
+    "simr": {
+      "Package": "simr",
+      "Version": "1.0.5",
+      "Source": "Repository",
+      "Repository": "CRAN",
+      "Hash": "cb1b3d8334a7de9bae3e97f300f05d45"
     },
     "sjPlot": {
       "Package": "sjPlot",
