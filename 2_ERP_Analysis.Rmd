@@ -99,9 +99,8 @@ single_trial_data_clean <- single_trial_data %>%
   dplyr::group_by(participant_id, session) %>% 
   dplyr::summarize(number_errors = sum(response_type == "incorrect")) %>%
   dplyr::ungroup(.) %>%
-  dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session")) 
-# Standardize this variable
-single_trial_data_clean$number_errors_standardized <- scale(single_trial_data_clean$number_errors, center = TRUE, scale = TRUE)
+  dplyr::mutate(number_errors_standardized = scale(number_errors, center = TRUE, scale = TRUE)) %>%
+  dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session"))
 
 
 # Add column for (grand mean standardized) number of speeding (needed as covariate later) 
@@ -112,9 +111,8 @@ single_trial_data_clean <- feedback_infos[feedback_infos$block != 6,] %>%
   dplyr::rename(number_feedback_faster = n) %>%
   dplyr::ungroup(.) %>%  
   dplyr::select(-feedback) %>%
-  dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session"))  
-# Standardize this variable
-single_trial_data_clean$number_feedback_faster_standardized <- scale(single_trial_data_clean$number_feedback_faster, center = TRUE, scale = TRUE)
+  dplyr::mutate(number_feedback_faster_standardized = scale(number_feedback_faster, center = TRUE, scale = TRUE)) %>%
+  dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session")) 
 
 
 # Add column for medication (needed as covariate later) 
@@ -355,7 +353,7 @@ LMM analysis of MFN/ERN/CRN will be conducted on untransformed values, as it see
 ```{r MFN-determine-transformation, fig.width = 8, fig.height = 3}
 
 # Arrange plots
-par(mfrow = c(1, 3)) 
+par(mfrow = c(1, 4)) 
 
 # Determine transformation of MFN by estimating optimal lambda using Box–Cox procedure
 bc_MFN <- boxcox(MFN_0_100_FCz + 100 ~ 1, data = single_trial_data_clean)
@@ -369,12 +367,17 @@ optlambda_ERN <- bc_ERN$x[which.max(bc_ERN$y)]
 bc_CRN <- boxcox(MFN_0_100_FCz + 100 ~ 1, data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",])
 optlambda_CRN <- bc_CRN$x[which.max(bc_CRN$y)]
 
+# Determine transformation of Pe by estimating optimal lambda using Box–Cox procedure
+bc_Pe <- boxcox(Pe_200_400_Pz + 120 ~ 1, data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",])
+optlambda_Pe <- bc_Pe$x[which.max(bc_Pe$y)]
+
 # Reset plot layout
 par(mfrow = c(1, 1)) 
 ```
 For MFN (left plot), the optimal lambda is `r round(optlambda_MFN, digits = 2)`, suggesting that no transformation (for lambda = 1) is needed.
-For ERN (middle plot), the optimal lambda is `r round(optlambda_ERN, digits = 2)`, suggesting that no transformation (for lambda = 1) is needed.
-For CRN (right plot), the optimal lambda is `r round(optlambda_CRN, digits = 2)`, suggesting that no transformation (for lambda = 1) is needed.
+For ERN (middle left plot), the optimal lambda is `r round(optlambda_ERN, digits = 2)`, suggesting that no transformation (for lambda = 1) is needed.
+For CRN (middle right plot), the optimal lambda is `r round(optlambda_CRN, digits = 2)`, suggesting that no transformation (for lambda = 1) is needed.
+For Pe (right plot), the optimal lambda is `r round(optlambda_Pe, digits = 2)`, suggesting that no transformation (for lambda = 1) is needed.
 <br><br>
 
 ### Split-half reliability
@@ -394,7 +397,7 @@ invisible(capture.output(split_half_reliability_MFN <- splithalf(data = single_t
                                     var.condition = "response_type",
                                     conditionlist = c("correct","incorrect"),
                                     average = "mean",
-                                    round.to = 3)))
+                                    round.to = 2)))
 
 # Display permutation-based split-half internal consistency
 my_table_template(split_half_reliability_MFN$final_estimates, caption = "Permutation-based split-half reliability ERN/CRN", digits = 3)
@@ -411,12 +414,12 @@ invisible(capture.output(split_half_reliability_Pe <- splithalf(data = single_tr
                                     var.trialnum = "trial",
                                     var.participant = "participant_id",
                                     average = "mean",
-                                    round.to = 3)))
+                                    round.to = 2)))
 
 # Display permutation-based split-half internal consistency
 my_table_template(split_half_reliability_Pe$final_estimates, caption = "Permutation-based split-half reliability Pe", digits = 3)
 ```
-The internal consitency of ERN and CRN was estimated using a permutation-based split-half approach (Parsons 2020) with 5000 random splits. The (Spearman-Brown corrected) split-half internal consistency of ERN, CRN, and Pe are excellent. The columns SB_low and SB_high represent 95% confidence intervall limits. The spearman-brown corrected reliability estimate for the ERN was .955, 95% CI [.932, .972], for CRN .995, 95% CI [.993, .997], for Pe .940, 95% CI [.912, .963]. The splithalf package was built to deal with RTs. However, the principle should also apply to ERP values, so the results should be correct. However, I also calculated the odd-even split-half reliabilty to compare the results (see below).
+The internal consitency of ERN and CRN was estimated using a permutation-based split-half approach (Parsons 2020) with 5000 random splits. The (Spearman-Brown corrected) split-half internal consistency of ERN, CRN, and Pe are excellent. The columns SB_low and SB_high represent 95% confidence intervall limits. The spearman-brown corrected reliability estimate for the ERN was .955, 95% CI [.932, .972], for CRN .995, 95% CI [.993, .997], for Pe .940, 95% CI [.912, .963]. The splithalf package was built to deal with RTs. However, the principle should also apply to ERP values, so the results should be correct. However, I also calculated the odd-even split-half reliabilty to compare the results (see below). In the manuscript, we will report the permutation-based split-half results.
 <br><br>
 
 ```{r odd-even-split-half-reliability}
@@ -459,7 +462,7 @@ oddeven_split_half_reliability <- matrix(c(r_CRN$estimate, r_ERN$estimate, r_Pe$
                                            r_CRN$conf.int[2], r_ERN$conf.int[2], r_Pe$conf.int[2], r_CRN_SB, r_ERN_SB, r_Pe_SB), ncol=4)
 colnames(oddeven_split_half_reliability) <- c("splithalf_raw", "splithalf_CI_lower_limit", "splithalf_CI_upper_limit", "splithalf_spearmanbrown")
 rownames(oddeven_split_half_reliability) <- c("CRN", "ERN", "Pe")
-my_table_template(oddeven_split_half_reliability, row_names = TRUE, caption = "Odd-even split-half reliability", digits = 3)
+my_table_template(oddeven_split_half_reliability, row_names = TRUE, caption = "Odd-even split-half reliability", digits = 2)
 ```
 Odd-even reliability for the ERN/CRN/Pe is also good to excellent. 
 <br><br>
@@ -471,42 +474,17 @@ Odd-even reliability for the ERN/CRN/Pe is also good to excellent.
 
 ```{r descriptive-statistics-table}
 
-# Calculate descriptive statistics for MFN per condition
+##### ERN/CRN
 descriptive_statistics_MFN <- summarySEwithinO(
   data          = single_trial_data_clean,
   measurevar    = "MFN_0_100_FCz",
   withinvars    = c("response_type", "stimulation", "session"),
   betweenvars   = "group",
   idvar         = "participant_id", 
-  conf.interval = .95) %>%
-  # Format confidence interval column
-  dplyr::mutate(
-    ci_MFN = paste0("[", round(MFN_0_100_FCz - ci, digits = 2), 
-                   ", ", round(MFN_0_100_FCz + ci, digits = 2), "]")) %>%
-  # Round MFN means to two decimals
-  dplyr::mutate_at("MFN_0_100_FCz", round, digits = 2) %>%    
-  # Select columns to be displayed
-  dplyr::select(c("group", "response_type", "stimulation", "session", "MFN_0_100_FCz", "ci_MFN", "ci"))
+  conf.interval = .95) 
 
 
-
-# Split and re-merge MFN table to display both groups next to each other
-descriptive_statistics_MFN_display <-  split(descriptive_statistics_MFN, descriptive_statistics_MFN$group)
-descriptive_statistics_MFN_display <-  left_join(descriptive_statistics_MFN_display$HC, descriptive_statistics_MFN_display$OCD, 
-                                                 by = c("response_type", "stimulation", "session"))
-
-
-# Display descriptive statistics for MFN (and select columns)
-my_table_template(descriptive_statistics_MFN_display[,c(2:6,9:10)],
-  caption = "MFN (in μV)",
-  col_names = c("Response type", "Stimulation", "Session", "M", "95% CI", "M", "95% CI"),
-  header_above_config = c(" " = 3, "HC" = 2, "OCD" = 2),
-  footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
-)
-
-
-
-# Calcuate means and CIs adjusted for within-participant factors (without session) - for plots
+##### ERN/CRN without session
 descriptive_statistics_MFN_no_session <- summarySEwithinO(
   data          = single_trial_data_clean,
   measurevar    = "MFN_0_100_FCz",
@@ -514,6 +492,30 @@ descriptive_statistics_MFN_no_session <- summarySEwithinO(
   betweenvars   = "group",
   idvar         = "participant_id", 
   conf.interval = .95
+) %>%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_MFN = paste0("[", round(MFN_0_100_FCz - ci, digits = 2), 
+                   ", ", round(MFN_0_100_FCz + ci, digits = 2), "]")) %>%
+  # Round MFN means to two decimals
+  dplyr::mutate_at("MFN_0_100_FCz", round, digits = 2) %>%    
+  # Select columns to be displayed
+  dplyr::select(c("group", "response_type", "stimulation", "MFN_0_100_FCz", "ci_MFN", "ci"))
+
+
+
+# Split and re-merge MFN table to display both groups next to each other
+descriptive_statistics_MFN_display <-  split(descriptive_statistics_MFN_no_session, descriptive_statistics_MFN_no_session$group)
+descriptive_statistics_MFN_display <-  left_join(descriptive_statistics_MFN_display$HC, descriptive_statistics_MFN_display$OCD, 
+                                                 by = c("response_type", "stimulation"))
+
+
+# Display descriptive statistics for MFN (and select columns)
+my_table_template(descriptive_statistics_MFN_display[,c(2:5,8:9)],
+  caption = "MFN (in μV)",
+  col_names = c("Response type", "Stimulation", "M", "95% CI", "M", "95% CI"),
+  header_above_config = c(" " = 2, "HC" = 2, "OCD" = 2),
+  footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
 )
 ```
 <br><br>
@@ -715,7 +717,7 @@ names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 7):ncol(single_t
 
 #### Model
 
-This is the overall model, including error and correct trials. This model will be reported before reporting the separate models for ERN and CRN, because it also shows the overall group effect and stimulation effect. 
+This is the overall model, including error and correct trials. This model will be reported before reporting the separate models for ERN and CRN, because it also shows the overall group effect and stimulation effect. But if reporting this model somehow does not fit well in manuscript, we will not report it. 
 
 ```{r LMM-MFN, cache = knitr_cache_enabled}
 
@@ -842,9 +844,11 @@ tab_model(LMM_ERN, LMM_CRN,
 )
 ```
 <br><br>
-There is a trend for a higher ERN in OCD compared to HC. There also is a trend for a higher CRN in OCD compared to HC. For CRN, there is an effect of stimulation, with smaller (i.e., less negative) CRN in the verum stimulation compared to the sham condition. There is a trend for a stimulation effect on ERN (which turns significant when using maximum likelihood instead of REML estimation). <br><br>
+There is a trend for a higher ERN in OCD compared to HC. There also is a trend for a higher CRN in OCD compared to HC. For CRN, there is an effect of stimulation, with smaller (i.e., less negative) CRN in the verum stimulation compared to the sham condition. There is a trend for a stimulation effect on ERN (which turns significant when using maximum likelihood instead of REML estimation - we will still stick with the REML estimation since the "just significant" effect from the ML estimation appears not really trustworthy to the readers as well). <br><br>
 
-Reinhart and Woodman (2014) found no stimulation effect on CRN. But from their Figure 2, I actually had the impression that the cathodal stimulation seems to rather increase the CRN (more neg), and a little bit reduces ERN. Maybe that their finding of a stimulation effect on the ERN (which was quantified as difference ERN-CRN) might be caused to a great deal by the effect on CRN? But possibly this stimulation effect was not significant when analyzing the CRN or ERN alone. In our data, the stimulation also reduces the CRN, which is probably why I see no effect in the difference ERN-CRN quantification as Reinhart & Woodman did (see ANOVA section). 
+Reinhart and Woodman (2014) found no stimulation effect on CRN. But from their Figure 2, I actually had the impression that the cathodal stimulation seems to rather increase the CRN (more neg), and a little bit reduces ERN. Maybe that their finding of a stimulation effect on the ERN (which was quantified as difference ERN-CRN) might be caused to a great deal by the effect on CRN? But possibly this stimulation effect was not significant when analyzing the CRN or ERN alone. In our data, the stimulation also reduces the CRN, which is probably why I see no effect in the difference ERN-CRN quantification as Reinhart & Woodman did (see ANOVA section). <br><br>
+
+We will report analyses on CRN as exploratory in the manuscript.
 <br><br>
 
 #### Assumption checks ERN
@@ -926,11 +930,20 @@ Test against upper bound: t(`r round(upper$df, 2)`) = `r round(upper$"t value", 
 **The ERN amplitude in the sham vs. verum condition is not statistically equivalent and not statistically different (or trend only)** <br>
 "Based on equivalence bounds (= smalles effect size of interest, SESOI) of -1.0 microvolt and 1.0 microvolt for the stimulation effect on the ERN quantified as mean amplitude from 0 to 100 ms at FCz, **we cannot reject effect sizes that we still consider meaningful**, t(44.18) = −0.33, p = .371. Because the effect was also not statistically different from 0 in a traditional null-hypothesis test, the result is inconclusive. **We can neither conclude that the effect is different from zero, nor that the effect is too small to matter**. We need to collect more data to draw conclusions about the presence of an effect, or the absence of a meaningful effect (or both)." <br> *citation: Improving Inferences About Null Effects With Bayes Factors and Equivalence Tests (Lakens et al., 2020)* <br><br>
 
-*Is this SESOI justified? Wy do we consider changes of at least 1 (or 1.5°) microvolt as meaningful and below as not meaningful? E.g. can it be based on the fact that 1 microvolt ERN reduction in OCD would lead to comparable ERN magnitude in OCD and HC? Does an ERN change of 1 microvolt predict something meaningful? The effect is considerably smalller than the one reported by Reinhart & Woodman (2014) and much smaller than reported ERN modification effects by Klawohn et al. (2015°°; 2020).*
+*Is this SESOI justified? Wy do we consider changes of at least 1 (or 1.5°) microvolt as meaningful and below as not meaningful? E.g. can it be based on the fact that 1 microvolt ERN reduction in OCD would lead to comparable ERN magnitude in OCD and HC? Does an ERN change of 1 microvolt predict something meaningful? The effect is considerably smalller than the one reported by Reinhart & Woodman (2014) and much smaller than reported ERN modification effects by Klawohn et al. (2015°°; 2020). But we should rather refer only to the Woodman paper here, not to Julia's.*
 
 *°would still lead to the same conclusion*
-*°° also used mean amplitude*
-<br><br><br>
+*°° also used mean amplitude* <br><br>
+
+**Possible justification of SESOI of 1 microvolt: effect size 25% smaller than effect reported by Reinhart & Woodman**
+
+* Problem 1: this is no established method for defining a SESOI (according to Lakens, 2017)
+
+* Problem 2: Woodman does not report unstandadized effect size in microvolt, only standadized effect size Cohen's d
+
+* Solution Problem 2: I can use the web digitizer to get delta ERN scores for each participant from Figure 5 (get red dots) and calculate mean of all values -> should give me the difference in the raw means, correct? (Unstandardized effect size is about 1.36 microvolt -> SESOI of 1 microvolt is more than 25% (26,5%) smaller than this effect)
+
+<br><br><br><br>
 
 ##### **Equivalence test based on standardized effect size boundaries and t test**
 
@@ -960,16 +973,91 @@ TOSTpaired(n = 56,
            alpha = 0.05, 
            plot = TRUE, verbose = TRUE)
 ```
+<br><br> 
+
+**Possible justification of SESOI: Telescope approach: SESOI = effect size that original study had 33% power to detect (would be Cohens dz = 0.38, see below)**
+
+* Problem 1: equivalence bounds would then be based on standardized effect size, which I can only implement in t test, not in LMM
+
+* for eqivalence test in the LMM, I need unstandardized effect size and I find no convicing method to calculate Cohen's d from a LMM in order to be able to translate the standardized effect size to an unstandadized effect size for performing the equivalence test
+
+* I found (dz = beta fixed effect / sqrt(n) * SE fixed effect OR ALSO dz = t/sqrt(n)) -> about 1.2 microvolt would correspond to d = 0.38?
+
+* but in Brysbaert paper, there is other description of how to calculate effect size for LMM that gives very different result
+
+* also package effectsize gives very different effect size (should also be Cohen’s d) for stimulation effect in LMM
+
+* Problem 2: interpretation of results is a bit more "abstract"? (when using -1 microvolt as bound, this would be very clear "we cannot reject that the verum ERN is at least 1 microvolt less negative than the sham ERN")
+
+* Solution Problem 1: Run equivalence test on t test (same as in LMM, has a trend for the sitmulation effect); t test also shows trend for stimulation effect (p = .07); interestingly mine mean difference is quite similar to Woodman's
+
+* Solution Problem 2: TOSTER output also shows unstandardized effect size that I can report to facilitate interpretation (unstandadized effect size is even larger than the one from the LMM: 1,3 vs. 1 microvolt)
+
+This approach is favored and will be reported in the manuscript.
+
 <br><br>
 
 #### Check covariates
 
 The purpose of including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models including the interactions are presented below. Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. Continuous predictors were grand mean standardized (number of errors, number of feedback faster) or within-participant standardized (baseline EEG). <br><br>
 Inclusion of baseline activity as covariate was inspired by Frömer et al. (Nature Comm 2021; "For each ERP, we regressed out the baseline activity at the same electrode sites; baseline was included as a nuisance regressor (Alday et al., 2019)). Alday (2019) argues that including baseline activity as predictor is superior to baseline correction. Since I did baseline correction during preprocessing, adding it also as covariate is probably not advantageous. But for the response-locked ERPs in the flanker task it may be worth checking at least, since an early interval (-500 to -300 ms) was used for baseline correction and a later baseline interval (-200 to 0 ms) as covariate. So I keep the analysis with this covariate here. <br><br> 
-We also included trial-by-trial P3 and N2 amplitude (within-participant standardized) as a covariate. Thereby, we aimed to control for amplitude differences resulting from group or stimulation effects on stimulus-locked ERPs. Hence, we checked whether inclusion of P3/N2 as covariate changes the results of the stimulation or group effect on ERN/CRN (to control for the shift in the stimulus-locked ERP caused by group or stimulation that affects the ERN/CRN results). The model with the P3 will be reported as post hoc analysis (i.e., not stated in the preregistration), the N2 analysis is of no real interest and will not be reported. This additional analysis including P3 as predictor is justified by two papers (Klawohn et al., Psychophys., 2020; Meyer et al., Psychophys., 2017), reporting that the overlap of P300 with ERN might be problematic when trying to make inferences on effects of one of these components. Note that the P3 was quantified at CPz (since this is where this ERP typically emerges most; is also in line with the preregistration). However, since we actually aim to control for the P3 signal contained in the ERN, one could also use the P3 quantified at FCz as covariate (this value would rather reflect how much of the P3 is left in the FCz and thus affects the ERN). We decided to go with the first option. 
+We also included trial-by-trial P3 and N2 amplitude (within-participant standardized) as a covariate. Thereby, we aimed to control for amplitude differences resulting from group or stimulation effects on stimulus-locked ERPs. Hence, we checked whether inclusion of P3/N2 as covariate changes the results of the stimulation or group effect on ERN/CRN (to control for the shift in the stimulus-locked ERP caused by group or stimulation that affects the ERN/CRN results). The model with the P3 will be reported as post hoc analysis (i.e., not stated in the preregistration), the N2 analysis is of no real interest and will not be reported. This additional analysis including P3 as predictor is justified by two papers (Klawohn et al., Psychophys., 2020; Meyer et al., Psychophys., 2017), reporting that the overlap of P300 with ERN might be problematic when trying to make inferences on effects of one of these components. Note that the P3 was quantified at CPz (since this is where this ERP typically emerges most; is also in line with the preregistration). However, since we actually aim to control for the P3 signal contained in the ERN, one could also use the P3 quantified at FCz as covariate (this value would rather reflect how much of the P3 is left in the FCz and thus affects the ERN). We decided to go with the first option. <br><br>
 
+Of these covariates, we will report P3 and medication in the manuscript. For P3, there are some interactions with P3 that we find difficult to explain. But in the model adding P3 only as main effect, the stimulation effect is not significant. For medication status, we will report the covariate analysis, not the (preregistered) subgroup analysis since this would result in non-significant results due to power problems. For the covariate model, do we use the whole group (but than medication status is confounded with group?) or only the OCD group (but then again we have not enoug power to find the stimulation effect)? For medication, we will only report that the effects hold true when controlling for medication and put the respective model only in the supplement. Will we report the analyses with covariates only for the ERN model or also for CRN/Pe?
 
 ```{r LMM-ERN-CRN-covariates, cache = knitr_cache_enabled}
+
+# ERN check covariate P3 (added only as main effect)
+LMM_ERN_P3_main_effect <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC + P3_300_500_CPz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# CRN check covariate P3 (added only as main effect)
+LMM_CRN_P3_main_effect <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC + P3_300_500_CPz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# Display models in one table
+tab_model(LMM_ERN_P3_main_effect,LMM_CRN_P3_main_effect,
+  dv.labels = c("ERN [μV], covariate P3 (added only as main effect)","CRN [μV], covariate P3 (added only as main effect)"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+
+# ERN check covariate P3 (added only in interaction with stimulation)
+LMM_ERN_P3_int_stim <- lmer(MFN_0_100_FCz ~ verum_sham * (OCD_HC + P3_300_500_CPz_standardized)  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# CRN check covariate P3 (added only in interaction with stimulation)
+LMM_CRN_P3_int_stim <- lmer(MFN_0_100_FCz ~ verum_sham * (OCD_HC + P3_300_500_CPz_standardized)  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# Display models in one table
+tab_model(LMM_ERN_P3_int_stim,LMM_CRN_P3_int_stim,
+  dv.labels = c("ERN [μV], covariate P3 (added only in interaction with stimulation)","CRN [μV], covariate P3 (added only in interaction with stimulation)"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
 
 # ERN check covariate P3
 LMM_ERN_P3 <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * P3_300_500_CPz_standardized  + 
@@ -1179,6 +1267,32 @@ tab_model(LMM_ERN_medication, LMM_CRN_medication,
 )
 
 
+# ERN check covariate medication (only OCD group)
+LMM_ERN_medication_OCD <- lmer(MFN_0_100_FCz ~ verum_sham * medication  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$group == "OCD",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# CRN check covariate medication (only OCD group)
+LMM_CRN_medication_OCD <- lmer(MFN_0_100_FCz ~ verum_sham * medication  +
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct" & single_trial_data_clean$group == "OCD",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# Display models in one table
+tab_model(LMM_ERN_medication_OCD, LMM_CRN_medication_OCD,
+  dv.labels = c("ERN [μV], covariate medication (only OCD group)","CRN [μV], covariate medication (only OCD group)"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+
 # ERN include only unmedicated participants
 LMM_ERN_unmedicated <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC +  
   (1 + verum_sham | participant_id),
@@ -1285,7 +1399,8 @@ When including only unmedicated participants, there is no ERN group difference a
 
 #### Model with avg ref
 
-To check whether we find a group difference or stimulation effect when using average reference insted of linked mastoid reference, we re-referenced the data before epoching (i.e., after ICA) to average reference. JK and I think that it is not necessary to reverse the mastoid referencing that was done before. 
+To check whether we find a group difference or stimulation effect when using average reference insted of linked mastoid reference, we re-referenced the data before epoching (i.e., after ICA) to average reference. JK and I think that it is not necessary to reverse the mastoid referencing that was done before. <br>
+We will not report this model in the manuscript for now. 
 
 ```{r LMM-ERN-CRN-avg-ref, cache = knitr_cache_enabled}
 
@@ -1342,6 +1457,8 @@ I also checked the nested models: For ERN, there is no group differences within 
 ### LMM for ERN / CRN (nested) {.tabset}
 
 #### Model
+
+Since the interaction group * stimulation is not significant in the full model (and there are no a priori hypotheses regarding the stimulation effect within the separate groups), we will not report the nested model in the manuscript for now. For the CRN, there is almost a trend, but we will still not report the nested model for now, since analyzing the CRN is exploratory itself and the trend is not really present (p = .114) and explaining why there is stimulation effect more in OCD might also be hard to explain.
 
 ```{r LMM-ERN-CRN-per-group, cache = knitr_cache_enabled}
 
@@ -1404,6 +1521,33 @@ Is same as in non-nested models (tab LMM separately for ERN / CRN)
 #### Check covariates
 
 ```{r LMM-ERN-CRN-per-group-covariates, cache = knitr_cache_enabled}
+
+
+# ERN check covariate P3 (added only as main effect)
+LMM_ERN_group_P3_main_effect <- lmer(MFN_0_100_FCz ~ group/stimulation + P3_300_500_CPz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# CRN check covariate P3 (added only as main effect)
+LMM_CRN_group_P3_main_effect <- lmer(MFN_0_100_FCz ~ group/stimulation + P3_300_500_CPz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# Display models in one table
+tab_model(LMM_ERN_group_P3_main_effect,LMM_CRN_group_P3_main_effect,
+  dv.labels = c("ERN [μV], covariate P3 (added only as main effect)","CRN [μV], covariate P3 (added only as main effect)"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
 
 # ERN check covariate P3
 LMM_ERN_group_P3 <- lmer(MFN_0_100_FCz ~ group/stimulation * P3_300_500_CPz_standardized  + 
@@ -1717,6 +1861,34 @@ Notes for assumption check would be the same as written for the MFN model.
 
 ```{r LMM-Pe-covariates, cache = knitr_cache_enabled}
 
+# Pe check covariate P3 (added only as main effect)
+LMM_Pe_P3_main_effect <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC + P3_300_500_CPz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_P3_main_effect,
+  dv.labels = "Pe [μV], covariate P3 (added only as main effect)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+
+# Pe check covariate P3 (added only in interaction with stimulation)
+LMM_Pe_P3_int_stim <- lmer(Pe_200_400_Pz ~ verum_sham * (OCD_HC + P3_300_500_CPz_standardized)  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_P3_int_stim,
+  dv.labels = "Pe [μV], covariate P3 (added only in interaction with stimulation)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+
 # Pe check covariate P3
 LMM_Pe_P3 <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * P3_300_500_CPz_standardized  + 
   (1 + verum_sham | participant_id),
@@ -1837,6 +2009,20 @@ tab_model(LMM_Pe_medication,
 )
 
 
+# Pe check covariate medication (only OCD group)
+LMM_Pe_medication_OCD <- lmer(Pe_200_400_Pz ~ verum_sham * medication  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$group == "OCD",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_medication_OCD,
+  dv.labels = "Pe [μV], covariate medication (only OCD group)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+
 # Pe include only unmedicated participants
 LMM_Pe_unmedicated <- lmer(Pe_200_400_Pz ~ verum_sham  +  
   (1 +  verum_sham| participant_id),
@@ -1883,6 +2069,8 @@ For further infos, see notes in section non-nested ERN-CRN models.
 
 #### Model
 
+Since the interaction group * stimulation is not significant in the full model (and there are no a priori hypotheses regarding the stimulation effect within the separate groups), we will not report the nested model in the manuscript for now.
+
 ```{r LMM-Pe-per-group, cache = knitr_cache_enabled}
 
 # Pe
@@ -1922,6 +2110,20 @@ Is same as in non-nested model (tab LMM Pe)
 #### Check covariates
 
 ```{r LMM-Pe-per-group-covariates, cache = knitr_cache_enabled}
+
+# Pe check covariate P3 (added only as main effect)
+LMM_Pe_group_P3_main_effect <- lmer(Pe_200_400_Pz ~ group/stimulation + P3_300_500_CPz_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_group_P3_main_effect,
+  dv.labels = "Pe [μV], covariate P3 (added only as main effect)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
 
 # Pe check covariate P3
 LMM_Pe_group_P3 <- lmer(Pe_200_400_Pz ~ group/stimulation * P3_300_500_CPz_standardized  + 
@@ -2074,6 +2276,8 @@ We additionally checked whether there is a group difference of stimulation effec
 
 #### Model
 
+We will report this model for the P3 in the manuscript (will be put in the supplement, only report briefly in main manuscript that there was a stimulation effect on P3 which is why P3 was added as covariate to the other models). For now, model with the factor stimulus type (see next tab) will not be reported and the model for N2 will not be reported for now as well. 
+
 ```{r LMM-N2-P3, cache = knitr_cache_enabled}
 
 # Add contrasts as numerical covariates via model matrix* (specify all possible contasts for now)
@@ -2089,10 +2293,9 @@ names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 3):ncol(single_t
 
 
 
-# N2 run final model (without correlations between random terms and random slope verum_sham:incongruent_congruent to achieve convergence) 
-LMM_N2 <- lmer(N2_200_300_FCz ~ verum_sham * OCD_HC * incorrect_correct * incongruent_congruent + 
-  (1 + verum_sham + incongruent_congruent + incorrect_correct + verum_sham:incorrect_correct + 
-     incorrect_correct:incongruent_congruent + verum_sham:incorrect_correct:incongruent_congruent || participant_id),
+# N2 run final model (without correlations between random terms to achieve convergence) 
+LMM_N2 <- lmer(N2_200_300_FCz ~ verum_sham * OCD_HC * incorrect_correct  + 
+  (1 + verum_sham * incorrect_correct || participant_id),
 data = single_trial_data_clean,
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -2109,10 +2312,9 @@ control = lmerControl(optimizer = "bobyqa")
 
 
 
-# P3 run final model (without correlations between random terms and random slope verum_sham:incongruent_congruent to achieve convergence)  
-LMM_P3 <- lmer(P3_300_500_CPz ~ verum_sham * OCD_HC * incorrect_correct * incongruent_congruent + 
-  (1 + verum_sham + incongruent_congruent + incorrect_correct  + verum_sham:incorrect_correct + 
-     incorrect_correct:incongruent_congruent + verum_sham:incorrect_correct:incongruent_congruent || participant_id),
+# P3 run final model
+LMM_P3 <- lmer(P3_300_500_CPz ~ verum_sham * OCD_HC * incorrect_correct * 
+  (1 + verum_sham * incorrect_correct | participant_id),
 data = single_trial_data_clean,
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -2131,6 +2333,61 @@ control = lmerControl(optimizer = "bobyqa")
 
 # Display models in one table
 tab_model(LMM_N2,LMM_P3,
+  dv.labels = c("N2 [μV]","P3 [μV]"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+```
+<br><br>
+There is a stimulation effect on P3 (P3 more positive for verum than sham) and an effect of response type (see tab "ERP Visualization") on P3. There are no group differences or further interactions.
+<br><br>
+
+#### Model with stimulus type
+
+```{r LMM-N2-P3-stim-type, cache = knitr_cache_enabled}
+
+# N2 run final model (without correlations between random terms and random slope verum_sham:incongruent_congruent to achieve convergence) 
+LMM_N2_stim_type <- lmer(N2_200_300_FCz ~ verum_sham * OCD_HC * incorrect_correct * incongruent_congruent + 
+  (1 + verum_sham + incongruent_congruent + incorrect_correct + verum_sham:incorrect_correct + 
+     incorrect_correct:incongruent_congruent + verum_sham:incorrect_correct:incongruent_congruent || participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(LMM_N2_stim_type) # Model does converge
+# isSingular(LMM_N2_stim_type) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_N2_stim_type)) # All terms explain variance (> 0.5%)
+
+
+
+# P3 run final model (without correlations between random terms and random slope verum_sham:incongruent_congruent to achieve convergence)  
+LMM_P3_stim_type <- lmer(P3_300_500_CPz ~ verum_sham * OCD_HC * incorrect_correct * incongruent_congruent + 
+  (1 + verum_sham + incongruent_congruent + incorrect_correct  + verum_sham:incorrect_correct + 
+     incorrect_correct:incongruent_congruent + verum_sham:incorrect_correct:incongruent_congruent || participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(LMM_P3_stim_type) # Model does converge
+# isSingular(LMM_P3_stim_type) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_P3_stim_type)) # All terms explain variance (> 0.5%)
+
+
+
+# Display models in one table
+tab_model(LMM_N2_stim_type,LMM_P3_stim_type,
   dv.labels = c("N2 [μV]","P3 [μV]"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
@@ -2210,7 +2467,9 @@ For comparison with Reinhart & Woodman (2014), we also used area amplitude quant
 
 Note: <br>
 The area amplitude quantification in the flanker task contains 18 RT outlier trials (out of 55680 trials; 5 of those 18 errors). Those trials were not excluded from the bins in the flanker analysis, but this should be ok (also, RT in these trials is only slightly below 100 or above 800 ms). <br>
-° I guess that Reinhart & Woodman used the quantification integral area amplitude difference ERN-CRN (instead of negative area amplitude), since one figure shows that ERN and CRN were both positive in their study. But still, it is not clear in their paper when/whether they used ERN and when difference ERN-CRN as measure (see Evernote 2020_12_21).
+° I guess that Reinhart & Woodman used the quantification integral area amplitude difference ERN-CRN (instead of negative area amplitude), since one figure shows that ERN and CRN were both positive in their study. But still, it is not clear in their paper when/whether they used ERN and when difference ERN-CRN as measure (see Evernote 2020_12_21). <br><br>
+
+The ANOVAs will not be reported in the manuscript for now. ANOVA for mean amplitude brings no additional value and ANOVAs based on Woodman's difference measure does not fit to our data (since we also have CRN stimulation effect and OCD group). ANOVA on ERN integral area quantification brings most interesting insight, but does not fit to Woodman's quantification (only time window and aggregation-base approach are identical). However, reporting this ANOVA would likely cause some problems for argumentation, e.g. why effect is suddently present for other time window and aggregation-based analysis. 
 
 ```{r ANOVAs}
 
