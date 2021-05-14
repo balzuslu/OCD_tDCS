@@ -109,9 +109,8 @@ single_trial_data_clean <- single_trial_data %>%
   dplyr::group_by(participant_id, session) %>% 
   dplyr::summarize(number_errors = sum(response_type == "incorrect")) %>%
   dplyr::ungroup(.) %>%
-  dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session")) 
-# Standardize this variable
-single_trial_data_clean$number_errors_standardized <- scale(single_trial_data_clean$number_errors, center = TRUE, scale = TRUE)
+  dplyr::mutate(number_errors_standardized = scale(number_errors, center = TRUE, scale = TRUE)) %>%
+  dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session"))
 
 
 
@@ -156,7 +155,7 @@ Trials were excluded from all analyses if RT was shorter than 100 ms or longer t
 In addition, we here excluded trials preceding or following an error (so that SCR was not confounded by previous or following events within the response window that may elicit
 pronounced changes of skin conductance).
 <br><br>
-In this analysis, ISCR values for the time window 1-5 s after the response were extracted for each trial. Common recommendations for response windows typically range from from 1 to 3 s up to 1 to 5 s after the stimulus (Dawson et al., 2007; Benedek & Kaernbach, 2010). I chose 1 t 5 s after the response because this is also compatible with the observed response window in the data (based on visual inspection in BVA of correct vs. error condition).
+In this analysis, ISCR values for the time window 1-5 s after the response were extracted for each trial. Common recommendations for response windows typically range from from 1 to 3 s up to 1 to 5 s after the stimulus (Dawson et al., 2007; Benedek & Kaernbach, 2010). I chose 1 to 5 s after the response because this is also compatible with the observed response window in the data (based on visual inspection in BVA of correct vs. error condition). Note however, that 1 to 4 s was stated in the preregistration.
 <br><br>
 
 ## Data Inspection {.tabset}
@@ -566,7 +565,7 @@ plot_scr_interaction_group_stimulation_ERN <- plot_model(LMM_scr_errors_plot,
                                 ci.lvl = .95) +
   labs(title = NULL, 
        x     = "ERN (Standardized [µV])", 
-       y     = "SCR (Standardized SQRT-Transformed [µS]") +
+       y     = "SCR (SQRT-Transformed [µS]") +
   my_figure_theme +
   aes(linetype = group, color = group) + 
   scale_linetype_manual(name = "Stimulation", values = c("solid",   "dashed")) +
