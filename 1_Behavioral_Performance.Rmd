@@ -139,17 +139,16 @@ single_trial_data_clean[single_trial_data_clean$trial == 1   |
                         single_trial_data_clean$trial == 480, "pes"] <- NA
 
 
-# Add column for number of errors (needed as covariate later) - this variable contains total number of errors, not only those entering analysis (preferred according to JK)
+# Add column for (grand mean standardized) number of errors (needed as covariate later) - this variable contains total number of errors, not only those entering analysis (preferred according to JK)
 single_trial_data_clean <- single_trial_data %>% 
   dplyr::group_by(participant_id, session) %>% 
   dplyr::summarize(number_errors = sum(response_type == "incorrect")) %>%
   dplyr::ungroup(.) %>%
+  dplyr::mutate(number_errors_standardized = scale(number_errors, center = TRUE, scale = TRUE)) %>%
   dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session")) 
-# Standardize this variable
-single_trial_data_clean$number_errors_standardized <- scale(single_trial_data_clean$number_errors, center = TRUE, scale = TRUE)
 
 
-# Add column for number of speeding (needed as covariate later) 
+# Add column for (grand mean standardized) number of speeding (needed as covariate later) 
 single_trial_data_clean <- feedback_infos[feedback_infos$block != 6,] %>% 
   dplyr::group_by(participant_id, session, feedback) %>%
   dplyr::count(feedback, .drop = FALSE) %>%
@@ -157,9 +156,8 @@ single_trial_data_clean <- feedback_infos[feedback_infos$block != 6,] %>%
   dplyr::rename(number_feedback_faster = n) %>%
   dplyr::ungroup(.) %>%  
   dplyr::select(-feedback) %>%
+  dplyr::mutate(number_feedback_faster_standardized = scale(number_feedback_faster, center = TRUE, scale = TRUE)) %>%
   dplyr::left_join(single_trial_data_clean, ., by = c("participant_id", "session")) 
-# Standardize this variable
-single_trial_data_clean$number_feedback_faster_standardized <- scale(single_trial_data_clean$number_feedback_faster, center = TRUE, scale = TRUE)
 
 
 # Make categorical variables factors
@@ -255,7 +253,7 @@ my_table_template(feedback_contingency, caption = "Feedback in the task", row_na
 # Calculate Chi-squared test
 chisq.test(feedback_infos$feedback, feedback_infos$group)
 ```
-The groups differ in the feedback they received. The OCD group received more feedback emphasizing speed. This is ok and could be expected. 
+The groups differ in the feedback they received. The OCD group received more feedback emphasizing speed. This is ok and could be expected. For now, we will not report this in the manuscript.
 <br><br>
 
 
@@ -448,12 +446,72 @@ For PES (right plot), the optimal lambda is `r round(optlambda_pes, digits = 2)`
 
 ```{r descriptive-statistics-table}
 
+##### WITH SESSION AND STIMULUS TYPE - FOR PLOTS 
+
 ##### RT
-# Calculate descriptive statistics for RT per condition
 descriptive_statistics_rt <- summarySEwithinO(
   data          = single_trial_data_clean,
   measurevar    = "rt",
   withinvars    = c("response_type", "stimulus_type", "stimulation", "session"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) 
+
+
+##### Accuracy
+descriptive_statistics_accuracy <- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = "accuracy_numeric",
+  withinvars    = c("stimulus_type", "stimulation", "session"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) 
+
+
+##### PES
+descriptive_statistics_pes <- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
+  measurevar    = "pes",
+  withinvars    = c("stimulation", "session"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) 
+
+
+##### PEA
+descriptive_statistics_pea <- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pea),],
+  measurevar    = "pea",
+  withinvars    = c("stimulation", "session"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) 
+
+
+##### PCA
+descriptive_statistics_pca <- summarySEwithinO(
+  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pca),],
+  measurevar    = "pca",
+  withinvars    = c("stimulation", "session"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) 
+
+
+
+
+##### WITHOUT SESSION AND STIMULUS TYPE - FOR TABLES 
+
+##### RT 
+descriptive_statistics_rt_no_session_no_stim_type <- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = "rt",
+  withinvars    = c("response_type", "stimulation"),
   betweenvars   = "group",
   idvar         = "participant_id", 
   conf.interval = .95
@@ -465,37 +523,34 @@ descriptive_statistics_rt <- summarySEwithinO(
   # Round RT means to zero decimals
   dplyr::mutate_at("rt", round, digits = 0) %>%    
   # Select columns to be displayed
-  dplyr::select(c("group", "response_type", "stimulus_type", "stimulation", "session", "rt", "ci_rt", "ci"))
+  dplyr::select(c("group", "response_type", "stimulation",  "rt", "ci_rt", "ci"))
 
 
 # Split and re-merge RT table to display both groups next to each other
-descriptive_statistics_rt_display <-  split(descriptive_statistics_rt, descriptive_statistics_rt$group)
-descriptive_statistics_rt_display <-  left_join(descriptive_statistics_rt_display$HC, descriptive_statistics_rt_display$OCD, by = c("stimulus_type", "response_type", "stimulation", "session"))
+descriptive_statistics_rt_display <-  split(descriptive_statistics_rt_no_session_no_stim_type, descriptive_statistics_rt_no_session_no_stim_type$group)
+descriptive_statistics_rt_display <-  left_join(descriptive_statistics_rt_display$HC, descriptive_statistics_rt_display$OCD, by = c("response_type", "stimulation"))
 
 
 # Display descriptive statistics for RT (and select columns)
-my_table_template(descriptive_statistics_rt_display[,c(2:7,10:11)],
+my_table_template(descriptive_statistics_rt_display[,c(2:5,8:9)],
   caption = "Behavioral Performance: RT (in ms)",
-  col_names = c("Response type", "Stimulus type", "Stimulation", "Session", "M", "95% CI", "M", "95% CI"),
-  header_above_config = c(" " = 4, "HC" = 2, "OCD" = 2),
+  col_names = c("Response type", "Stimulation", "M", "95% CI", "M", "95% CI"),
+  header_above_config = c(" " = 2, "HC" = 2, "OCD" = 2),
   footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
 )
 
 
-
-##### Accuracy
-# Calculate descriptive statistics for accuracy per condition
-descriptive_statistics_accuracy <- summarySEwithinO(
+##### Accuarcy 
+descriptive_statistics_accuracy_no_session_no_stim_type <- summarySEwithinO(
   data          = single_trial_data_clean,
   measurevar    = "accuracy_numeric",
-  withinvars    = c("stimulus_type", "stimulation", "session"),
+  withinvars    = c("stimulation"),
   betweenvars   = "group",
   idvar         = "participant_id", 
   conf.interval = .95
 ) %>%
   # Multiply numeric values by 100 to obtain values in percent
-  dplyr::mutate_if(is.numeric, list(~ . * 100)
-  )  %>%  
+  dplyr::mutate_if(is.numeric, list(~ . * 100)) %>%
   # Format confidence interval column
   dplyr::mutate(
     ci_accuracy = paste0("[", round(accuracy_numeric - ci, digits = 2), 
@@ -503,30 +558,56 @@ descriptive_statistics_accuracy <- summarySEwithinO(
   # Round accuracy means to two decimals
   dplyr::mutate_at("accuracy_numeric", round, digits = 2) %>% 
   # Select columns to be displayed
-  dplyr::select(c("group", "stimulus_type", "stimulation", "session", "accuracy_numeric", "ci_accuracy", "ci"))
+  dplyr::select(c("group", "stimulation", "accuracy_numeric", "ci_accuracy", "ci"))
 
 
 # Split and re-merge accuracy table to display both groups next to each other
-descriptive_statistics_accuracy_display <-  split(descriptive_statistics_accuracy, descriptive_statistics_accuracy$group)
-descriptive_statistics_accuracy_display <-  left_join(descriptive_statistics_accuracy_display$HC, descriptive_statistics_accuracy_display$OCD, by = c("stimulus_type", "stimulation", "session"))
+descriptive_statistics_accuracy_display <-  split(descriptive_statistics_accuracy_no_session_no_stim_type, descriptive_statistics_accuracy_no_session_no_stim_type$group)
+descriptive_statistics_accuracy_display <-  left_join(descriptive_statistics_accuracy_display$HC, descriptive_statistics_accuracy_display$OCD, by = c("stimulation"))
 
 
 # Display descriptive statistics for Accuracy (and select columns)
-my_table_template(descriptive_statistics_accuracy_display[,c(2:6,9:10)],
+my_table_template(descriptive_statistics_accuracy_display[,c(2:4,7:8)],
   caption = "Behavioral Performance: Accuracy (in %)",
-  col_names = c("Stimulus type", "Stimulation", "Session", "M", "95% CI", "M", "95% CI"),
-  header_above_config = c(" " = 3, "HC" = 2, "OCD" = 2),
+  col_names = c("Stimulation", "M", "95% CI", "M", "95% CI"),
+  header_above_config = c(" " = 1, "HC" = 2, "OCD" = 2),
   footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
 )
 
 
 
+
+##### WITHOUT SESSION - FOR PLOTS AND TABLES 
+
+##### RT
+descriptive_statistics_rt_no_session <- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = "rt",
+  withinvars    = c("response_type", "stimulus_type", "stimulation"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+)
+
+
+##### Accuracy
+descriptive_statistics_accuracy_no_session <- summarySEwithinO(
+  data          = single_trial_data_clean,
+  measurevar    = "accuracy_numeric",
+  withinvars    = c("stimulus_type", "stimulation"),
+  betweenvars   = "group",
+  idvar         = "participant_id", 
+  conf.interval = .95
+) %>%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100))
+
+
 ##### PES
-# Calculate descriptive statistics for PES per condition
-descriptive_statistics_pes <- summarySEwithinO(
+descriptive_statistics_pes_no_session <- summarySEwithinO(
   data          = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
   measurevar    = "pes",
-  withinvars    = c("stimulation", "session"),
+  withinvars    = "stimulation",
   betweenvars   = "group",
   idvar         = "participant_id", 
   conf.interval = .95
@@ -540,120 +621,19 @@ descriptive_statistics_pes <- summarySEwithinO(
 
 
 # Split and re-merge PES table to display both groups next to each other
-descriptive_statistics_pes_display <-  split(descriptive_statistics_pes, descriptive_statistics_pes$group)
-descriptive_statistics_pes_display <-  left_join(descriptive_statistics_pes_display$HC, descriptive_statistics_pes_display$OCD, by = c("stimulation", "session"))
+descriptive_statistics_pes_display <-  split(descriptive_statistics_pes_no_session, descriptive_statistics_pes_no_session$group)
+descriptive_statistics_pes_display <-  left_join(descriptive_statistics_pes_display$HC, descriptive_statistics_pes_display$OCD, by = c("stimulation"))
 
 
 # Display descriptive statistics for PES (and select columns)
-my_table_template(descriptive_statistics_pes_display[,c(2,3,5,10,13,18)],
+my_table_template(descriptive_statistics_pes_display[,c(2,4,9,12,17)],
   caption = "Behavioral Performance: Post-Error Slowing (in %)",
-  col_names = c("Stimulation", "Session", "M", "95% CI", "M", "95% CI"),
-  header_above_config = c(" " = 2, "HC" = 2, "OCD" = 2),
+  col_names = c("Stimulation", "M", "95% CI", "M", "95% CI"),
+  header_above_config = c(" " = 1, "HC" = 2, "OCD" = 2),
   footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
 )
-
-
 
 ##### PEA
-# Calculate descriptive statistics for post-error accuracy per condition
-descriptive_statistics_pea <- summarySEwithinO(
-  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pea),],
-  measurevar    = "pea",
-  withinvars    = c("stimulation", "session"),
-  betweenvars   = "group",
-  idvar         = "participant_id", 
-  conf.interval = .95
-) %>%
-  # Multiply numeric values by 100 to obtain values in percent
-  dplyr::mutate_if(is.numeric, list(~ . * 100)
-  )  %>%  
-  # Format confidence interval column
-  dplyr::mutate(
-    ci_pea = paste0("[", round(pea - ci, digits = 2), 
-                   ", ", round(pea + ci, digits = 2), "]")) %>%
-  # Round PEA means to two decimals
-  dplyr::mutate_at("pea", round, digits = 2) 
-
-# Split and re-merge PEA table to display both groups next to each other
-descriptive_statistics_pea_display <-  split(descriptive_statistics_pea, descriptive_statistics_pea$group)
-descriptive_statistics_pea_display <-  left_join(descriptive_statistics_pea_display$HC, descriptive_statistics_pea_display$OCD, by = c("stimulation", "session"))
-
-
-# Display descriptive statistics for PEA (and select columns)
-my_table_template(descriptive_statistics_pea_display[,c(2,3,5,10,13,18)],
-  caption = "Behavioral Performance: Post-Error Accuracy (in %)",
-  col_names = c("Stimulation", "Session", "M", "95% CI", "M", "95% CI"),
-  header_above_config = c(" " = 2, "HC" = 2, "OCD" = 2),
-  footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
-)
-
-
-
-##### PCA
-# Calculate descriptive statistics for post-correct accuracy per condition
-descriptive_statistics_pca <- summarySEwithinO(
-  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pca),],
-  measurevar    = "pca",
-  withinvars    = c("stimulation", "session"),
-  betweenvars   = "group",
-  idvar         = "participant_id", 
-  conf.interval = .95
-) %>%
-  # Multiply numeric values by 100 to obtain values in percent
-  dplyr::mutate_if(is.numeric, list(~ . * 100)
-  )  %>%  
-  # Format confidence interval column
-  dplyr::mutate(
-    ci_pca = paste0("[", round(pca - ci, digits = 2), 
-                   ", ", round(pca + ci, digits = 2), "]")) %>%
-  # Round PCA means to two decimals
-  dplyr::mutate_at("pca", round, digits = 2) 
-
-
-# Split and re-merge PCA table to display both groups next to each other
-descriptive_statistics_pca_display <-  split(descriptive_statistics_pca, descriptive_statistics_pca$group)
-descriptive_statistics_pca_display <-  left_join(descriptive_statistics_pca_display$HC, descriptive_statistics_pca_display$OCD, by = c("stimulation", "session"))
-
-
-# Display descriptive statistics for PCA (and select columns)
-my_table_template(descriptive_statistics_pca_display[,c(2,3,5,10,13,18)],
-  caption = "Behavioral Performance: Post-Correct Accuracy (in %)",
-  col_names = c("Stimulation", "Session", "M", "95% CI", "M", "95% CI"),
-  header_above_config = c(" " = 2, "HC" = 2, "OCD" = 2),
-  footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
-)
-
-
-# Calcuate means and CIs adjusted for within-participant factors (without session) - for plots
-descriptive_statistics_rt_no_session <- summarySEwithinO(
-  data          = single_trial_data_clean,
-  measurevar    = "rt",
-  withinvars    = c("response_type", "stimulus_type", "stimulation"),
-  betweenvars   = "group",
-  idvar         = "participant_id", 
-  conf.interval = .95
-)
-
-descriptive_statistics_accuracy_no_session <- summarySEwithinO(
-  data          = single_trial_data_clean,
-  measurevar    = "accuracy_numeric",
-  withinvars    = c("stimulus_type", "stimulation"),
-  betweenvars   = "group",
-  idvar         = "participant_id", 
-  conf.interval = .95
-) %>%
-  # Multiply numeric values by 100 to obtain values in percent
-  dplyr::mutate_if(is.numeric, list(~ . * 100))
-
-descriptive_statistics_pes_no_session <- summarySEwithinO(
-  data          = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
-  measurevar    = "pes",
-  withinvars    = "stimulation",
-  betweenvars   = "group",
-  idvar         = "participant_id", 
-  conf.interval = .95
-)
-
 descriptive_statistics_pea_no_session <- summarySEwithinO(
   data          = single_trial_data_clean[!is.na(single_trial_data_clean$pea),],
   measurevar    = "pea",
@@ -663,8 +643,29 @@ descriptive_statistics_pea_no_session <- summarySEwithinO(
   conf.interval = .95
 ) %>%
   # Multiply numeric values by 100 to obtain values in percent
-  dplyr::mutate_if(is.numeric, list(~ . * 100))
+  dplyr::mutate_if(is.numeric, list(~ . * 100)) %>%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_pea = paste0("[", round(pea - ci, digits = 2), 
+                   ", ", round(pea + ci, digits = 2), "]")) %>%
+  # Round PEA means to two decimals
+  dplyr::mutate_at("pea", round, digits = 2) 
 
+# Split and re-merge PEA table to display both groups next to each other
+descriptive_statistics_pea_display <-  split(descriptive_statistics_pea_no_session, descriptive_statistics_pea_no_session$group)
+descriptive_statistics_pea_display <-  left_join(descriptive_statistics_pea_display$HC, descriptive_statistics_pea_display$OCD, by = c("stimulation"))
+
+
+# Display descriptive statistics for PEA (and select columns)
+my_table_template(descriptive_statistics_pea_display[,c(2,4,9,12,17)],
+  caption = "Behavioral Performance: Post-Error Accuracy (in %)",
+  col_names = c("Stimulation", "M", "95% CI", "M", "95% CI"),
+  header_above_config = c(" " = 1, "HC" = 2, "OCD" = 2),
+  footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
+)
+
+
+##### PCA
 descriptive_statistics_pca_no_session <- summarySEwithinO(
   data          = single_trial_data_clean[!is.na(single_trial_data_clean$pca),],
   measurevar    = "pca",
@@ -674,7 +675,27 @@ descriptive_statistics_pca_no_session <- summarySEwithinO(
   conf.interval = .95
 ) %>%
   # Multiply numeric values by 100 to obtain values in percent
-  dplyr::mutate_if(is.numeric, list(~ . * 100))
+  dplyr::mutate_if(is.numeric, list(~ . * 100)) %>%
+  # Format confidence interval column
+  dplyr::mutate(
+    ci_pca = paste0("[", round(pca - ci, digits = 2), 
+                   ", ", round(pca + ci, digits = 2), "]")) %>%
+  # Round PCA means to two decimals
+  dplyr::mutate_at("pca", round, digits = 2) 
+
+
+# Split and re-merge PCA table to display both groups next to each other
+descriptive_statistics_pca_display <-  split(descriptive_statistics_pca_no_session, descriptive_statistics_pca_no_session$group)
+descriptive_statistics_pca_display <-  left_join(descriptive_statistics_pca_display$HC, descriptive_statistics_pca_display$OCD, by = c("stimulation"))
+
+
+# Display descriptive statistics for PCA (and select columns)
+my_table_template(descriptive_statistics_pca_display[,c(2,4,9,12,17)],
+  caption = "Behavioral Performance: Post-Correct Accuracy (in %)",
+  col_names = c("Stimulation", "M", "95% CI", "M", "95% CI"),
+  header_above_config = c(" " = 1, "HC" = 2, "OCD" = 2),
+  footnote_config = c(general = "Confidence intervals are adjusted for within-participant designs as described by Morey (2008).")
+)
 ```
 <br><br>
 
@@ -969,21 +990,13 @@ names(single_trial_data_clean)[(ncol(single_trial_data_clean) - 11):ncol(single_
 
 #### LMM
 
-Even though congruent errors were very rare (`r round(nrow(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$stimulus_type == "congruent",])/nrow(single_trial_data_clean)*100, digits = 2)`% of all trials; N = `r nrow(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$stimulus_type == "congruent",])` trials), I did not exclude them from LMM RT analysis. In order to not loose power, I do not want to exclude congruent errors from analyses in general (e.g. EEG, accuracy), which is ok as I will not add stimulus type as factor there. For the following reasons it should also be ok to not exclude congruent errors from LMM RT analysis:
-
-* LMMs take into account this imbalance due to different number of observations per cell and thus different uncertainty. So, it should be not problematic that congruent errors are rare.
-
-* Additionally, it should be ok that one cell only has few observations, as the interaction response type * stimulus type is not included in the model but only main effects. Not including this interaction in the model is ok, as it is of no interest to our research questions. 
-
-* I thought about whether the effect of stimulus type could confound effect of response type, as errors occur mostly in incongruent trials whereas correct responses are occur in both congruent and incongruent trials. But actually, when both factors are included, the respective main effects reflect the effect of each factor when controlling for the other. 
-
-For the aggregation-based ANOVA on RT, I will excluded congruent errors.
+This model will be reported in the manuscript.
 
 ```{r LMM-RT, cache = knitr_cache_enabled}
 
 # Run model with maximal random-effects structure
-LMM_rt <- lmer(rt_log ~ verum_sham * OCD_HC * (incorrect_correct + incongruent_congruent) +
-  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+LMM_rt <- lmer(rt_log ~ verum_sham * OCD_HC * incorrect_correct +
+  (1 + verum_sham * incorrect_correct | participant_id),
 data = single_trial_data_clean,
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1007,16 +1020,16 @@ tab_model(LMM_rt,
 )
 ```
 <br><br>
-Responses are faster in the congruent than in the incongruent condition. Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation. Trends for the following interactions are present: group:stimulus_congruence and stimulation:group:response_type. 
+Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation. Trend for the following interaction is present stimulation:group:response_type. 
 <br><br>
 
-#### LMM nested
+#### LMM nested 
 
 ```{r LMM-RT-per-group, cache = knitr_cache_enabled}
 
 # Run model with maximal random-effects structure
-LMM_rt_group <- lmer(rt_log ~ group/stimulation * (incorrect_correct + incongruent_congruent) +
-  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+LMM_rt_group <- lmer(rt_log ~ group/stimulation * incorrect_correct  +
+  (1 + verum_sham * incorrect_correct  | participant_id),
 data = single_trial_data_clean,
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1043,9 +1056,85 @@ tab_model(LMM_rt_group,
 For the separate groups, there is no significant effect of stimulation on RT. Trends for the following interactions are present: group * stimulus_congruence and HC:stimulation:stimulus_congruence.
 <br><br>
 
+#### LMM with stimulus type
+
+Even though congruent errors were very rare (`r round(nrow(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$stimulus_type == "congruent",])/nrow(single_trial_data_clean)*100, digits = 2)`% of all trials; N = `r nrow(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$stimulus_type == "congruent",])` trials), I did not exclude them from LMM RT analysis. In order to not loose power, I do not want to exclude congruent errors from analyses in general (e.g. EEG, accuracy), which is ok as I will not add stimulus type as factor there. For the following reasons it should also be ok to not exclude congruent errors from LMM RT analysis:
+
+* LMMs take into account this imbalance due to different number of observations per cell and thus different uncertainty. So, it should be not problematic that congruent errors are rare.
+
+* Additionally, it should be ok that one cell only has few observations, as the interaction response type * stimulus type is not included in the model but only main effects. Not including this interaction in the model is ok, as it is of no interest to our research questions. 
+
+* I thought about whether the effect of stimulus type could confound effect of response type, as errors occur mostly in incongruent trials whereas correct responses are occur in both congruent and incongruent trials. But actually, when both factors are included, the respective main effects reflect the effect of each factor when controlling for the other. 
+
+For the aggregation-based ANOVA on RT, I will excluded congruent errors.
+
+```{r LMM-RT-stim-type, cache = knitr_cache_enabled}
+
+# Run model with maximal random-effects structure
+LMM_rt_stim_type <- lmer(rt_log ~ verum_sham * OCD_HC * (incorrect_correct + incongruent_congruent) +
+  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(LMM_rt_stim_type) # Model does converge 
+# isSingular(LMM_rt_stim_type) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_rt_stim_type)) # All terms explain variance 
+
+
+# Display results (fixed effects)
+tab_model(LMM_rt_stim_type,
+  dv.labels = "log(RT)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
+Responses are faster in the congruent than in the incongruent condition. Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation. Trends for the following interactions are present: group:stimulus_congruence and stimulation:group:response_type. 
+<br><br>
+
+#### LMM nested with stimulus type
+
+```{r LMM-RT-per-group-stim-type, cache = knitr_cache_enabled}
+
+# Run model with maximal random-effects structure
+LMM_rt_group_stim_type <- lmer(rt_log ~ group/stimulation * (incorrect_correct + incongruent_congruent) +
+  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+data = single_trial_data_clean,
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(LMM_rt_group_stim_type) # Model does converge 
+# isSingular(LMM_rt_group_stim_type) # Check for singular model fit (i.e., dimensions of the variance-covariance matrix have been estimated as exactly zero): FALSE
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(LMM_rt_group_stim_type)) # All terms explain variance 
+
+
+# Display results (fixed effects)
+tab_model(LMM_rt_group_stim_type,
+  dv.labels = "log(RT)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
+For the separate groups, there is no significant effect of stimulation on RT. Trends for the following interactions are present: group * stimulus_congruence and HC:stimulation:stimulus_congruence.
+<br><br>
+
 #### Assumption checks
 
-```{r LMM-RT-assumptions, fig.width = 20, fig.height = 15, cache = knitr_cache_enabled}
+```{r LMM-RT-assumptions, fig.width = 20, fig.height = 15, cache = knitr_cache_enabled, eval = FALSE}
 
 # Check model assumptions
 performance::check_model(LMM_rt, panel = TRUE)
@@ -1095,8 +1184,8 @@ Note: The covariate number of errors refers to the actual number of errors commi
 ```{r LMM-RT-covariates, cache = knitr_cache_enabled}
 
 # RT check covariate session
-LMM_rt_session <- lmer(rt_log ~ verum_sham * OCD_HC * (incorrect_correct + incongruent_congruent + session) +
-  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+LMM_rt_session <- lmer(rt_log ~ verum_sham * OCD_HC * (incorrect_correct + session) +
+  (1 + verum_sham * incorrect_correct | participant_id),
 data = single_trial_data_clean,
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1110,8 +1199,8 @@ tab_model(LMM_rt_session,
 
 
 # RT check covariate number of errors (predictor was z standardized)
-LMM_rt_number_errors <- lmer(rt_log ~ verum_sham * OCD_HC * (incorrect_correct + incongruent_congruent + number_errors_standardized) +
-  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+LMM_rt_number_errors <- lmer(rt_log ~ verum_sham * OCD_HC * (incorrect_correct + number_errors_standardized) +
+  (1 + verum_sham * incorrect_correct | participant_id),
 data = single_trial_data_clean,
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1125,8 +1214,8 @@ tab_model(LMM_rt_number_errors,
 
 
 # RT check covariate number of feedback faster (predictor was z standardized)
-LMM_rt_number_feedback_faster <- lmer(rt_log ~ verum_sham * OCD_HC * (incorrect_correct + incongruent_congruent + number_feedback_faster_standardized) +
-  (1 + verum_sham * (incorrect_correct + incongruent_congruent) | participant_id),
+LMM_rt_number_feedback_faster <- lmer(rt_log ~ verum_sham * OCD_HC * (incorrect_correct + number_feedback_faster_standardized) +
+  (1 + verum_sham * incorrect_correct | participant_id),
 data = single_trial_data_clean,
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1143,7 +1232,8 @@ tab_model(LMM_rt_number_feedback_faster,
 #### GLMM / GLMM nested
 
 In the preregistration I wrote that for RT, a GLMM with gamma or inverse gaussian distribution with an identity link function on raw RT will be preferred over a LMM on transformed values, if both models allow a sufficiently complex random structure without convergence problems. So I tried a GLMM here. There are no convergence problems. <br><br>
-Lo & Andrews (2015) recommend gamma or inverse gaussian distribution for RTs. For the RTs, gamma distribution fits very well and a bit better than inverse gaussian distribution. Hence, I would choose gamma distribution and the identity link funktion (recommended by Lo & Andrews, 2015). BUT: With the gamma distribution, all effects in the GLMM turn significant (since the standard error gets tiny), which seems not right to me. Using the inverse gaussian distribution (see results below), the results seem much more realisitic (effects are comparable to the LMM). 
+Lo & Andrews (2015) recommend gamma or inverse gaussian distribution for RTs. For the RTs, gamma distribution fits very well and a bit better than inverse gaussian distribution. Hence, I would choose gamma distribution and the identity link funktion (recommended by Lo & Andrews, 2015). BUT: With the gamma distribution, all effects in the GLMM turn significant (since the standard error gets tiny), which seems not right to me. Using the inverse gaussian distribution (see results below), the results seem much more realisitic (effects are comparable to the LMM). <br><br>
+We will report the LMM for RTs. The main reason is that we do not want to deal with the group difference in RT because we would have to include RT as covariate in all models then (the group difference also remains when stimulation type is not included in the model). Further, I am not really happy with the convergence of the models.
 
 ```{r GLMM-RT, cache = knitr_cache_enabled}
 
@@ -1219,13 +1309,11 @@ To quantify PES robust, we used the method proposed by Dutilh et al. (2012). "A 
 
 I decided to test the stimulation effect on PES in a separate model instead of including the factor correctness of previous trial in the RT model. Otherwise, this would have led to an overly complex LMM on RTs. Additionally, all trials would have been included then, preventing to use the robust (and preregistered) PES quantification by Dutilh et al. (2012).
 
-I included stimulus type as covariate (hence, only as fixed, not as random effect) in this model to avoid confounding the PES effect with stimulus congruency, as stimulus congruency of the respective trial might potentially interfere with PES. The results do not change when the covariate is not included. The covariate was included only in the LMM, not in the parallel ANOVA calculated below.
-
 ```{r LMM-PES}
 
-# Run final model (to avoid singularity / non-convergence and rePCA value of 0, correlations betw. random terms and radom slope of stimulus_type had to be removed)
-LMM_pes <- lmer(pes ~ verum_sham * OCD_HC + incongruent_congruent +
-  (1 + verum_sham || participant_id),
+# Run final model 
+LMM_pes <- lmer(pes ~ verum_sham * OCD_HC +
+  (1 + verum_sham | participant_id),
 data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1249,16 +1337,16 @@ tab_model(LMM_pes,
 )
 ```
 <br><br>
-There is PES (intercept is significant). There is no effect of congruency in the respective on PES. There is no evidence for an effect of group or stimulation. 
+There is PES (intercept is significant). There is no evidence for an effect of group or stimulation. 
 <br><br>
 
 #### LMM nested
 
 ```{r LMM-PES-per-group}
 
-# Run final model (to avoid singularity / non-convergence and rePCA value of 0, correlations betw. random terms and radom slope of stimulus_type had to be removed)
-LMM_pes_group <- lmer(pes ~ group/stimulation + incongruent_congruent +
-  (1 + verum_sham || participant_id),
+# Run final model
+LMM_pes_group <- lmer(pes ~ group/stimulation  +
+  (1 + verum_sham | participant_id),
 data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1287,7 +1375,7 @@ For the separate groups, there is no significant effect of stimulation on PES.
 
 #### Assumption checks
 
-```{r LMM-PES-assumptions, fig.width = 20, fig.height = 15}
+```{r LMM-PES-assumptions, fig.width = 20, fig.height = 15, eval = FALSE}
 
 # Check model assumptions
 performance::check_model(LMM_pes, panel = TRUE)
@@ -1333,12 +1421,11 @@ performance::check_normality(LMM_pes, effects = "random")
 
 For further infos on inclusion of covariates, see notes in section "(G)LMM Analyses -> RT", tab "Check covariates".
 
-
 ```{r LMM-PES-covariates, cache = knitr_cache_enabled}
 
 # PES check covariate session
-LMM_pes_session <- lmer(pes ~ verum_sham * OCD_HC * session + incongruent_congruent +
-  (1 + verum_sham  || participant_id),
+LMM_pes_session <- lmer(pes ~ verum_sham * OCD_HC * session  +
+  (1 + verum_sham | participant_id),
 data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1352,8 +1439,8 @@ tab_model(LMM_pes_session,
 
 
 # PES check covariate number of errors (predictor was z standardized)
-LMM_pes_number_errors <- lmer(pes ~ verum_sham * OCD_HC * number_errors_standardized + incongruent_congruent +
-  (1 + verum_sham  || participant_id),
+LMM_pes_number_errors <- lmer(pes ~ verum_sham * OCD_HC * number_errors_standardized  +
+  (1 + verum_sham | participant_id),
 data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1367,8 +1454,8 @@ tab_model(LMM_pes_number_errors,
 
 
 # PES check covariate number of feedback faster (predictor was z standardized)
-LMM_pes_number_feedback_faster <- lmer(pes ~ verum_sham * OCD_HC * number_feedback_faster_standardized + incongruent_congruent +
-  (1 + verum_sham  || participant_id),
+LMM_pes_number_feedback_faster <- lmer(pes ~ verum_sham * OCD_HC * number_feedback_faster_standardized  +
+  (1 + verum_sham | participant_id),
 data = single_trial_data_clean[!is.na(single_trial_data_clean$pes),],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1384,15 +1471,17 @@ tab_model(LMM_pes_number_feedback_faster,
 
 ### Accuracy {.tabset}
 
-#### GLMM
+#### GLMM 
+
+This model will be reported in the manuscript. <br>
 
 I included the factor *accuracy of previous trial* in the model, to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered. (If preferred, I could also first run the preregistered model with only stimulation, group and stimulus type as fixed factors and then a second model, including additionally the factor *accuracy of previous trial*. This approach would also allow using all trials for the basic accuracy model, as when including the factor , I automatically lose all trials from the calculation at the start of a new task block, that have NA for the variable *accuracy of previous trial*. But the results remain the same, independent of whether I run the model with all trials or the subset). I did not add *accuracy of previous trial* as random effect here. Doing so would require specifying the model matrix separately for the subset of data where *accuracy of previous trial* is not NA.  
 
 ```{r GLMM-accuracy, cache = knitr_cache_enabled}
 
 # Run model with maximal random-effects structure
-GLMM_accuracy <- glmer(accuracy_numeric ~ verum_sham * OCD_HC * (incongruent_congruent + accuracy_prev_trial) +
-  (1 + verum_sham * incongruent_congruent | participant_id),
+GLMM_accuracy <- glmer(accuracy_numeric ~ verum_sham * OCD_HC * accuracy_prev_trial +
+  (1 + verum_sham | participant_id),
 data = single_trial_data_clean,
 family = binomial,
 control = glmerControl(optimizer = "bobyqa")
@@ -1414,18 +1503,31 @@ tab_model(GLMM_accuracy,
   show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
   string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
 )
+
+
+# Plot interaction stimulation * PEIA
+# plot_acc_predicted <- plot_model(GLMM_accuracy,
+#                                 type   = "pred",
+#                                 terms  = c("accuracy_prev_trial","verum_sham"),
+#                                 ci.lvl = .95) +
+#   labs(title = "Predicted probabilities of a correct response", 
+#        x     = "Accuracy on the previous trial", 
+#        y     = "Accuracy") +
+#   my_figure_theme +
+#   scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("#ffad48", "#43b7c2"))
+# plot_acc_predicted
 ```
 <br><br>
-Accuracy is lower in the incongruent condition than in the congruent condition. Furthermore, accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy). There is no evidence for an effect of group or stimulation. There is a significant interaction group:stimulus_type and a trend for an interaction stimulation:accuracy_prev_trial.
+Accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy; PEIA). There is no evidence for an effect of group or stimulation. There is a significant interaction stimulation:accuracy_prev_trial. There is more PEIA in the verum than in the sham condition. This is contrary to the finding reported by Reinhart & Woodman (2014) of a *reduced* probability for a correct response following an error in the cathodal relative to the sham condition.
 <br><br>
 
-#### GLMM nested
+#### GLMM nested 
 
 ```{r GLMM-accuracy-per-group, cache = knitr_cache_enabled}
 
 # Run model with maximal random-effects structure
-GLMM_accuracy_group <- glmer(accuracy_numeric ~ group/stimulation * (incongruent_congruent + accuracy_prev_trial) +
-  (1 + verum_sham * incongruent_congruent | participant_id),
+GLMM_accuracy_group <- glmer(accuracy_numeric ~ group/stimulation * accuracy_prev_trial +
+  (1 + verum_sham | participant_id),
 data = single_trial_data_clean,
 family = binomial,
 control = glmerControl(optimizer = "bobyqa")
@@ -1443,6 +1545,72 @@ control = glmerControl(optimizer = "bobyqa")
 
 # Display results (fixed effects)
 tab_model(GLMM_accuracy_group,
+  dv.labels = "Accuracy", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
+  string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
+For the separate groups, there is no significant effect of stimulation on accuracy. There is a significant interaction stimulation:accuracy_prev_trial in the OCD group.
+<br><br>
+
+#### GLMM with stimulus type
+
+```{r GLMM-accuracy-stim-type, cache = knitr_cache_enabled}
+
+# Run model with maximal random-effects structure
+GLMM_accuracy_stim_type <- glmer(accuracy_numeric ~ verum_sham * OCD_HC * (incongruent_congruent + accuracy_prev_trial) +
+  (1 + verum_sham * incongruent_congruent | participant_id),
+data = single_trial_data_clean,
+family = binomial,
+control = glmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(GLMM_accuracy_stim_type) # Model does converge
+# isSingular(GLMM_accuracy_stim_type) # is also ok
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(GLMM_accuracy_stim_type)) # All terms explain variance
+
+
+# Display results (fixed effects)
+tab_model(GLMM_accuracy_stim_type,
+  dv.labels = "Accuracy", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
+  string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
+)
+```
+<br><br>
+Accuracy is lower in the incongruent condition than in the congruent condition. Furthermore, accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy). There is no evidence for an effect of group or stimulation. There is a significant interaction group:stimulus_type and a trend for an interaction stimulation:accuracy_prev_trial.
+<br><br>
+
+#### GLMM nested with stimulus type
+
+```{r GLMM-accuracy-per-group-stim-type, cache = knitr_cache_enabled}
+
+# Run model with maximal random-effects structure
+GLMM_accuracy_group_stim_type <- glmer(accuracy_numeric ~ group/stimulation * (incongruent_congruent + accuracy_prev_trial) +
+  (1 + verum_sham * incongruent_congruent | participant_id),
+data = single_trial_data_clean,
+family = binomial,
+control = glmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(GLMM_accuracy_group_stim_type) # Model does converge
+# isSingular(GLMM_accuracy_group_stim_type) # is also ok
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(GLMM_accuracy_group_stim_type)) # All terms explain variance
+
+
+# Display results (fixed effects)
+tab_model(GLMM_accuracy_group_stim_type,
   dv.labels = "Accuracy", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
   string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
@@ -1491,8 +1659,8 @@ For further infos on inclusion of covariates, see notes in section LMM Anylses R
 ```{r LMM-accuracy-covariates, cache = knitr_cache_enabled}
 
 # Accuracy check covariate session (not included in all interactions for reasons of convergence)
-GLMM_accuracy_session <- glmer(accuracy_numeric ~ verum_sham * OCD_HC * (incongruent_congruent + accuracy_prev_trial + session) +
-  (1 + verum_sham * incongruent_congruent | participant_id),
+GLMM_accuracy_session <- glmer(accuracy_numeric ~ verum_sham * OCD_HC * (accuracy_prev_trial + session) +
+  (1 + verum_sham | participant_id),
 data = single_trial_data_clean,
 family = binomial,
 control = glmerControl(optimizer = "bobyqa")
@@ -1506,8 +1674,8 @@ tab_model(GLMM_accuracy_session,
 
 
 # Accuracy check covariate number of feedback faster (predictor was z standardized) (not included in all interactions for reasons of convergence)
-GLMM_accuracy_number_feedback_faster <- glmer(accuracy_numeric ~ verum_sham * OCD_HC * (incongruent_congruent + accuracy_prev_trial + number_feedback_faster_standardized) +
-  (1 + verum_sham * incongruent_congruent || participant_id),
+GLMM_accuracy_number_feedback_faster <- glmer(accuracy_numeric ~ verum_sham * OCD_HC * (accuracy_prev_trial + number_feedback_faster_standardized) +
+  (1 + verum_sham | participant_id),
 data = single_trial_data_clean,
 family = binomial,
 control = glmerControl(optimizer = "bobyqa")
@@ -1526,7 +1694,8 @@ tab_model(GLMM_accuracy_number_feedback_faster,
 
 ### ANOVAs
 
-To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), RT, PES, and accuracy were additionally analyzed with Greenhouse–Geisser corrected repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), response type (correct, incorrect)/condition (congruent correct, incongruent correct, incongruent incorrect), and accuracy previous trial (correct, incorrect). (GG correction only relevant for the ANOVA on RT, as factors in all other have only two levels, so that sphericity could not be violated). As can be seen below, the ANOVAs yielded similar results as obtained with mixed-effects modeling with respect to all effects. I additionally analyzed whether there is an stimulation effect on the number of corrective second responses (because this was erroneously stated in the preregistration). There is none. This analysis requires aggregated data, hence I only calculated an ANOVA, no LMM.
+To facilitate comparison with previously reported results obtained using a similar task and aggregation-based analyses (Rainhart & Woodman 2014), RT, PES, and accuracy were additionally analyzed with Greenhouse–Geisser corrected repeated-measures analyses of variance (ANOVAs) including the within-participant factors stimulation (verum, sham), group (OCD, HC), response type (correct, incorrect)/condition (congruent correct, incongruent correct, incongruent incorrect), and accuracy previous trial (correct, incorrect). (GG correction only relevant for the ANOVA on RT, as factors in all other have only two levels, so that sphericity could not be violated). As can be seen below, the ANOVAs yielded similar results as obtained with mixed-effects modeling with respect to all effects. I additionally analyzed whether there is an stimulation effect on the number of corrective second responses (because this was erroneously stated in the preregistration). There is none. This analysis requires aggregated data, hence I only calculated an ANOVA, no LMM. <br><br>
+The ANOVAs will not be reported in the manuscript.
 
 ```{r ANOVAs}
 
@@ -1602,7 +1771,7 @@ anova_accuracy <- aov_ez(
   id     = "participant_id", 
   dv     = "percentage_correct_responses", 
   data   = data_anova_accuracy,
-  within = c("stimulation", "stimulus_type", "accuracy_prev_trial"),
+  within = c("stimulation", "accuracy_prev_trial"),
   between= c("group"),
   observed = c("group")
 )
@@ -1639,25 +1808,16 @@ afex_options(emmeans_model = "multivariate")
 
 # Pairwise t tests
 pairwise_rt  <- summary(pairs(emmeans(anova_rt, ~condition), adjust = "holm"))
-pairwise_acc <- summary(pairs(emmeans(anova_accuracy, "accuracy_prev_trial", by = "stimulus_type"), adjust = "holm"))
-
 
 
 # Add Cohen's dz (CIs for d could be added if needed, as it can be returned by the "t_to_d" function)
 pairwise_rt$cohens_dz  <- round(t_to_d(pairwise_rt$t.ratio,  pairwise_rt$df,  paired = TRUE)[1], digits = 2)
-pairwise_acc$cohens_dz <- round(t_to_d(pairwise_acc$t.ratio, pairwise_acc$df, paired = TRUE)[1], digits = 2)
 
 
 # Display results 
 my_table_template(pairwise_rt, 
                   digits = c(0, 2, 2, 0, 2, 4, 2),
                   caption = "RT: Main Effect Response Type",
-                  footnote = "P values are adjusted with Holm–Bonferroni method.") 
-
-
-my_table_template(pairwise_acc, 
-                  digits = c(0, 0, 2, 2, 0, 2, 3, 2),
-                  caption = "Accuracy: Interaction Effect Stimulus Type x Accuracy Previous Trial",
                   footnote = "P values are adjusted with Holm–Bonferroni method.") 
 ```
 <br><br>
