@@ -705,39 +705,43 @@ my_table_template(descriptive_statistics_pca_display[,c(2,4,9,12,17)],
 
 # Create plot RT 
 plot_rt <- ggplot() +
-  geom_boxplot(data = df_aggregated_per_subject_rt, aes(x = stimulation, y = rt, fill = group), outlier.size =0.3)+
-  geom_point(data = descriptive_statistics_rt_no_session, aes(x = stimulation, y = rt, colour = group), 
+  geom_boxplot(data = df_aggregated_per_subject_rt, aes(x = stimulation, y = rt, fill = group), outlier.shape = NA)+
+  geom_point(data = descriptive_statistics_rt_no_session_no_stim_type, aes(x = stimulation, y = rt, colour = group), 
              position = position_dodge(width = 0.7), shape = 15, size = 1) +
-  geom_errorbar(data = descriptive_statistics_rt_no_session, aes(x = stimulation, ymax = rt + ci, ymin = rt - ci, colour = group),
+  geom_errorbar(data = descriptive_statistics_rt_no_session_no_stim_type, aes(x = stimulation, ymax = rt + ci, ymin = rt - ci, colour = group),
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
-  geom_line(data = descriptive_statistics_rt_no_session, aes(x = stimulation, y = rt, group = group, color = group), 
+  geom_line(data = descriptive_statistics_rt_no_session_no_stim_type, aes(x = stimulation, y = rt, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
   scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
-  facet_wrap(~response_type + stimulus_type, nrow = 1) +
+  facet_wrap(~response_type, nrow = 1) +
   my_figure_theme + 
+  coord_cartesian(ylim = c(200, 550)) +
+  scale_y_continuous(expand = c(0, 0)) +
   labs(x = "\nStimulation condition", y = "RT (ms)")
 
 
 # Create plot accuracy 
 plot_accuracy <- ggplot() +
-  geom_boxplot(data = df_aggregated_per_subject_accuracy, aes(x = stimulation, y = accuracy_numeric, fill = group), outlier.size =0.3)+
-  geom_point(data = descriptive_statistics_accuracy_no_session, aes(x = stimulation, y = accuracy_numeric, colour = group), 
+  geom_boxplot(data = df_aggregated_per_subject_accuracy, aes(x = stimulation, y = accuracy_numeric, fill = group), outlier.shape = NA)+
+  geom_point(data = descriptive_statistics_accuracy_no_session_no_stim_type, aes(x = stimulation, y = accuracy_numeric, colour = group), 
              position = position_dodge(width = 0.7), shape = 15, size = 1) +
-  geom_errorbar(data = descriptive_statistics_accuracy_no_session, aes(x = stimulation, ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci, colour = group),
+  geom_errorbar(data = descriptive_statistics_accuracy_no_session_no_stim_type, aes(x = stimulation, ymax = accuracy_numeric + ci, ymin = accuracy_numeric - ci, colour = group),
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
-  geom_line(data = descriptive_statistics_accuracy_no_session, aes(x = stimulation, y = accuracy_numeric, group = group, color = group), 
+  geom_line(data = descriptive_statistics_accuracy_no_session_no_stim_type, aes(x = stimulation, y = accuracy_numeric, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
   scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
-  facet_wrap(~stimulus_type, nrow = 1) +
+#  facet_wrap(~stimulus_type, nrow = 1) +
+  coord_cartesian(ylim = c(70, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
   my_figure_theme + 
-  labs(x = "\nStimulation condition", y = "Accuracy (%)")
+  labs(x = "\n", y = "Accuracy (%)")
 
 
 # Create plot PES
 plot_pes <- ggplot() +
-  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pes, fill = group), outlier.size =0.3)+
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pes, fill = group), outlier.shape = NA)+
   geom_point(data = descriptive_statistics_pes_no_session, aes(x = stimulation, y = pes, colour = group), 
              position = position_dodge(width = 0.7), shape = 15, size = 1) +
   geom_errorbar(data = descriptive_statistics_pes_no_session, aes(x = stimulation, ymax = pes + ci, ymin = pes - ci, colour = group),
@@ -746,13 +750,15 @@ plot_pes <- ggplot() +
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
   scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
+    coord_cartesian(ylim = c(-50, 100)) +
+  scale_y_continuous(expand = c(0, 0)) +
   my_figure_theme + 
-  labs(x = "\nStimulation condition", y = "Post-error slowing (ms)")
+  labs(x = "\n", y = "Post-error slowing (ms)")
 
 
 # Create plot PEA
 plot_pea <- ggplot() +
-  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pea, fill = group), outlier.size =0.3)+
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pea, fill = group), outlier.shape = NA)+
   geom_point(data = descriptive_statistics_pea_no_session, aes(x = stimulation, y = pea, colour = group), 
              position = position_dodge(width = 0.7), shape = 15, size = 1) +
   geom_errorbar(data = descriptive_statistics_pea_no_session, aes(x = stimulation, ymax = pea + ci, ymin = pea - ci, colour = group),
@@ -767,7 +773,7 @@ plot_pea <- ggplot() +
 
 # Create plot PCA
 plot_pca <- ggplot() +
-  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pca, fill = group), outlier.size =0.3)+
+  geom_boxplot(data = df_aggregated_per_subject_pes_pea_pca, aes(x = stimulation, y = pca, fill = group), outlier.shape = NA)+
   geom_point(data = descriptive_statistics_pca_no_session, aes(x = stimulation, y = pca, colour = group), 
              position = position_dodge(width = 0.7), shape = 15, size = 1) +
   geom_errorbar(data = descriptive_statistics_pca_no_session, aes(x = stimulation, ymax = pca + ci, ymin = pca - ci, colour = group),
@@ -1471,17 +1477,15 @@ tab_model(LMM_pes_number_feedback_faster,
 
 ### Accuracy {.tabset}
 
-#### GLMM 
+#### GLMM
 
 This model will be reported in the manuscript. <br>
 
-I included the factor *accuracy of previous trial* in the model, to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered. (If preferred, I could also first run the preregistered model with only stimulation, group and stimulus type as fixed factors and then a second model, including additionally the factor *accuracy of previous trial*. This approach would also allow using all trials for the basic accuracy model, as when including the factor , I automatically lose all trials from the calculation at the start of a new task block, that have NA for the variable *accuracy of previous trial*. But the results remain the same, independent of whether I run the model with all trials or the subset). I did not add *accuracy of previous trial* as random effect here. Doing so would require specifying the model matrix separately for the subset of data where *accuracy of previous trial* is not NA.  
-
-```{r GLMM-accuracy, cache = knitr_cache_enabled}
+```{r GLMM-accuracy, cache = knitr_cache_enabled, fig.width = 4, results = 'asis'}
 
 # Run model with maximal random-effects structure
-GLMM_accuracy <- glmer(accuracy_numeric ~ verum_sham * OCD_HC * accuracy_prev_trial +
-  (1 + verum_sham | participant_id),
+GLMM_accuracy <- glmer(accuracy_numeric ~ stimulation * group +
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean,
 family = binomial,
 control = glmerControl(optimizer = "bobyqa")
@@ -1504,21 +1508,20 @@ tab_model(GLMM_accuracy,
   string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
 )
 
-
-# Plot interaction stimulation * PEIA
-# plot_acc_predicted <- plot_model(GLMM_accuracy,
-#                                 type   = "pred",
-#                                 terms  = c("accuracy_prev_trial","verum_sham"),
-#                                 ci.lvl = .95) +
-#   labs(title = "Predicted probabilities of a correct response", 
-#        x     = "Accuracy on the previous trial", 
-#        y     = "Accuracy") +
-#   my_figure_theme +
-#   scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("#ffad48", "#43b7c2"))
-# plot_acc_predicted
+# Plot interaction stimulation * group
+plot_acc_predicted <- plot_model(GLMM_accuracy,
+                                type   = "pred",
+                                terms  = c("group","stimulation"),
+                                ci.lvl = .95) +
+  labs(title = "Predicted probabilities of a correct response",
+       x     = "Group",
+       y     = "Accuracy") +
+  my_figure_theme +
+  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("#ffad48", "#43b7c2"))
+plot_acc_predicted
 ```
 <br><br>
-Accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy; PEIA). There is no evidence for an effect of group or stimulation. There is a significant interaction stimulation:accuracy_prev_trial. There is more PEIA in the verum than in the sham condition. This is contrary to the finding reported by Reinhart & Woodman (2014) of a *reduced* probability for a correct response following an error in the cathodal relative to the sham condition.
+There is no evidence for an effect of group or stimulation but a trend for the interaction stimulation * group. Reinhart and Woodman (2014) found that cathodal stimulation increased the error rate. We see this effect in the OCD group (for HC - if anything at all - the opposite direction), but in the nested model this effect is not significant in the OCD group.
 <br><br>
 
 #### GLMM nested 
@@ -1526,7 +1529,7 @@ Accuracy is higher on trials following incorrect responses than on trials follow
 ```{r GLMM-accuracy-per-group, cache = knitr_cache_enabled}
 
 # Run model with maximal random-effects structure
-GLMM_accuracy_group <- glmer(accuracy_numeric ~ group/stimulation * accuracy_prev_trial +
+GLMM_accuracy_group <- glmer(accuracy_numeric ~ group/stimulation +
   (1 + verum_sham | participant_id),
 data = single_trial_data_clean,
 family = binomial,
@@ -1549,9 +1552,83 @@ tab_model(GLMM_accuracy_group,
   show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
   string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
 )
+
+
+# Run model with maximal random-effects structure
+GLMM_accuracy_group2 <- glmer(accuracy_numeric ~ stimulation/group +
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean,
+family = binomial,
+control = glmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(GLMM_accuracy_group2) # Model does converge
+# isSingular(GLMM_accuracy_group2) # is also ok
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(GLMM_accuracy_group2)) # All terms explain variance
+
+
+# Display results (fixed effects)
+tab_model(GLMM_accuracy_group2,
+  dv.labels = "Accuracy", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
+  string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
+)
 ```
 <br><br>
 For the separate groups, there is no significant effect of stimulation on accuracy. There is a significant interaction stimulation:accuracy_prev_trial in the OCD group.
+<br><br>
+
+#### GLMM with PEIA
+
+I included the factor *accuracy of previous trial* in the model, to directly test the difference between post-error vs. post-correct accuracy (post-error increase of accuracy) and the effect of stimulation on it. This was not preregistered. (If preferred, I could also first run the preregistered model with only stimulation, group and stimulus type as fixed factors and then a second model, including additionally the factor *accuracy of previous trial*. This approach would also allow using all trials for the basic accuracy model, as when including the factor , I automatically lose all trials from the calculation at the start of a new task block, that have NA for the variable *accuracy of previous trial*. But the results remain the same, independent of whether I run the model with all trials or the subset). I did not add *accuracy of previous trial* as random effect here. Doing so would require specifying the model matrix separately for the subset of data where *accuracy of previous trial* is not NA.  
+
+```{r GLMM-accuracy-peia, cache = knitr_cache_enabled, fig.width = 5, results = 'asis'}
+
+# Run model with maximal random-effects structure
+GLMM_accuracy_PEIA <- glmer(accuracy_numeric ~ verum_sham * OCD_HC * accuracy_prev_trial +
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean,
+family = binomial,
+control = glmerControl(optimizer = "bobyqa")
+)
+
+
+# Check model output
+# summary(GLMM_accuracy_PEIA) # Model does converge
+# isSingular(GLMM_accuracy_PEIA) # is also ok
+
+
+# Check PCA of random-effects variance-covariance estimates
+# summary(rePCA(GLMM_accuracy_PEIA)) # All terms explain variance
+
+
+# Display results (fixed effects)
+tab_model(GLMM_accuracy_PEIA,
+  dv.labels = "Accuracy", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "z value", 
+  string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
+)
+
+
+# Plot interaction stimulation * PEIA
+plot_acc_predicted <- plot_model(GLMM_accuracy_PEIA,
+                                type   = "pred",
+                                terms  = c("accuracy_prev_trial","verum_sham"),
+                                ci.lvl = .95) +
+  labs(title = "Predicted probabilities of a correct response",
+       x     = "Accuracy on the previous trial",
+       y     = "Accuracy") +
+  my_figure_theme +
+  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("#ffad48", "#43b7c2"))
+plot_acc_predicted
+```
+<br><br>
+Accuracy is higher on trials following incorrect responses than on trials following correct responses (post-error increase of accuracy; PEIA). There is no evidence for an effect of group or stimulation. There is a significant interaction stimulation:accuracy_prev_trial. There is more PEIA in the verum than in the sham condition. This is contrary to the finding reported by Reinhart & Woodman (2014) of a *reduced* probability for a correct response following an error in the cathodal relative to the sham condition. Since this would be difficult to explain and this analysis was not preregistered, we will report the simple model, without PEIA.
 <br><br>
 
 #### GLMM with stimulus type
