@@ -50,8 +50,7 @@ my_figure_theme <- theme_classic(base_size = 11) +
 
 # instad of theme_classic: + theme_apa(base_size = 11)
 
-my_figure_colors_1 <- c("steelblue1","lightcoral","blue","red")
-my_figure_colors_2 <- c("seagreen1","lightsalmon","seagreen","lightsalmon4")
+my_figure_colors <- c("slategray3","navy","tan1","sienna3")
 ```
 
 ## Response-locked ERPs
@@ -122,11 +121,11 @@ resp_locked_data[
 # Add group and session variables and remove string '_T1/T2' from participant ID (to get correct number of factor levels later); make all factors
 resp_locked_data <- resp_locked_data  %>% 
   dplyr::mutate(
-    group          = as.factor(ifelse(substr(participant_id, 1,1) == "C", "HC", "OCD")),
-    session        = as.factor(ifelse(substr(participant_id, 6,7) == "T1", "T1", "T2")),
-    participant_id = as.factor(substr(participant_id, 1,4)), 
-    condition      = as.factor(condition),
-    stimulation    = as.factor(stimulation)
+    group          = factor(ifelse(substr(participant_id, 1,1) == "C", "HC", "OCD")),
+    session        = factor(ifelse(substr(participant_id, 6,7) == "T1", "T1", "T2")),
+    participant_id = factor(substr(participant_id, 1,4)), 
+    condition      = factor(condition, levels = c("incorrect", "correct")),
+    stimulation    = factor(stimulation)
     )
 
 
@@ -141,6 +140,7 @@ resp_locked_data$participant_id <- droplevels(resp_locked_data$participant_id)
 #### Per participant
 
 ```{r plot-per-participant-resp-locked, fig.height = 9, fig.width = 10, cache = knitr_cache_enabled}
+
 # Plot ERPs per participant for HC
 plot_per_participant_HC <- ggplot(resp_locked_data[resp_locked_data$group == "HC",],aes(time, FCz)) +
   stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour = stimulation:condition)) +
@@ -150,10 +150,10 @@ plot_per_participant_HC <- ggplot(resp_locked_data[resp_locked_data$group == "HC
   coord_cartesian(ylim=c(-15, 15), xlim=c(-500,600)) +
   scale_y_continuous(breaks=seq(-15, 15, 10)) +
   scale_x_continuous(breaks=c(-200, 100, 400)) +
-  scale_colour_manual(values = my_figure_colors_2) +  
+  scale_colour_manual(values = my_figure_colors) +  
   facet_wrap(.~ participant_id+session, ncol = 8, labeller = labeller(.multi_line = FALSE, sep=": ")) +
   ggtitle("ERPs per participant: HC") +  
-  labs(x = "\ntime (ms)", y = expression(paste("FCz [",mu,"V]")), colour = "") +  
+  labs(x = "\nTime (ms)", y = expression(paste("FCz (",mu,"V)")), colour = "") +  
   theme(strip.text.x = element_text(margin = margin(0, 0, 0, 0))) +
   my_figure_theme
 
@@ -175,10 +175,10 @@ plot_per_participant_OCD <- ggplot(resp_locked_data[resp_locked_data$group == "O
   coord_cartesian(ylim=c(-15, 15), xlim=c(-500,600)) +
   scale_y_continuous(breaks=seq(-15, 15, 10)) +
   scale_x_continuous(breaks=c(-200, 100, 400)) +
-  scale_colour_manual(values = my_figure_colors_2) +  
+  scale_colour_manual(values = my_figure_colors) +  
   facet_wrap(.~ participant_id+session, ncol = 8, labeller = labeller(.multi_line = FALSE, sep=": ")) +
   ggtitle("ERPs per participant: OCD") +  
-  labs(x = "\ntime (ms)", y = expression(paste("FCz [",mu,"V]")), colour = "") +  
+  labs(x = "\nTime (ms)", y = expression(paste("FCz (",mu,"V)")), colour = "") +  
   theme(strip.text.x = element_text(margin = margin(0, 0, 0, 0))) +
   my_figure_theme
 
@@ -192,7 +192,7 @@ plot_per_participant_OCD
 ```
 <br><br>
 
-#### ERPs as a function of group and stimulation {.active}
+#### ERN/CRN as a function of group and stimulation {.active}
 
 ```{r plot-group-by-stimulation-resp-locked, fig.height = 10, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP trajectories (at FCz) as a function of (A) stimulation by group and (B) group by stimulation. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008).", cache = knitr_cache_enabled}
 
@@ -215,37 +215,37 @@ CIs_group_stimulation_resp_locked <- purrr::map_df(running_CIs_group_stimulation
 
 # Plot ERPs per stimulation by group
 plot_stimulation_by_group_resp_locked <- ggplot(resp_locked_data,aes(time, FCz)) +
-  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= stimulation:condition)) +
-  geom_ribbon(data = CIs_group_stimulation_resp_locked, aes(ymin = FCz-ci, ymax = FCz+ci, fill = stimulation:condition), alpha = 0.15) + guides(fill = "none") +
+  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= condition:stimulation)) +
+  geom_ribbon(data = CIs_group_stimulation_resp_locked, aes(ymin = FCz-ci, ymax = FCz+ci, fill = condition:stimulation), alpha = 0.15) + guides(fill = "none") +
   geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
   geom_hline(yintercept = 0, linetype = "dashed", colour="grey") +  
   geom_ribbon(aes(xmin=0, xmax=100), alpha=.2, fill="grey70") +
-  coord_cartesian(ylim=c(-10,10), xlim=c(-500,1000)) +
-  scale_y_continuous(breaks=seq(-10,10,2)) +
-  scale_x_continuous(breaks=seq(-500,1000,200)) +
-  scale_colour_manual(values = my_figure_colors_2) +
-  scale_fill_manual(values = my_figure_colors_2) +
+  coord_cartesian(ylim=c(-10,12), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-12,10,2), expand = c(0, 0)) +
+  scale_x_continuous(breaks=seq(-500,1000,200), expand = c(0, 0)) +
+  scale_colour_manual(values = my_figure_colors, labels = c("error: sham", "error: cathodal", "correct: sham", "correct: cathodal")) +
+  scale_fill_manual(values = my_figure_colors) +
   facet_grid(. ~ group) + 
   ggtitle("ERPs per stimulation by group") +
-  labs(x = "\ntime (ms)", y = expression(paste("FCz [",mu,"V]")), colour = "") +
+  labs(x = "\nTime (ms)", y = expression(paste("FCz (",mu,"V)")), colour = "") +
   my_figure_theme
 
 
 # Plot ERPs per group by stimulation
 plot_group_by_stimulation_resp_locked <- ggplot(resp_locked_data,aes(time, FCz)) +
-  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= group:condition)) +
-  geom_ribbon(data = CIs_group_stimulation_resp_locked, aes(ymin = FCz-ci, ymax = FCz+ci, fill = group:condition), alpha = 0.15) + guides(fill = "none") +
+  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= condition:group)) +
+  geom_ribbon(data = CIs_group_stimulation_resp_locked, aes(ymin = FCz-ci, ymax = FCz+ci, fill = condition:group), alpha = 0.15) + guides(fill = "none") +
   geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
   geom_hline(yintercept = 0, linetype = "dashed", colour="grey") + 
   geom_ribbon(aes(xmin=0, xmax=100), alpha=.2, fill="grey70") +
-  coord_cartesian(ylim=c(-10,10), xlim=c(-500,1000)) +
-  scale_y_continuous(breaks=seq(-10,10,2)) +
-  scale_x_continuous(breaks=seq(-500,1000,200)) +
-  scale_colour_manual(values = my_figure_colors_1) +
-  scale_fill_manual(values = my_figure_colors_1) +
+  coord_cartesian(ylim=c(-10,12), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-12,10,2), expand = c(0, 0)) +
+  scale_x_continuous(breaks=seq(-500,1000,200), expand = c(0, 0)) +
+  scale_colour_manual(values = my_figure_colors, labels = c( "error: HC", "error: OCD", "correct: HC", "correct: OCD")) +
+  scale_fill_manual(values = my_figure_colors) +
   facet_grid(. ~ stimulation) + 
   ggtitle("ERPs per group by stimulation") +
-  labs(x = "\ntime (ms)", y = expression(paste("FCz [",mu,"V]")), colour = "") +
+  labs(x = "\nTime (ms)", y = expression(paste("FCz (",mu,"V)")), colour = "") +
   my_figure_theme 
 
 
@@ -257,7 +257,7 @@ figure_ERP_trajectories_resp_locked <- ggdraw() +
 
 
 # Save plot
-ggsave("./figures/figure_ERP_trajectories.tiff", width = 14, height = 18, units = "cm", dpi=600, compression = "lzw")
+ggsave("./figures/figure_ERP_trajectories.tiff", width = 20, height = 20, units = "cm", dpi=300, compression = "lzw")
 
 
 # Display plot
@@ -267,12 +267,168 @@ figure_ERP_trajectories_resp_locked
 *Note: CRN is clearly visible but positive. This is quite typical for mastoid reference. *
 <br><br>
 
+```{r plot-group-by-stimulation-resp-locked-ERPs-presentation, fig.height = 5, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP trajectories (at FCz) as a function of stimulation by group. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008).", cache = knitr_cache_enabled, eval = FALSE}
+
+
+# Plot ERPs per stimulation by group (only sham)
+figure_ERP_trajectories_ERN_1 <- ggplot(resp_locked_data[resp_locked_data$condition == "incorrect" & resp_locked_data$stimulation == "sham",],aes(time, FCz)) +
+  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= condition:stimulation)) +
+  geom_ribbon(data = CIs_group_stimulation_resp_locked[CIs_group_stimulation_resp_locked$condition == "incorrect" & CIs_group_stimulation_resp_locked$stimulation == "sham",], aes(ymin = FCz-ci, ymax = FCz+ci, fill = condition:stimulation), alpha = 0.15) + guides(fill = "none") +
+  geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour="grey") +  
+  geom_ribbon(aes(xmin=0, xmax=100), alpha=.2, fill="grey70") +
+  coord_cartesian(ylim=c(-10,12), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-12,10,2), expand = c(0, 0)) +
+  scale_x_continuous(breaks=seq(-500,1000,200), expand = c(0, 0)) +
+  scale_colour_manual(values = my_figure_colors, labels = c("error: sham")) +
+  scale_fill_manual(values = my_figure_colors) +
+  facet_grid(. ~ group) + 
+  labs(x = "\nTime (ms)", y = expression(paste("FCz (",mu,"V)")), colour = "") +
+  my_figure_theme
+
+
+# Save plot
+#ggsave("./figures/figure_ERP_trajectories_ERN_1.tiff", width = 20, height = 10, units = "cm", dpi=300, compression = "lzw")
+
+
+# Display plot
+figure_ERP_trajectories_ERN_1
+
+
+
+# Plot ERPs per stimulation by group
+figure_ERP_trajectories_ERN_2 <- ggplot(resp_locked_data[resp_locked_data$condition == "incorrect",],aes(time, FCz)) +
+  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= condition:stimulation)) +
+  geom_ribbon(data = CIs_group_stimulation_resp_locked[CIs_group_stimulation_resp_locked$condition == "incorrect",], aes(ymin = FCz-ci, ymax = FCz+ci, fill = condition:stimulation), alpha = 0.15) + guides(fill = "none") +
+  geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour="grey") +  
+  geom_ribbon(aes(xmin=0, xmax=100), alpha=.2, fill="grey70") +
+  coord_cartesian(ylim=c(-10,12), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-12,10,2),expand = c(0, 0)) +
+  scale_x_continuous(breaks=seq(-500,1000,200), expand = c(0, 0)) +
+  scale_colour_manual(values = my_figure_colors, labels = c("error: sham", "error: cathodal", "correct: sham", "correct: cathodal")) +
+  scale_fill_manual(values = my_figure_colors) +
+  facet_grid(. ~ group) + 
+  labs(x = "\nTime (ms)", y = expression(paste("FCz (",mu,"V)")), colour = "") +
+  my_figure_theme
+
+
+# Save plot
+#ggsave("./figures/figure_ERP_trajectories_ERN_2.tiff", width = 20, height = 10, units = "cm", dpi=300, compression = "lzw")
+
+
+# Display plot
+figure_ERP_trajectories_ERN_2
+
+
+
+
+# Plot ERPs per stimulation by group
+figure_ERP_trajectories_CRN_1 <- ggplot(resp_locked_data[resp_locked_data$condition == "incorrect" | (resp_locked_data$condition == "correct" & resp_locked_data$stimulation == "sham"),],aes(time, FCz)) +
+  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= condition:stimulation)) +
+  geom_ribbon(data = CIs_group_stimulation_resp_locked[CIs_group_stimulation_resp_locked$condition == "incorrect" | (CIs_group_stimulation_resp_locked$condition == "correct" & CIs_group_stimulation_resp_locked$stimulation == "sham"),], aes(ymin = FCz-ci, ymax = FCz+ci, fill = condition:stimulation), alpha = 0.15) + guides(fill = "none") +
+  geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour="grey") +  
+  geom_ribbon(aes(xmin=0, xmax=100), alpha=.2, fill="grey70") +
+  coord_cartesian(ylim=c(-10,12), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-12,10,2), expand = c(0, 0)) +
+  scale_x_continuous(breaks=seq(-500,1000,200), expand = c(0, 0)) +
+  scale_colour_manual(values = my_figure_colors, labels = c("error: sham", "error: cathodal", "correct: sham")) +
+  scale_fill_manual(values = my_figure_colors) +
+  facet_grid(. ~ group) + 
+  labs(x = "\nTime (ms)", y = expression(paste("FCz (",mu,"V)")), colour = "") +
+  my_figure_theme
+
+
+# Save plot
+#ggsave("./figures/figure_ERP_trajectories_CRN_1.tiff", width = 20, height = 10, units = "cm", dpi=300, compression = "lzw")
+
+
+# Display plot
+figure_ERP_trajectories_CRN_1
+
+
+
+# Plot ERPs per stimulation by group
+figure_ERP_trajectories_CRN_2 <- ggplot(resp_locked_data,aes(time, FCz)) +
+  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= condition:stimulation)) +
+  geom_ribbon(data = CIs_group_stimulation_resp_locked, aes(ymin = FCz-ci, ymax = FCz+ci, fill = condition:stimulation), alpha = 0.15) + guides(fill = "none") +
+  geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour="grey") +  
+  geom_ribbon(aes(xmin=0, xmax=100), alpha=.2, fill="grey70") +
+  coord_cartesian(ylim=c(-10,12), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-12,10,2), expand = c(0, 0)) +
+  scale_x_continuous(breaks=seq(-500,1000,200), expand = c(0, 0)) +
+  scale_colour_manual(values = my_figure_colors, labels = c("error: sham", "error: cathodal", "correct: sham", "correct: cathodal")) +
+  scale_fill_manual(values = my_figure_colors) +
+  facet_grid(. ~ group) + 
+  labs(x = "\nTime (ms)", y = expression(paste("FCz (",mu,"V)")), colour = "") +
+  my_figure_theme
+
+
+# Save plot
+#ggsave("./figures/figure_ERP_trajectories_CRN_2.tiff", width = 20, height = 10, units = "cm", dpi=300, compression = "lzw")
+
+
+# Display plot
+figure_ERP_trajectories_CRN_2
+```
+<br><br>
+
+#### Pe as a function of group and stimulation
+
+```{r plot-group-by-stimulation-resp-locked-Pe, fig.height = 5, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP trajectories (at Pz) as a function of (A) stimulation by group and (B) group by stimulation. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008).", cache = knitr_cache_enabled}
+
+# Calculate running within-participant CIs
+running_CIs_group_stimulation_resp_locked_Pe <- resp_locked_data %>%
+  split(.$time) %>%
+  map(~summarySEwithinO(data = .,
+                       measurevar = "Pz",
+                       withinvars = c("condition", "stimulation"),
+                       betweenvars = "group",
+                       idvar = "participant_id"))
+
+
+# Calculate running within-participant CIs 
+CIs_group_stimulation_resp_locked_Pe <- purrr::map_df(running_CIs_group_stimulation_resp_locked_Pe,magrittr::extract) %>%
+  dplyr::mutate(
+    time = rep(unique(resp_locked_data$time), each = 8) # Note: 8 refers to the number of conditions (group x stimulation x response_type = 2 x 2 x 2 = 8)
+    )
+
+
+# Plot ERPs per stimulation by group
+figure_ERP_trajectories_Pe <- ggplot(resp_locked_data[resp_locked_data$condition == "incorrect",],aes(time, Pz)) +
+  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= condition:stimulation)) +
+  geom_ribbon(data = CIs_group_stimulation_resp_locked_Pe[CIs_group_stimulation_resp_locked_Pe$condition == "incorrect",], aes(ymin = Pz-ci, ymax = Pz+ci, fill = condition:stimulation), alpha = 0.15) + guides(fill = "none") +
+  geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour="grey") +  
+  geom_ribbon(aes(xmin=200, xmax=400), alpha=.2, fill="grey70") +
+  coord_cartesian(ylim=c(-2,12), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-2,12,2),expand = c(0, 0)) +
+  scale_x_continuous(breaks=seq(-500,1000,200), expand = c(0, 0)) +
+  scale_colour_manual(values = my_figure_colors, labels = c("error: sham", "error: cathodal")) +
+  scale_fill_manual(values = my_figure_colors) +
+  facet_grid(. ~ group) + 
+  labs(x = "\nTime (ms)", y = expression(paste("Pz (",mu,"V)")), colour = "") +
+  my_figure_theme
+
+
+# Save plot
+ggsave("./figures/figure_ERP_trajectories_Pe.tiff", width = 20, height = 10, units = "cm", dpi=300, compression = "lzw")
+
+
+# Display plot
+figure_ERP_trajectories_Pe
+```
+<br>
+
 ### ERP Topographies {.tabset}
 ***
 
 #### Per group and response type
 
 ```{r topographies-resp-locked, fig.height = 7, fig.width = 10, dpi=600, fig.cap = "Note. Response-locked ERP topograhpies (from 0 to 100 ms) separately for both groups and response conditions.", cache = knitr_cache_enabled}
+
 # Convert to long format for electrodes
 data_topo <- resp_locked_data %>%
   # Remove channels of no interest
@@ -352,7 +508,7 @@ figure_ERP_topographies <- ggdraw() +
 
 
 # Save plot
-ggsave("./figures/figure_ERP_topographies.tiff", width = 16, height = 10, units = "cm", dpi=600, compression = "lzw")
+ggsave("./figures/figure_ERP_topographies.tiff", width = 16, height = 10, units = "cm", dpi=300, compression = "lzw")
 
 
 # Display plot
@@ -409,6 +565,123 @@ ggsave("./figures/figure_ERP_topographies_stimulation.tiff", width = 20, height 
 
 # Display plot
 figure_ERP_topographies_stimulation
+
+
+
+# ggplot(data_topo_diff_stimulation[data_topo_diff_stimulation$condition == "incorrect",], aes(x = x, y = y, fill = amplitude, label = electrode)) + 
+#     geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.9) + 
+#     scale_fill_distiller(palette = "RdBu", limits = c(-1, 1)) + 
+#     theme_void() + 
+#     coord_equal() + 
+#     ggtitle("sham-verum") +
+#     labs(fill = expression(paste(mu, "V"))) + 
+#     theme(plot.title = element_text(size = 12, vjust = 3, hjust = .5, face = "bold"),legend.position = "bottom") + 
+#     facet_grid(rows = vars(group))
+# 
+# ggplot(data_topo_diff_stimulation[data_topo_diff_stimulation$condition == "correct",], aes(x = x, y = y, fill = amplitude, label = electrode)) +
+#     geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.9) +
+#     scale_fill_distiller(palette = "RdBu", limits = c(-1.5, 1)) +
+#     theme_void() +
+#     coord_equal() +
+#     ggtitle("sham-verum") +
+#     labs(fill = expression(paste(mu, "V"))) +
+#     theme(plot.title = element_text(size = 12, vjust = 3, hjust = .5, face = "bold"),legend.position = "bottom") +
+#     facet_grid(rows = vars(group))
+```
+<br><br>
+
+```{r topographies-resp-locked-presentation, fig.height = 5, fig.width = 4, dpi=300, eval = FALSE}
+
+# Plot ERN HC
+figure_topo_ERN_HC <- ggplot(data_topo[data_topo$condition == "incorrect" & data_topo$group == "HC",], aes(x = x, y = y, fill = amplitude, label = electrode)) +
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.5) +
+    scale_fill_distiller(palette = "RdBu", limits = c(-5, 6.2)) +
+    theme_void() +
+    coord_equal() +
+    labs(fill = expression(paste(mu, "V"))) +
+    theme(strip.text = element_text(size = 18, hjust = .5, face = "bold"),legend.position = "bottom") 
+
+# Save plot
+#ggsave("./figures/figure_topo_ERN_HC.tiff", width = 5, height = 6, units = "cm", dpi=300, compression = "lzw")
+
+
+# Plot ERN OCD
+figure_topo_ERN_OCD <- ggplot(data_topo[data_topo$condition == "incorrect" & data_topo$group == "OCD",], aes(x = x, y = y, fill = amplitude, label = electrode)) +
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.5) +
+    scale_fill_distiller(palette = "RdBu", limits = c(-5, 6.2)) +
+    theme_void() +
+    coord_equal() +
+    labs(fill = expression(paste(mu, "V"))) +
+    theme(strip.text = element_text(size = 18, hjust = .5, face = "bold"),legend.position = "bottom") 
+
+# Save plot
+#ggsave("./figures/figure_topo_ERN_OCD.tiff", width = 5, height = 6, units = "cm", dpi=300, compression = "lzw")
+
+
+
+# Plot CRN HC
+figure_topo_CRN_HC <- ggplot(data_topo[data_topo$condition == "correct" & data_topo$group == "HC",], aes(x = x, y = y, fill = amplitude, label = electrode)) +
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.5) +
+    scale_fill_distiller(palette = "RdBu", limits = c(0, 12)) +
+    theme_void() +
+    coord_equal() +
+    labs(fill = expression(paste(mu, "V"))) +
+    theme(strip.text = element_text(size = 18, hjust = .5, face = "bold"),legend.position = "bottom") 
+
+# Save plot
+#ggsave("./figures/figure_topo_CRN_HC.tiff", width = 5, height = 6, units = "cm", dpi=300, compression = "lzw")
+
+
+# Plot CRN OCD
+figure_topo_CRN_OCD <- ggplot(data_topo[data_topo$condition == "correct" & data_topo$group == "OCD",], aes(x = x, y = y, fill = amplitude, label = electrode)) +
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.5) +
+    scale_fill_distiller(palette = "RdBu", limits = c(0, 12)) +
+    theme_void() +
+    coord_equal() +
+    labs(fill = expression(paste(mu, "V"))) +
+    theme(strip.text = element_text(size = 18, hjust = .5, face = "bold"),legend.position = "bottom") 
+
+# Save plot
+#ggsave("./figures/figure_topo_CRN_OCD.tiff", width = 5, height = 6, units = "cm", dpi=300, compression = "lzw")
+
+
+##### Pe
+
+data_topo_Pe <- resp_locked_data %>%
+  # Remove channels of no interest
+  dplyr::select(-IO1, -M1, -F9, -F10) %>%
+  # Change from wide to long format for electrodes
+  tidyr::gather(., electrode, amplitude, Fp1:O2, factor_key = TRUE)  %>%
+  # Select time windows
+  dplyr::filter(time >= 200 & time <= 400) %>%
+  # Add electrode information
+  electrode_locations(., electrode = "electrode", drop = FALSE, montage = NULL)
+
+
+# Plot Pe HC
+figure_topo_Pe_HC <- ggplot(data_topo_Pe[data_topo_Pe$condition == "incorrect" & data_topo_Pe$group == "HC",], aes(x = x, y = y, fill = amplitude, label = electrode)) +
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.5) +
+    scale_fill_distiller(palette = "RdBu", limits = c(2, 10)) + 
+    theme_void() +
+    coord_equal() +
+    labs(fill = expression(paste(mu, "V"))) +
+    theme(strip.text = element_text(size = 18, hjust = .5, face = "bold"),legend.position = "bottom") 
+
+# Save plot
+#ggsave("./figures/figure_topo_Pe_HC.tiff", width = 5, height = 6, units = "cm", dpi=300, compression = "lzw")
+
+
+# Plot Pe OCD
+figure_topo_Pe_OCD <- ggplot(data_topo_Pe[data_topo_Pe$condition == "incorrect" & data_topo_Pe$group == "OCD",], aes(x = x, y = y, fill = amplitude, label = electrode)) +
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.5) +
+    scale_fill_distiller(palette = "RdBu", limits = c(2, 10)) +
+    theme_void() +
+    coord_equal() +
+    labs(fill = expression(paste(mu, "V"))) +
+    theme(strip.text = element_text(size = 18, hjust = .5, face = "bold"),legend.position = "bottom") 
+
+# Save plot
+#ggsave("./figures/figure_topo_Pe_OCD.tiff", width = 5, height = 6, units = "cm", dpi=300, compression = "lzw")
 ```
 <br><br>
 
@@ -480,11 +753,11 @@ stim_locked_data[
 # Add group and session variables and remove string '_T1/T2' from participant ID (to get correct number of factor levels later); make all factors
 stim_locked_data <- stim_locked_data  %>% 
   dplyr::mutate(
-    group          = as.factor(ifelse(substr(participant_id, 1,1) == "C", "HC", "OCD")),
-    session        = as.factor(ifelse(substr(participant_id, 6,7) == "T1", "T1", "T2")),
-    participant_id = as.factor(substr(participant_id, 1,4)), 
-    condition      = as.factor(condition),
-    stimulation    = as.factor(stimulation)
+    group          = factor(ifelse(substr(participant_id, 1,1) == "C", "HC", "OCD")),
+    session        = factor(ifelse(substr(participant_id, 6,7) == "T1", "T1", "T2")),
+    participant_id = factor(substr(participant_id, 1,4)), 
+    condition      = factor(condition, levels = c("incorrect","correct")),
+    stimulation    = factor(stimulation)
     )
 
 
@@ -519,39 +792,39 @@ CIs_group_stimulation_stim_locked <- purrr::map_df(running_CIs_group_stimulation
 
 # Plot ERPs per stimulation by group
 plot_stimulation_by_group_stim_locked <- ggplot(stim_locked_data,aes(time, CPz)) +
-  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= stimulation:condition)) +
-  geom_ribbon(data = CIs_group_stimulation_stim_locked, aes(ymin = CPz-ci, ymax = CPz+ci, fill = stimulation:condition), alpha = 0.15) + guides(fill = "none") +
+  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= condition:stimulation)) +
+  geom_ribbon(data = CIs_group_stimulation_stim_locked, aes(ymin = CPz-ci, ymax = CPz+ci, fill = condition:stimulation), alpha = 0.15) + guides(fill = "none") +
   geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
   geom_hline(yintercept = 0, linetype = "dashed", colour="grey") +  
   geom_ribbon(aes(xmin=200, xmax=295), alpha=.2, fill="grey70") +
   geom_ribbon(aes(xmin=305, xmax=500), alpha=.2, fill="grey70") +
-  coord_cartesian(ylim=c(-4,12), xlim=c(-500,1000)) +
-  scale_y_continuous(breaks=seq(-4,12,2)) +
-  scale_x_continuous(breaks=seq(-500,1000,200)) +
-  scale_colour_manual(values = my_figure_colors_2) +
-  scale_fill_manual(values = my_figure_colors_2) +
+  coord_cartesian(ylim=c(-2,14), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-2,14,2), expand = c(0, 0)) +
+  scale_x_continuous(breaks=seq(-500,1000,200), expand = c(0, 0)) +
+  scale_colour_manual(values = my_figure_colors, labels = c("error: sham", "error: cathodal", "correct: sham", "correct: cathodal")) +
+  scale_fill_manual(values = my_figure_colors) +
   facet_grid(. ~ group) + 
   ggtitle("ERPs per stimulation by group") +
-  labs(x = "\ntime (ms)", y = expression(paste("CPz [",mu,"V]")), colour = "") +
+  labs(x = "\nTime (ms)", y = expression(paste("CPz (",mu,"V)")), colour = "") +
   my_figure_theme
 
 
 # Plot ERPs per group by stimulation
 plot_group_by_stimulation_stim_locked <- ggplot(stim_locked_data,aes(time, CPz)) +
-  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= group:condition)) +
-  geom_ribbon(data = CIs_group_stimulation_stim_locked, aes(ymin = CPz-ci, ymax = CPz+ci, fill = group:condition), alpha = 0.15) + guides(fill = "none") +
+  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= condition:group)) +
+  geom_ribbon(data = CIs_group_stimulation_stim_locked, aes(ymin = CPz-ci, ymax = CPz+ci, fill = condition:group), alpha = 0.15) + guides(fill = "none") +
   geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
   geom_hline(yintercept = 0, linetype = "dashed", colour="grey") + 
   geom_ribbon(aes(xmin=200, xmax=295), alpha=.2, fill="grey70") +
   geom_ribbon(aes(xmin=305, xmax=500), alpha=.2, fill="grey70") +
-  coord_cartesian(ylim=c(-4,12), xlim=c(-500,1000)) +
-  scale_y_continuous(breaks=seq(-4,12,2)) +
-  scale_x_continuous(breaks=seq(-500,1000,200)) +
-  scale_colour_manual(values = my_figure_colors_1) +
-  scale_fill_manual(values = my_figure_colors_1) +
+  coord_cartesian(ylim=c(-2,14), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-2,14,2), expand = c(0, 0)) +
+  scale_x_continuous(breaks=seq(-500,1000,200), expand = c(0, 0)) +
+  scale_colour_manual(values = my_figure_colors, labels = c( "error: HC", "error: OCD", "correct: HC", "correct: OCD")) +
+  scale_fill_manual(values = my_figure_colors) +
   facet_grid(. ~ stimulation) + 
   ggtitle("ERPs per group by stimulation") +
-  labs(x = "\ntime (ms)", y = expression(paste("CPz [",mu,"V]")), colour = "") +
+  labs(x = "\nTime (ms)", y = expression(paste("CPz (",mu,"V)")), colour = "") +
   my_figure_theme 
 
 
@@ -563,11 +836,81 @@ figure_ERP_trajectories_stim_locked <- ggdraw() +
 
 
 # Save plot
-ggsave("./figures/figure_ERP_trajectories_stim_locked.tiff", width = 14, height = 18, units = "cm", dpi=600, compression = "lzw")
+ggsave("./figures/figure_ERP_trajectories_stim_locked.tiff", width = 20, height = 20, units = "cm", dpi=300, compression = "lzw")
 
 
 # Display plot
 figure_ERP_trajectories_stim_locked
 ```
 <br>
+
+```{r plot-group-by-stimulation-stim-locked-only-presentation, fig.height = 5, fig.width = 10, dpi=600, fig.cap = "Note. Stimulus-locked ERP trajectories (at CPz, but note that for N2 FCz should better be displayed) as a function of (A) stimulation by group and (B) group by stimulation. Shaded areas represent 95% CIs and are adjusted for within-participant designs as described by Morey (2008).", cache = knitr_cache_enabled, eval = FALSE}
+
+
+# Plot ERPs per stimulation by group
+figure_ERP_trajectories_stim_locked <- ggplot(stim_locked_data,aes(time, CPz)) +
+  stat_summary(fun = mean, geom = "line", size = 0.5, linetype = "solid", aes(colour= condition:stimulation)) +
+  geom_ribbon(data = CIs_group_stimulation_stim_locked, aes(ymin = CPz-ci, ymax = CPz+ci, fill = condition:stimulation), alpha = 0.15) + guides(fill = "none") +
+  geom_vline(xintercept = 0, linetype = "dashed", colour="grey" ) +
+  geom_hline(yintercept = 0, linetype = "dashed", colour="grey") +  
+  geom_ribbon(aes(xmin=300, xmax=500), alpha=.2, fill="grey70") +
+  coord_cartesian(ylim=c(-2,14), xlim=c(-500,1000)) +
+  scale_y_continuous(breaks=seq(-2,14,2), expand = c(0, 0)) +
+  scale_x_continuous(breaks=seq(-500,1000,200), expand = c(0, 0)) +
+  scale_colour_manual(values = my_figure_colors, labels = c("error: sham", "error: cathodal", "correct: sham", "correct: cathodal")) +
+  scale_fill_manual(values = my_figure_colors) +
+  facet_grid(. ~ group) + 
+  labs(x = "\nTime (ms)", y = expression(paste("CPz (",mu,"V)")), colour = "") +
+  my_figure_theme
+
+
+# Save plot
+# ggsave("./figures/figure_ERP_trajectories_stim_locked.tiff", width = 20, height = 10, units = "cm", dpi=300, compression = "lzw")
+
+
+# Display plot
+figure_ERP_trajectories_stim_locked
+```
+<br>
+
+```{r topographies-stim-locked-presentation, fig.height = 5, fig.width = 4, dpi=300, eval = FALSE}
+
+##### P300
+
+data_topo_P300 <- stim_locked_data %>%
+  # Remove channels of no interest
+  dplyr::select(-IO1, -M1, -F9, -F10) %>%
+  # Change from wide to long format for electrodes
+  tidyr::gather(., electrode, amplitude, Fp1:O2, factor_key = TRUE)  %>%
+  # Select time windows
+  dplyr::filter(time >= 300 & time <= 500) %>%
+  # Add electrode information
+  electrode_locations(., electrode = "electrode", drop = FALSE, montage = NULL)
+
+
+# Plot P300 HC
+figure_topo_P300_HC <- ggplot(data_topo_P300[data_topo_P300$group == "HC",], aes(x = x, y = y, fill = amplitude, label = electrode)) +
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.5) +
+    scale_fill_distiller(palette = "RdBu", limits = c(0, 8.7)) + 
+    theme_void() +
+    coord_equal() +
+    labs(fill = expression(paste(mu, "V"))) +
+    theme(strip.text = element_text(size = 18, hjust = .5, face = "bold"),legend.position = "bottom") 
+
+# Save plot
+#ggsave("./figures/figure_topo_P300_HC.tiff", width = 5, height = 6, units = "cm", dpi=300, compression = "lzw")
+
+
+# Plot P300 OCD
+figure_topo_P300_OCD <- ggplot(data_topo_P300[data_topo_P300$group == "OCD",], aes(x = x, y = y, fill = amplitude, label = electrode)) +
+    geom_topo(grid_res = 300, interp_limit = "head", chan_markers = "point", chan_size = 0.5, head_size = 0.5) +
+    scale_fill_distiller(palette = "RdBu", limits = c(0, 8.7)) +
+    theme_void() +
+    coord_equal() +
+    labs(fill = expression(paste(mu, "V"))) +
+    theme(strip.text = element_text(size = 18, hjust = .5, face = "bold"),legend.position = "bottom") 
+
+# Save plot
+#ggsave("./figures/figure_topo_P300_OCD.tiff", width = 5, height = 6, units = "cm", dpi=300, compression = "lzw")
+```
 
