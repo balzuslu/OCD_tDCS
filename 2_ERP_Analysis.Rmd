@@ -66,7 +66,8 @@ my_figure_theme <- theme_classic(base_size = 11) +
         plot.title = element_text(hjust = 0.5)) 
 # instad of theme_classic: + theme_apa(base_size = 11)
 
-my_figure_colors <- c("#8ea6b4", "#465369")
+
+my_figure_colors <- c("tan1","navy","slategray3","sienna3")
 ```
 <br><br> 
 
@@ -121,7 +122,9 @@ single_trial_data_clean <- single_trial_data_clean %>%
                                               participant_id == "P_06" | participant_id == "P_08" | participant_id == "P_10" |
                                               participant_id == "P_15" | participant_id == "P_16" | participant_id == "P_18" |
                                               participant_id == "P_22" | participant_id == "P_25" | participant_id == "P_26" |
-                                              participant_id == "P_28" | participant_id == "P_30", "yes", "no")))
+                                              participant_id == "P_28" | participant_id == "P_30", "yes", "no")),
+                group_medication = as.factor(ifelse((group == "HC"), "HC", 
+                                             ifelse((group == "OCD" & medication == "no"), "OCD_no_med", "OCD_med"))))
 
 
 # Add column for (within-participant standardized) baseline EEG, N2, P3 (needed as covariate later) 
@@ -165,6 +168,7 @@ single_trial_data_clean$session             <- as.factor(single_trial_data_clean
 single_trial_data_clean$stimulation         <- as.factor(single_trial_data_clean$stimulation)
 single_trial_data_clean$stimulus_type       <- as.factor(single_trial_data_clean$stimulus_type)
 single_trial_data_clean$response_type       <- as.factor(single_trial_data_clean$response_type)
+single_trial_data_clean$group_medication    <- factor(single_trial_data_clean$group_medication, levels = c("HC", "OCD_no_med", "OCD_med"))
 
 
 # Load files with ERN quantified as area amplitude (replicating Reinhart & Woodman, 2014)
@@ -258,7 +262,7 @@ There is one participant (P_28) whose ERN deviates > 3 SD from the group mean pe
 
 # Plot distribution MFN
 hist_MFN <- ggplot(single_trial_data_clean, aes(x = MFN_0_100_FCz)) +
-  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "tan1", size = 1) +
   stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$MFN_0_100_FCz, na.rm = TRUE), 
                                      sd = sd(single_trial_data_clean$MFN_0_100_FCz, na.rm = TRUE)), color = "black", size = 0.5) +
   geom_vline(aes(xintercept = mean(MFN_0_100_FCz, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
@@ -266,7 +270,7 @@ hist_MFN <- ggplot(single_trial_data_clean, aes(x = MFN_0_100_FCz)) +
   my_figure_theme 
 
 qqplot_MFN <- ggplot(single_trial_data_clean, aes(sample = MFN_0_100_FCz)) +
-  stat_qq(color = "#8ea6b4") +
+  stat_qq(color = "tan1") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot MFN", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
   my_figure_theme
@@ -274,7 +278,7 @@ qqplot_MFN <- ggplot(single_trial_data_clean, aes(sample = MFN_0_100_FCz)) +
 
 # Plot distribution ERN
 hist_ERN <- ggplot(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",], aes(x = MFN_0_100_FCz)) +
-  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "tan1", size = 1) +
   stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",]$MFN_0_100_FCz, na.rm = TRUE), 
                                      sd = sd(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",]$MFN_0_100_FCz, na.rm = TRUE)), color = "black", size = 0.5) +
   geom_vline(aes(xintercept = mean(MFN_0_100_FCz, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
@@ -282,7 +286,7 @@ hist_ERN <- ggplot(single_trial_data_clean[single_trial_data_clean$response_type
   my_figure_theme
 
 qqplot_ERN <- ggplot(single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",], aes(sample = MFN_0_100_FCz)) +
-  stat_qq(color = "#8ea6b4") +
+  stat_qq(color = "tan1") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot ERN", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
   my_figure_theme
@@ -290,7 +294,7 @@ qqplot_ERN <- ggplot(single_trial_data_clean[single_trial_data_clean$response_ty
 
 # Plot distribution CRN
 hist_CRN <- ggplot(single_trial_data_clean[single_trial_data_clean$response_type == "correct",], aes(x = MFN_0_100_FCz)) +
-  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "tan1", size = 1) +
   stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean[single_trial_data_clean$response_type == "correct",]$MFN_0_100_FCz, na.rm = TRUE), 
                                      sd = sd(single_trial_data_clean[single_trial_data_clean$response_type == "correct",]$MFN_0_100_FCz, na.rm = TRUE)), color = "black", size = 0.5) +
   geom_vline(aes(xintercept = mean(MFN_0_100_FCz, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
@@ -298,7 +302,7 @@ hist_CRN <- ggplot(single_trial_data_clean[single_trial_data_clean$response_type
   my_figure_theme
 
 qqplot_CRN <- ggplot(single_trial_data_clean[single_trial_data_clean$response_type == "correct",], aes(sample = MFN_0_100_FCz)) +
-  stat_qq(color = "#8ea6b4") +
+  stat_qq(color = "tan1") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot CRN", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
   my_figure_theme
@@ -705,7 +709,7 @@ plot_MFN <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_MFN_no_session, aes(x = stimulation, y = MFN_0_100_FCz, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   facet_grid(cols = vars(response_type), scales = "free",labeller = labeller(response_type = response_type.labs))+
   my_figure_theme + 
@@ -737,7 +741,7 @@ plot_Pe <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_Pe_no_session, aes(x = stimulation, y = Pe_200_400_Pz, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   my_figure_theme + 
   coord_cartesian(ylim = c(-5, 20)) +
@@ -767,7 +771,7 @@ plot_MFN_session <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_MFN, aes(x = stimulation, y = MFN_0_100_FCz, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   facet_wrap(~response_type + session, nrow = 1) +
   my_figure_theme + 
@@ -806,6 +810,7 @@ contrasts(single_trial_data_clean$response_type) <- contr.sdif(2)
 contrasts(single_trial_data_clean$session)       <- contr.sdif(2)
 contrasts(single_trial_data_clean$stimulus_type) <- contr.sdif(2)
 contrasts(single_trial_data_clean$medication)    <- contr.sdif(2)
+contrasts(single_trial_data_clean$group_medication) <- contr.sdif(3)
 
 
 # Add contrasts as numerical covariates via model matrix* (specify all possible contasts for now)
@@ -1154,11 +1159,17 @@ This approach is favored and will be reported in the manuscript.
 
 #### Check covariates
 
-The purpose of including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models including the interactions are presented below. Note: The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. Continuous predictors were grand mean standardized (number of errors, number of feedback faster) or within-participant standardized (baseline EEG). <br><br>
+The purpose of including the covariates was to see how the effects change when controlling for the overall effect of the covariate. Thus, covariates were included only as fixed factor, not as random term. I first included the covariates as main effect only, not allowing any interactions with stimulation or group. However, inspecting the interactions as well might lead to new, important insights. These models including the interactions are presented below. <br><br> 
+
+The covariate number of errors refers to the actual number of errors committed by each participant, not the number included in the analyses. Continuous predictors were grand mean standardized (number of errors, number of feedback faster) or within-participant standardized (baseline EEG). <br><br>
+
+For the covariate medication, we did not run the model as ERP ~ stimulation * group * medication, since medication would be confounded with group (only OCD group contains participants with medication). Thus, we used 3 groups for this model (HC, OCD no med, OCD med) and specified the model as ERP ~ stimulation * medication group. <br><br>
+
 Inclusion of baseline activity as covariate was inspired by Frömer et al. (Nature Comm 2021; "For each ERP, we regressed out the baseline activity at the same electrode sites; baseline was included as a nuisance regressor (Alday et al., 2019)). Alday (2019) argues that including baseline activity as predictor is superior to baseline correction. Since I did baseline correction during preprocessing, adding it also as covariate is probably not advantageous. But for the response-locked ERPs in the flanker task it may be worth checking at least, since an early interval (-500 to -300 ms) was used for baseline correction and a later baseline interval (-200 to 0 ms) as covariate. So I keep the analysis with this covariate here. <br><br> 
+
 We also included trial-by-trial P3 and N2 amplitude (within-participant standardized) as a covariate. Thereby, we aimed to control for amplitude differences resulting from group or stimulation effects on stimulus-locked ERPs. Hence, we checked whether inclusion of P3/N2 as covariate changes the results of the stimulation or group effect on ERN/CRN (to control for the shift in the stimulus-locked ERP caused by group or stimulation that affects the ERN/CRN results). The model with the P3 will be reported as post hoc analysis (i.e., not stated in the preregistration), the N2 analysis is of no real interest and will not be reported. This additional analysis including P3 as predictor is justified by two papers (Klawohn et al., Psychophys., 2020; Meyer et al., Psychophys., 2017), reporting that the overlap of P300 with ERN might be problematic when trying to make inferences on effects of one of these components. Note that the P3 was quantified at CPz (since this is where this ERP typically emerges most; is also in line with the preregistration). However, since we actually aim to control for the P3 signal contained in the ERN, one could also use the P3 quantified at FCz as covariate (this value would rather reflect how much of the P3 is left in the FCz and thus affects the ERN). We decided to go with the first option. <br><br>
 
-Of these covariates, we will report P3 and medication in the manuscript. For P3, there are some interactions with P3 that we find difficult to explain. But in the model adding P3 only as main effect, the stimulation effect is not significant. For medication status, we will report the covariate analysis, not the (preregistered) subgroup analysis since this would result in non-significant results due to power problems. For the covariate model, do we use the whole group (but than medication status is confounded with group?) or only the OCD group (but then again we have not enoug power to find the stimulation effect)? For medication, we will only report that the effects hold true when controlling for medication and put the respective model only in the supplement. Will we report the analyses with covariates only for the ERN model or also for CRN/Pe?
+Of these covariates, we will report P3 and medication in the manuscript. For P3, there are some interactions with P3 that we find difficult to explain. But in the model adding P3 only as main effect, the stimulation effect is not significant. For medication status, we will report the covariate analysis, not the (preregistered) subgroup analysis since this would result in non-significant results due to power problems. For the covariate model, do we use the whole group (but than medication status is confounded with group?) or only the OCD group (but then again we have not enoug power to find the stimulation effect)? For medication, we will only report that the effects hold true when controlling for medication and put the respective model only in the supplement. Will we report the analyses with covariates the ERN, CRN, and Pe.
 
 ```{r LMM-ERN-CRN-covariates, cache = knitr_cache_enabled, results = 'asis', fig.width = 5, fig.height = 4}
 
@@ -1172,8 +1183,8 @@ control = lmerControl(optimizer = "bobyqa")
 
 
 # CRN check covariate P3 (added only as main effect)
-LMM_CRN_P3_main_effect <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC + P3_300_500_CPz_standardized  + 
-  (1 + verum_sham | participant_id),
+LMM_CRN_P3_main_effect <- lmer(MFN_0_100_FCz ~ stimulation * OCD_HC + P3_300_500_CPz_standardized  + 
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1214,28 +1225,6 @@ tab_model(LMM_ERN_P3_int_stim,LMM_CRN_P3_int_stim,
 )
 
 
-
-# Plot predicted effects for ERN group and stimulation
-plot_ERN_stim2 <- plot_model(LMM_ERN_P3_int_stim,
-                                type   = "pred",
-                                terms  = c("group", "stimulation"),
-                                ci.lvl = .95) +
-  labs(title = "Model-predicted ERN values",
-       x     = "Group",
-       y     = "ERN (mean amplitude 0-100 ms at FCz [μV])\n") +
-  my_figure_theme +
-  aes(color = group) +
-  scale_color_manual(name = "Stimulation condition", labels = c("sham","cathodal"), values = c("slategray3", "navy")) +
-  coord_cartesian(ylim = c(-9, 2), xlim = c(0.5,2.5)) +
-  scale_y_continuous(breaks=seq(-8, 2, 2), expand = c(0,0)) +
-  scale_x_continuous(labels=c("HC","OCD"), breaks=c(1,2), expand=c(0,0))
-plot_ERN_stim2
-
-
-# Save plot
-ggsave("./figures/figure_LMM_ERN_control_P300_plot.tiff", width = 10, height = 10, units = "cm", dpi=300, compression = "lzw")
-
-
 # ERN check covariate P3
 LMM_ERN_P3 <- lmer(MFN_0_100_FCz ~ verum_sham * group * P3_300_500_CPz_standardized  + 
   (1 + verum_sham | participant_id),
@@ -1272,7 +1261,7 @@ plot_P3_stimulation <- plot_model(LMM_ERN_P3,
        y     = "ERN (mean amplitude 0-100 ms at FCz [μV])") +
   my_figure_theme +
   aes(color = group) +
-  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("#ffad48", "#43b7c2")) +
+  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("slategray3", "navy")) +
   theme(axis.ticks.x = element_line()) +
   coord_cartesian(ylim = c(-45,40), xlim = c(-6, 4)) +
   scale_y_continuous(breaks=seq(-40, 40, 10), expand = c(0,0)) +
@@ -1290,29 +1279,12 @@ plot_P3_group <- plot_model(LMM_ERN_P3,
        y     = "ERN (mean amplitude 0-100 ms at FCz [μV])") +
   my_figure_theme +
   aes(color = group) +
-  scale_color_manual(name = "Group", labels = c("HC","OCD"), values = c("#ffad48", "#43b7c2")) +
+  scale_color_manual(name = "Group", labels = c("HC","OCD"), values = c("slategray3", "navy")) +
   theme(axis.ticks.x = element_line()) +
   coord_cartesian(ylim = c(-45,40), xlim = c(-6, 4)) +
   scale_y_continuous(breaks=seq(-40, 40, 10), expand = c(0,0)) +
   scale_x_continuous(breaks=seq(-6, 4, 2), expand = c(0,0))
 plot_P3_group
-
-
-# Plot predicted effects for interaction P3 * group * stimulation
-plot_P3_stimulation_group <- plot_model(LMM_ERN_P3,
-                                type   = "pred",
-                                terms  = c("P3_300_500_CPz_standardized","verum_sham","group"),
-                                ci.lvl = .95) +
-  labs(title = "ERN LMM: Plot interaction between P3 and group",
-       x     = "P3 (standardized mean amplitude 300-500 ms at CPz [μV])",
-       y     = "ERN (mean amplitude 0-100 ms at FCz [μV])") +
-  my_figure_theme +
-  aes(color = group) +
-  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("#ffad48", "#43b7c2")) +
-  theme(axis.ticks.x = element_line()) +
-  coord_cartesian(xlim = c(-6, 4)) +
-  scale_x_continuous(breaks=seq(-6, 4, 2), expand = c(0,0))
-plot_P3_stimulation_group
 
 
 
@@ -1473,7 +1445,7 @@ tab_model(LMM_ERN_stimulus_type, LMM_CRN_stimulus_type,
 
 
 # ERN check covariate medication
-LMM_ERN_medication <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * medication  + 
+LMM_ERN_medication <- lmer(MFN_0_100_FCz ~ verum_sham * group_medication + 
   (1 + verum_sham | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
@@ -1482,7 +1454,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 
 # CRN check covariate medication
-LMM_CRN_medication <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * medication  +
+LMM_CRN_medication <- lmer(MFN_0_100_FCz ~ verum_sham * group_medication + 
   (1 + verum_sham | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
@@ -1492,10 +1464,42 @@ control = lmerControl(optimizer = "bobyqa")
 
 # Display models in one table
 tab_model(LMM_ERN_medication, LMM_CRN_medication,
-  dv.labels = c("ERN [μV], covariate medication","CRN [μV], covariate medication"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  dv.labels = c("ERN [μV], covariate medication (1 = HC, 2 = OCD no med, 3 = OCD med)", "CRN [μV], covariate medication (1 = HC, 2 = OCD no med, 3 = OCD med)"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
 )
+
+
+# ERN plot interaction stimulation * group_medication 
+plot_ERN_med_predicted <- plot_model(LMM_ERN_medication,
+                                type   = "pred",
+                                terms  = c("group_medication","verum_sham"),
+                                ci.lvl = .95) +
+  labs(title = "Predicted ERN amplitude",
+       x     = "Group",
+       y     = "ERN [μV]") +
+  my_figure_theme +
+  coord_cartesian(ylim = c(-15,5)) +
+  scale_y_continuous(breaks=seq(-15, 5, 5), expand = c(0,0)) +
+  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("slategray3", "navy"))
+plot_ERN_med_predicted
+
+
+
+# CRN plot interaction stimulation * group_medication 
+plot_CRN_med_predicted <- plot_model(LMM_CRN_medication,
+                                type   = "pred",
+                                terms  = c("group_medication","verum_sham"),
+                                ci.lvl = .95) +
+  labs(title = "Predicted CRN amplitude",
+       x     = "Group",
+       y     = "CRN [μV]") +
+  my_figure_theme +
+  coord_cartesian(ylim = c(-2,10)) +
+  scale_y_continuous(breaks=seq(-2, 10, 2), expand = c(0,0)) +
+  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("slategray3", "navy"))
+plot_CRN_med_predicted
+
 
 
 # ERN check covariate medication (only OCD group)
@@ -1719,36 +1723,9 @@ Is same as in non-nested models (tab LMM separately for ERN / CRN)
 
 ```{r LMM-ERN-CRN-per-group-covariates, cache = knitr_cache_enabled}
 
-
-# ERN check covariate P3 (added only as main effect)
-LMM_ERN_group_P3_main_effect <- lmer(MFN_0_100_FCz ~ group/stimulation + P3_300_500_CPz_standardized  + 
-  (1 + verum_sham | participant_id),
-data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
-REML = TRUE,
-control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
-
-
-# CRN check covariate P3 (added only as main effect)
-LMM_CRN_group_P3_main_effect <- lmer(MFN_0_100_FCz ~ group/stimulation + P3_300_500_CPz_standardized  + 
-  (1 + verum_sham | participant_id),
-data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
-REML = TRUE,
-control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
-
-
-# Display models in one table
-tab_model(LMM_ERN_group_P3_main_effect,LMM_CRN_group_P3_main_effect,
-  dv.labels = c("ERN [μV], covariate P3 (added only as main effect)","CRN [μV], covariate P3 (added only as main effect)"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
-  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
-  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
-)
-
-
 # ERN check covariate P3
 LMM_ERN_group_P3 <- lmer(MFN_0_100_FCz ~ group/stimulation * P3_300_500_CPz_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1757,7 +1734,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 # CRN check covariate P3
 LMM_CRN_group_P3 <- lmer(MFN_0_100_FCz ~ group/stimulation * P3_300_500_CPz_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1774,7 +1751,7 @@ tab_model(LMM_ERN_group_P3, LMM_CRN_group_P3,
 
 # ERN check covariate N2
 LMM_ERN_group_N2 <- lmer(MFN_0_100_FCz ~ group/stimulation * N2_200_300_FCz_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1783,7 +1760,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 # CRN check covariate N2
 LMM_CRN_group_N2 <- lmer(MFN_0_100_FCz ~ group/stimulation * N2_200_300_FCz_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1800,7 +1777,7 @@ tab_model(LMM_ERN_group_N2, LMM_CRN_group_N2,
 
 # ERN check covariate baseline EEG
 LMM_ERN_group_baseline_EEG <- lmer(MFN_0_100_FCz ~ group/stimulation * MFN_baseline_pre_200_0_FCz_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1809,7 +1786,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 # CRN check covariate baseline EEG
 LMM_CRN_group_baseline_EEG <- lmer(MFN_0_100_FCz ~ group/stimulation * MFN_baseline_pre_200_0_FCz_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1826,7 +1803,7 @@ tab_model(LMM_ERN_group_baseline_EEG,LMM_CRN_group_baseline_EEG,
 
 # ERN check covariate session
 LMM_ERN_group_session <- lmer(MFN_0_100_FCz ~ group/stimulation * session  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1835,7 +1812,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 # CRN check covariate session
 LMM_CRN_group_session <- lmer(MFN_0_100_FCz ~ group/stimulation * session  +
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1852,7 +1829,7 @@ tab_model(LMM_ERN_group_session,LMM_CRN_group_session,
 
 # ERN check covariate number of errors (predictor was z standardized)
 LMM_ERN_group_number_errors <- lmer(MFN_0_100_FCz ~ group/stimulation * number_errors_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1861,7 +1838,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 # CRN check covariate number of errors (predictor was z standardized)
 LMM_CRN_group_number_errors <- lmer(MFN_0_100_FCz ~ group/stimulation * number_errors_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1878,7 +1855,7 @@ tab_model(LMM_ERN_group_number_errors,LMM_CRN_group_number_errors,
 
 # ERN check covariate number of feedback faster (predictor was z standardized)
 LMM_ERN_group_number_feedback_faster <- lmer(MFN_0_100_FCz ~ group/stimulation * number_feedback_faster_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1887,7 +1864,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 # CRN check covariate number of feedback faster (predictor was z standardized)
 LMM_CRN_group_number_feedback_faster <- lmer(MFN_0_100_FCz ~ group/stimulation * number_feedback_faster_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1904,7 +1881,7 @@ tab_model(LMM_ERN_group_number_feedback_faster,LMM_CRN_group_number_feedback_fas
 
 # ERN check covariate stimulus type
 LMM_ERN_group_stimulus_type <- lmer(MFN_0_100_FCz ~ group/stimulation * stimulus_type  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1913,7 +1890,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 # CRN check covariate stimulus_type
 LMM_CRN_group_stimulus_type <- lmer(MFN_0_100_FCz ~ group/stimulation * stimulus_type  +
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1929,8 +1906,8 @@ tab_model(LMM_ERN_group_stimulus_type,LMM_CRN_group_stimulus_type,
 
 
 # ERN check covariate medication
-LMM_ERN_group_medication <- lmer(MFN_0_100_FCz ~ group/stimulation * medication  + 
-  (1 + verum_sham | participant_id),
+LMM_ERN_group_medication <- lmer(MFN_0_100_FCz ~ group_medication/stimulation  + 
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1938,8 +1915,8 @@ control = lmerControl(optimizer = "bobyqa")
 
 
 # CRN check covariate medication
-LMM_CRN_group_medication <- lmer(MFN_0_100_FCz ~ group/stimulation * medication  +
-  (1 + verum_sham | participant_id),
+LMM_CRN_group_medication <- lmer(MFN_0_100_FCz ~ group_medication/stimulation  +
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1948,7 +1925,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 # Display models in one table
 tab_model(LMM_ERN_group_medication,LMM_CRN_group_medication,
-  dv.labels = c("ERN [μV], covariate medication","CRN [μV], covariate medication"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  dv.labels = c("ERN [μV], covariate medication (1 = HC, 2 = OCD no med, 3 = OCD med)","CRN [μV], covariate medication (1 = HC, 2 = OCD no med, 3 = OCD med)"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 25, digits.re = 3
 )
@@ -1956,7 +1933,7 @@ tab_model(LMM_ERN_group_medication,LMM_CRN_group_medication,
 
 # ERN include only unmedicated participants
 LMM_ERN_group_unmedicated <- lmer(MFN_0_100_FCz ~ group/stimulation +  
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$medication == "no",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -1965,7 +1942,7 @@ control = lmerControl(optimizer = "bobyqa")
 
 # CRN  include only unmedicated participants
 LMM_CRN_group_unmedicated <- lmer(MFN_0_100_FCz ~ group/stimulation + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct" & single_trial_data_clean$medication == "no",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -2079,34 +2056,6 @@ Notes for assumption check would be the same as written for the MFN model.
 
 ```{r LMM-Pe-covariates, cache = knitr_cache_enabled, fig.width = 5, fig.height = 4, results = 'asis'}
 
-# Pe check covariate P3 (added only as main effect)
-LMM_Pe_P3_main_effect <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC + P3_300_500_CPz_standardized  + 
-  (1 + verum_sham | participant_id),
-data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
-REML = TRUE,
-control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
-tab_model(LMM_Pe_P3_main_effect,
-  dv.labels = "Pe [μV], covariate P3 (added only as main effect)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
-  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
-  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
-)
-
-
-# Pe check covariate P3 (added only in interaction with stimulation)
-LMM_Pe_P3_int_stim <- lmer(Pe_200_400_Pz ~ verum_sham * (OCD_HC + P3_300_500_CPz_standardized)  + 
-  (1 + verum_sham | participant_id),
-data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
-REML = TRUE,
-control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
-tab_model(LMM_Pe_P3_int_stim,
-  dv.labels = "Pe [μV], covariate P3 (added only in interaction with stimulation)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
-  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
-  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
-)
-
-
 # Pe check covariate P3
 LMM_Pe_P3 <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * P3_300_500_CPz_standardized  + 
   (1 + verum_sham | participant_id),
@@ -2213,94 +2162,33 @@ tab_model(LMM_Pe_stimulus_type,
 
 
 # Pe check covariate medication
-LMM_Pe_medication <- lmer(Pe_200_400_Pz ~ stimulation * group * medication   + 
-  (1 + stimulation | participant_id),
+LMM_Pe_medication <- lmer(Pe_200_400_Pz ~ verum_sham * group_medication + 
+  (1 + verum_sham | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
 # Convergence, singulatrity, PCA checked, all ok
 tab_model(LMM_Pe_medication,
-  dv.labels = "Pe [μV], covariate medication", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  dv.labels = "Pe [μV], covariate medication (1 = HC, 2 = OCD no med, 3 = OCD med)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
 
 
-# Plot interaction stimulation * group 
-plot_Pe_med_predicted1 <- plot_model(LMM_Pe_medication,
+# Plot interaction stimulation * group_medication 
+plot_Pe_med_predicted <- plot_model(LMM_Pe_medication,
                                 type   = "pred",
-                                terms  = c("group","stimulation"),
+                                terms  = c("group_medication","verum_sham"),
                                 ci.lvl = .95) +
   labs(title = "Predicted Pe amplitude",
        x     = "Group",
        y     = "Pe [μV]") +
   my_figure_theme +
-  coord_cartesian(ylim = c(6,16)) +
-  scale_y_continuous(breaks=seq(6, 16, 2), expand = c(0,0)) +
-  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("#ffad48", "#43b7c2"))
-plot_Pe_med_predicted1
-
-
-# Plot interaction stimulation * medication
-plot_Pe_med_predicted2 <- plot_model(LMM_Pe_medication,
-                                type   = "pred",
-                                terms  = c("medication","stimulation"),
-                                ci.lvl = .95) +
-  labs(title = "Predicted Pe amplitude",
-       x     = "Medication",
-       y     = "Pe [μV]") +
-  my_figure_theme +
-  coord_cartesian(ylim = c(0,12)) +
-  scale_y_continuous(breaks=seq(0, 12, 2), expand = c(0,0)) +
-  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("#ffad48", "#43b7c2"))
-plot_Pe_med_predicted2
-
-
-
-# Pe check covariate medication (only additive)
-LMM_Pe_medication_additive <- lmer(Pe_200_400_Pz ~ stimulation * group + medication   + 
-  (1 + stimulation | participant_id),
-data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
-REML = TRUE,
-control = lmerControl(optimizer = "bobyqa")
-)
-# Convergence, singulatrity, PCA checked, all ok
-tab_model(LMM_Pe_medication_additive,
-  dv.labels = "Pe [μV], covariate medication (only additive)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
-  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
-  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
-)
-
-
-# Plot interaction stimulation * group 
-plot_Pe_med_predicted1 <- plot_model(LMM_Pe_medication_additive,
-                                type   = "pred",
-                                terms  = c("group","stimulation"),
-                                ci.lvl = .95) +
-  labs(title = "Predicted Pe amplitude",
-       x     = "Group",
-       y     = "Pe [μV]") +
-  my_figure_theme +
-  coord_cartesian(ylim = c(6,16)) +
-  scale_y_continuous(breaks=seq(6, 16, 2), expand = c(0,0)) +
-  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("#ffad48", "#43b7c2"))
-plot_Pe_med_predicted1
-
-
-# Plot interaction stimulation * medication
-plot_Pe_med_predicted2 <- plot_model(LMM_Pe_medication_additive,
-                                type   = "pred",
-                                terms  = c("medication","stimulation"),
-                                ci.lvl = .95) +
-  labs(title = "Predicted Pe amplitude",
-       x     = "Medication",
-       y     = "Pe [μV]") +
-  my_figure_theme +
-  coord_cartesian(ylim = c(0,12)) +
-  scale_y_continuous(breaks=seq(0, 12, 2), expand = c(0,0)) +
-  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("#ffad48", "#43b7c2"))
-plot_Pe_med_predicted2
+  coord_cartesian(ylim = c(4,16)) +
+  scale_y_continuous(breaks=seq(4, 16, 2), expand = c(0,0)) +
+  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("slategray3", "navy"))
+plot_Pe_med_predicted
 
 
 # Pe check covariate medication (only OCD group)
@@ -2354,7 +2242,7 @@ For further infos, see notes in section non-nested ERN-CRN models.
 
 * **Pe group difference**: Remains non-significant in all models. 
 
-* **Pe stimulation effect**: Remains significant when including the covariate P3, N2, session, number of errors, number of feedback faster. Turns trend when including the covariate baseline EEG. Turns non-significant when including the variable stimulus type or medication in the model. 
+* **Pe stimulation effect**: Remains significant when including the covariate P3, N2, session, number of errors, number of feedback faster, medication. Turns trend when including the covariate baseline EEG. Turns non-significant when including the variable stimulus type in the model. 
 
 * **Subgroup analysis**: When including only unmedicated participants or unmedicated patients, the stimulation effect on Pe remains significant. 
 <br><br>
@@ -2405,23 +2293,9 @@ Is same as in non-nested model (tab LMM Pe)
 
 ```{r LMM-Pe-per-group-covariates, cache = knitr_cache_enabled}
 
-# Pe check covariate P3 (added only as main effect)
-LMM_Pe_group_P3_main_effect <- lmer(Pe_200_400_Pz ~ group/stimulation + P3_300_500_CPz_standardized  + 
-  (1 + verum_sham | participant_id),
-data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
-REML = TRUE,
-control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
-tab_model(LMM_Pe_group_P3_main_effect,
-  dv.labels = "Pe [μV], covariate P3 (added only as main effect)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
-  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
-  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
-)
-
-
 # Pe check covariate P3
 LMM_Pe_group_P3 <- lmer(Pe_200_400_Pz ~ group/stimulation * P3_300_500_CPz_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -2436,7 +2310,7 @@ tab_model(LMM_Pe_group_P3,
 
 # Pe check covariate N2
 LMM_Pe_group_N2 <- lmer(Pe_200_400_Pz ~ group/stimulation * N2_200_300_FCz_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -2451,7 +2325,7 @@ tab_model(LMM_Pe_group_N2,
 
 # Pe check covariate baseline EEG
 LMM_Pe_group_baseline_EEG <- lmer(Pe_200_400_Pz ~ group/stimulation * Pe_baseline_pre_200_0_Pz_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -2466,7 +2340,7 @@ tab_model(LMM_Pe_group_baseline_EEG,
 
 # Pe check covariate session
 LMM_Pe_group_session <- lmer(Pe_200_400_Pz ~ group/stimulation * session  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -2481,7 +2355,7 @@ tab_model(LMM_Pe_group_session,
 
 # Pe check covariate number of errors (predictor was z standardized)
 LMM_Pe_group_number_errors <- lmer(Pe_200_400_Pz ~ group/stimulation * number_errors_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -2496,7 +2370,7 @@ tab_model(LMM_Pe_group_number_errors,
  
 # Pe check covariate number of feedback faster (predictor was z standardized)
 LMM_Pe_group_number_feedback_faster <- lmer(Pe_200_400_Pz ~ group/stimulation * number_feedback_faster_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -2511,7 +2385,7 @@ tab_model(LMM_Pe_group_number_feedback_faster,
 
 # Pe check covariate stimulus type
 LMM_Pe_group_stimulus_type <- lmer(Pe_200_400_Pz ~ group/stimulation * stimulus_type  + 
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -2525,15 +2399,15 @@ tab_model(LMM_Pe_group_stimulus_type,
 
 
 # Pe check covariate medication
-LMM_Pe_group_medication <- lmer(Pe_200_400_Pz ~ group/stimulation * medication  + 
-  (1 + verum_sham | participant_id),
+LMM_Pe_group_medication <- lmer(Pe_200_400_Pz ~ group_medication/stimulation  + 
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
 # Convergence, singulatrity, PCA checked, all ok
 tab_model(LMM_Pe_group_medication,
-  dv.labels = "Pe [μV], covariate medication", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  dv.labels = "Pe [μV], covariate medication (1 = HC, 2 = OCD no med, 3 = OCD med)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
@@ -2541,7 +2415,7 @@ tab_model(LMM_Pe_group_medication,
 
 # Pe include only unmedicated participants
 LMM_Pe_group_unmedicated <- lmer(Pe_200_400_Pz ~ group/stimulation  +  
-  (1 + verum_sham | participant_id),
+  (1 + stimulation | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$medication == "no",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
