@@ -62,7 +62,7 @@ my_figure_theme <- theme_classic(base_size = 11) +
         plot.title = element_text(hjust = 0.5)) 
 # instad of theme_classic: + theme_apa(base_size = 11)
 
-my_figure_colors <- c("#8ea6b4", "#465369")
+my_figure_colors <- c("tan1","navy","slategray3","sienna3")
 ```
 <br><br> 
 
@@ -266,7 +266,7 @@ The groups differ in the feedback they received. The OCD group received more fee
 
 # Plot distribution RT
 hist_rt <- ggplot(single_trial_data_clean, aes(x = rt)) +
-  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "tan1", size = 1) +
   stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$rt, na.rm = TRUE), 
                                      sd = sd(single_trial_data_clean$rt, na.rm = TRUE)), color = "black", size = 0.5) +
   geom_vline(aes(xintercept = mean(rt, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
@@ -274,7 +274,7 @@ hist_rt <- ggplot(single_trial_data_clean, aes(x = rt)) +
   my_figure_theme
 
 qqplot_rt <- ggplot(single_trial_data_clean, aes(sample = rt)) +
-  stat_qq(color = "#8ea6b4") +
+  stat_qq(color = "tan1") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot RT", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
   my_figure_theme
@@ -282,7 +282,7 @@ qqplot_rt <- ggplot(single_trial_data_clean, aes(sample = rt)) +
 
 # Plot distribution log RT
 hist_rt_log <- ggplot(single_trial_data_clean, aes(x = rt_log)) +
-  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "tan1", size = 1) +
   stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$rt_log, na.rm = TRUE), 
                                      sd = sd(single_trial_data_clean$rt_log, na.rm = TRUE)), color = "black", size = 0.5) +
   geom_vline(aes(xintercept = mean(rt_log, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
@@ -290,7 +290,7 @@ hist_rt_log <- ggplot(single_trial_data_clean, aes(x = rt_log)) +
   my_figure_theme
 
 qqplot_rt_log <- ggplot(single_trial_data_clean, aes(sample = rt_log)) +
-  stat_qq(color = "#8ea6b4") +
+  stat_qq(color = "tan1") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot log(RT)", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
   my_figure_theme
@@ -298,7 +298,7 @@ qqplot_rt_log <- ggplot(single_trial_data_clean, aes(sample = rt_log)) +
 
 # Plot distribution PES
 hist_pes <- ggplot(single_trial_data_clean[!is.na(single_trial_data_clean$pes),], aes(x = pes)) +
-  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "tan1", size = 1) +
   stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$pes, na.rm = TRUE), 
                                      sd = sd(single_trial_data_clean$pes, na.rm = TRUE)), color = "black", size = 0.5) +
   geom_vline(aes(xintercept = mean(pes, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
@@ -306,7 +306,7 @@ hist_pes <- ggplot(single_trial_data_clean[!is.na(single_trial_data_clean$pes),]
   my_figure_theme
 
 qqplot_pes <- ggplot(single_trial_data_clean[!is.na(single_trial_data_clean$pes),], aes(sample = pes)) +
-  stat_qq(color = "#8ea6b4") +
+  stat_qq(color = "tan1") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot PES", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
   my_figure_theme
@@ -319,7 +319,7 @@ accuracy_histogram <- single_trial_data_clean %>%
   dplyr::ungroup()
 
 hist_accuracy <- ggplot(accuracy_histogram, aes(x = mean_accuracy)) +
-  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "tan1", size = 1) +
   stat_function(fun = dnorm, args = list(mean = mean(accuracy_histogram$mean_accuracy, na.rm = TRUE), 
                                      sd = sd(accuracy_histogram$mean_accuracy, na.rm = TRUE)), color = "black", size = 0.5) +
   geom_vline(aes(xintercept = mean(mean_accuracy, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
@@ -327,7 +327,7 @@ hist_accuracy <- ggplot(accuracy_histogram, aes(x = mean_accuracy)) +
   my_figure_theme
 
 qqplot_accuracy <- ggplot(accuracy_histogram, aes(sample = mean_accuracy)) +
-  stat_qq(color = "#8ea6b4") +
+  stat_qq(color = "tan1") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot Accuracy", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
   my_figure_theme
@@ -335,7 +335,7 @@ qqplot_accuracy <- ggplot(accuracy_histogram, aes(sample = mean_accuracy)) +
 
 # Plot distribution PEA 
 hist_pea <- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(x = pea)) +
-  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "tan1", size = 1) +
   stat_function(fun = dnorm, args = list(mean = mean(df_aggregated_per_subject_pes_pea_pca$pea, na.rm = TRUE), 
                                      sd = sd(df_aggregated_per_subject_pes_pea_pca$pea, na.rm = TRUE)), color = "black", size = 0.5) +
   geom_vline(aes(xintercept = mean(pea, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
@@ -343,7 +343,7 @@ hist_pea <- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(x = pea)) +
   my_figure_theme
 
 qqplot_pea <- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(sample = pea)) +
-  stat_qq(color = "#8ea6b4") +
+  stat_qq(color = "tan1") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot Mean Post-Error Accuracy", x = "Theoretical Quantiles", y = "Sample Quantiles") +
   my_figure_theme
@@ -351,7 +351,7 @@ qqplot_pea <- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(sample = pea)) +
 
 # Plot distribution PCA 
 hist_pca <- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(x = pca)) +
-  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "tan1", size = 1) +
   stat_function(fun = dnorm, args = list(mean = mean(df_aggregated_per_subject_pes_pea_pca$pca, na.rm = TRUE), 
                                      sd = sd(df_aggregated_per_subject_pes_pea_pca$pca, na.rm = TRUE)), color = "black", size = 0.5) +
   geom_vline(aes(xintercept = mean(pca, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
@@ -359,7 +359,7 @@ hist_pca <- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(x = pca)) +
   my_figure_theme
 
 qqplot_pca <- ggplot(df_aggregated_per_subject_pes_pea_pca, aes(sample = pca)) +
-  stat_qq(color = "#8ea6b4") +
+  stat_qq(color = "tan1") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot Mean Post-Correct Accuracy", x = "Theoretical Quantiles", y = "Sample Quantiles") +
   my_figure_theme
@@ -467,7 +467,9 @@ descriptive_statistics_accuracy <- summarySEwithinO(
   betweenvars   = "group",
   idvar         = "participant_id", 
   conf.interval = .95
-) 
+) %>%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100))
 
 
 ##### PES
@@ -489,7 +491,9 @@ descriptive_statistics_pea <- summarySEwithinO(
   betweenvars   = "group",
   idvar         = "participant_id", 
   conf.interval = .95
-) 
+) %>%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100))
 
 
 ##### PCA
@@ -500,7 +504,9 @@ descriptive_statistics_pca <- summarySEwithinO(
   betweenvars   = "group",
   idvar         = "participant_id", 
   conf.interval = .95
-) 
+) %>%
+  # Multiply numeric values by 100 to obtain values in percent
+  dplyr::mutate_if(is.numeric, list(~ . * 100))
 
 
 
@@ -712,7 +718,7 @@ plot_rt <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_rt_no_session_no_stim_type, aes(x = stimulation, y = rt, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   facet_wrap(~response_type, nrow = 1) +
   my_figure_theme + 
@@ -730,7 +736,7 @@ plot_accuracy <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_accuracy_no_session_no_stim_type, aes(x = stimulation, y = accuracy_numeric, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
 #  facet_wrap(~stimulus_type, nrow = 1) +
   coord_cartesian(ylim = c(70, 100)) +
@@ -748,9 +754,9 @@ plot_pes <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_pes_no_session, aes(x = stimulation, y = pes, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
-    coord_cartesian(ylim = c(-50, 100)) +
+  coord_cartesian(ylim = c(-50, 100)) +
   scale_y_continuous(expand = c(0, 0)) +
   my_figure_theme + 
   labs(x = "\n", y = "Post-error slowing (ms)")
@@ -765,7 +771,7 @@ plot_pea <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_pea_no_session, aes(x = stimulation, y = pea, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   my_figure_theme + 
   labs(x = "\nStimulation condition", y = "Post-error accuracy (ms)")
@@ -780,7 +786,7 @@ plot_pca <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_pca_no_session, aes(x = stimulation, y = pca, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   my_figure_theme + 
   labs(x = "\nStimulation condition", y = "Post-correct accuracy (ms)")
@@ -839,7 +845,7 @@ plot_rt_session <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_rt, aes(x = stimulation, y = rt, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   facet_wrap(~response_type + stimulus_type + session, nrow = 1) +
   my_figure_theme + 
@@ -855,7 +861,7 @@ plot_accuracy_session <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_accuracy, aes(x = stimulation, y = accuracy_numeric, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   facet_wrap(~stimulus_type + session, nrow = 1) +
   my_figure_theme + 
@@ -871,7 +877,7 @@ plot_pes_session <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_pes, aes(x = stimulation, y = pes, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   facet_wrap(~session, nrow = 1) +
   my_figure_theme + 
@@ -887,7 +893,7 @@ plot_pea_session <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_pea, aes(x = stimulation, y = pea, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   facet_wrap(~session, nrow = 1) +
   my_figure_theme + 
@@ -903,7 +909,7 @@ plot_pca_session <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_pca, aes(x = stimulation, y = pca, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   facet_wrap(~session, nrow = 1) +
   my_figure_theme + 
@@ -1517,7 +1523,7 @@ plot_acc_predicted <- plot_model(GLMM_accuracy,
        x     = "Group",
        y     = "Accuracy") +
   my_figure_theme +
-  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("#ffad48", "#43b7c2"))
+  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("slategray3", "navy"))
 plot_acc_predicted
 ```
 <br><br>
@@ -1624,7 +1630,7 @@ plot_acc_predicted <- plot_model(GLMM_accuracy_PEIA,
        x     = "Accuracy on the previous trial",
        y     = "Accuracy") +
   my_figure_theme +
-  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("#ffad48", "#43b7c2"))
+  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("slategray3", "navy"))
 plot_acc_predicted
 ```
 <br><br>
@@ -1733,7 +1739,7 @@ overdisp_fun(GLMM_accuracy) # If the p-value is < 0.05, the data are overdispers
 
 For further infos on inclusion of covariates, see notes in section LMM Anylses RT, tab "Check covariates".
 
-```{r LMM-accuracy-covariates, cache = knitr_cache_enabled}
+```{r GLMM-accuracy-covariates, cache = knitr_cache_enabled}
 
 # Accuracy check covariate session (not included in all interactions for reasons of convergence)
 GLMM_accuracy_session <- glmer(accuracy_numeric ~ verum_sham * OCD_HC * (accuracy_prev_trial + session) +

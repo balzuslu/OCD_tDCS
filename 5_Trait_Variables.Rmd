@@ -43,7 +43,7 @@ my_figure_theme <- theme_classic(base_size = 11) +
         plot.title = element_text(hjust = 0.5)) 
 # instad of theme_classic: + theme_apa(base_size = 11)
 
-my_figure_colors <- c("#8ea6b4", "#465369")
+my_figure_colors <- c("tan1","navy","slategray3","sienna3")
 
 
 # Create function to label outliers

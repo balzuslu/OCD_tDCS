@@ -58,7 +58,7 @@ my_figure_theme <- theme_classic(base_size = 11) +
         plot.title = element_text(hjust = 0.5)) 
 # instad of theme_classic: + theme_apa(base_size = 11)
 
-my_figure_colors <- c("#8ea6b4", "#465369")
+my_figure_colors <- c("tan1","navy","slategray3","sienna3")
 ```
 <br><br> 
 
@@ -167,7 +167,7 @@ In this analysis, ISCR values for the time window 1-5 s after the response were 
 
 # Plot distribution ISCR
 hist_ISCR <- ggplot(single_trial_data_clean, aes(x = ISCR)) +
-  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "tan1", size = 1) +
   stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$ISCR, na.rm = TRUE), 
                                      sd = sd(single_trial_data_clean$ISCR, na.rm = TRUE)), color = "black", size = 0.5) +
   geom_vline(aes(xintercept = mean(ISCR, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
@@ -175,7 +175,7 @@ hist_ISCR <- ggplot(single_trial_data_clean, aes(x = ISCR)) +
   my_figure_theme 
 
 qqplot_ISCR <- ggplot(single_trial_data_clean, aes(sample = ISCR)) +
-  stat_qq(color = "#8ea6b4") +
+  stat_qq(color = "tan1") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot ISCR", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
   my_figure_theme
@@ -183,7 +183,7 @@ qqplot_ISCR <- ggplot(single_trial_data_clean, aes(sample = ISCR)) +
 
 # Plot distribution ISCR sqrt
 hist_ISCR_sqrt <- ggplot(single_trial_data_clean, aes(x = ISCR_sqrt)) +
-  geom_histogram(aes(y = ..density..), color="gray33", fill = "#8ea6b4", size = 1) +
+  geom_histogram(aes(y = ..density..), color="gray33", fill = "tan1", size = 1) +
   stat_function(fun = dnorm, args=list(mean = mean(single_trial_data_clean$ISCR_sqrt, na.rm = TRUE), 
                                      sd = sd(single_trial_data_clean$ISCR_sqrt, na.rm = TRUE)), color = "black", size = 0.5) +
   geom_vline(aes(xintercept = mean(ISCR_sqrt, na.rm = TRUE)), color = "black", linetype = "dashed", size = 1) +
@@ -191,7 +191,7 @@ hist_ISCR_sqrt <- ggplot(single_trial_data_clean, aes(x = ISCR_sqrt)) +
   my_figure_theme
 
 qqplot_ISCR_sqrt <- ggplot(single_trial_data_clean, aes(sample = ISCR_sqrt)) +
-  stat_qq(color = "#8ea6b4") +
+  stat_qq(color = "tan1") +
   stat_qq_line() +
   labs (title = "Q-Q-Plot ISCR_sqrt", x = "Theoretical Quantiles", y = "Sample Quantiles") + 
   my_figure_theme
@@ -303,7 +303,7 @@ plot_SCR <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_SCR_no_session, aes(x = stimulation, y = ISCR_z, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   facet_wrap(~response_type, nrow = 1) +
   my_figure_theme + 
@@ -332,7 +332,7 @@ plot_SCR_session <- ggplot() +
                 position = position_dodge(width = 0.7), width = 0, size = 0.5) +
   geom_line(data = descriptive_statistics_SCR, aes(x = stimulation, y = ISCR_z, group = group, color = group), 
             position = position_dodge(width = 0.7), linetype = 3, size = 0.5) +
-  scale_colour_manual(values = c("#b23f00", "#ff9b64"), name = "Group:") +
+  scale_colour_manual(values = c("sienna3", "slategray3"), name = "Group:") +
   scale_fill_manual(values = my_figure_colors, name = "Group:") +
   facet_wrap(~response_type + session, nrow = 1) +
   my_figure_theme + 
@@ -552,7 +552,7 @@ The plot shows the predicted values (marginal effects) for the interaction group
 # Respecify LMM: Enter fixed effects as factors, not contrasts (to have all factor levels in the plot)
 # Double bar syntax for zero-correlation parameter model won't work anymore (full model still converges, no singular fit, results are pretty much the same)
 LMM_scr_errors_plot <- lmer(ISCR_sqrt ~ stimulation * group * MFN_0_100_FCz_z +
-  (1 + verum_sham + MFN_0_100_FCz_z | participant_id),
+  (1 + stimulation + MFN_0_100_FCz_z | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
@@ -569,7 +569,7 @@ plot_scr_interaction_group_stimulation_ERN <- plot_model(LMM_scr_errors_plot,
   my_figure_theme +
   aes(linetype = group, color = group) + 
   scale_linetype_manual(name = "Stimulation", values = c("solid",   "dashed")) +
-  scale_color_manual(name =    "Stimulation", values = c("#ffad48", "#43b7c2")) +
+  scale_color_manual(name =    "Stimulation", values = my_figure_colors) +
   coord_cartesian(ylim = c(0, 1), xlim = c(-6, 4)) +
   scale_y_continuous(breaks=seq(0, 1, 0.2), expand = c(0,0)) +
   scale_x_continuous(breaks=seq(-6, 4, 2),  expand = c(0,0)) + 
