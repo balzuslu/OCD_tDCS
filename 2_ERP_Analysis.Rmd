@@ -919,7 +919,7 @@ performance::check_normality(LMM_MFN, effects = "random")
 
 #### Model
 
-```{r LMM-ERN-CRN, cache = knitr_cache_enabled, fig.width = 4, fig.height = 4, results = 'asis'}
+```{r LMM-ERN-CRN, cache = knitr_cache_enabled}
 
 # ERN
 LMM_ERN <- lmer(MFN_0_100_FCz ~ stimulation * group  + 
@@ -965,6 +965,15 @@ tab_model(LMM_ERN, LMM_CRN,
 )
 
 
+# Display random effects
+print("Random effects ERN:")
+print(VarCorr(LMM_ERN), digits = 3, comp = "Std.Dev.")
+
+print("Random effects CRN:")
+print(VarCorr(LMM_CRN), digits = 3, comp = "Std.Dev.")
+```
+
+```{r LMM-ERN-CRN-plot, fig.width = 4, fig.height = 4}
 
 # Plot predicted effects for ERN group and stimulation
 plot_ERN_stim <- plot_model(LMM_ERN,
@@ -2070,7 +2079,7 @@ When including only unmedicated patients, there is no ERN group difference anymo
 
 #### Model
 
-```{r LMM-Pe, cache = knitr_cache_enabled, results = 'asis', fig.width = 5, fig.height = 4}
+```{r LMM-Pe, cache = knitr_cache_enabled}
 
 # Pe
 LMM_Pe <- lmer(Pe_200_400_Pz ~ stimulation * group  + 
@@ -2096,6 +2105,13 @@ tab_model(LMM_Pe,
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
 
+
+# Display random effects
+print("Random effects:")
+print(VarCorr(LMM_Pe), digits = 3, comp = "Std.Dev.")
+```
+
+``` {r LMM-Pe-plot, fig.width = 4, fig.height = 4}
 
 # Plot predicted effects for Pe
 plot_Pe_stim <- plot_model(LMM_Pe,
