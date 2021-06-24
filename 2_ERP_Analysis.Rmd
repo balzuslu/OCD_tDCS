@@ -138,6 +138,10 @@ single_trial_data_clean <- single_trial_data_clean %>%
   dplyr::ungroup()
 
 
+# Add column for grand mean standardized trial number (needed as covariate later) 
+single_trial_data_clean$trial_standardized <- scale(single_trial_data_clean$trial, scale = TRUE, center = TRUE)
+
+
 # Calculate aggregated data per participant for boxplots, ANOVAs, t tests, and outlier detection
 df_aggregated_per_subject_MFN <- single_trial_data_clean %>%
   dplyr::group_by(participant_id, group, response_type, stimulation, session) %>%
@@ -1444,6 +1448,64 @@ tab_model(LMM_ERN_stimulus_type, LMM_CRN_stimulus_type,
 )
 
 
+
+# ERN check covariate trial number
+LMM_ERN_number_trials <- lmer(MFN_0_100_FCz ~ verum_sham * group * trial_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+ 
+# CRN check covariate trial number
+LMM_CRN_number_trials <- lmer(MFN_0_100_FCz ~ verum_sham * group * trial_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# Display models in one table
+tab_model(LMM_ERN_number_trials, LMM_CRN_number_trials,
+  dv.labels = c("ERN [μV], covariate trial number","CRN [μV], covariate trial number"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+# ERN plot interaction stimulation * trial 
+plot_ERN_trial_predicted <- plot_model(LMM_ERN_number_trials,
+                                type   = "pred",
+                                terms  = c("trial_standardized","verum_sham"),
+                                ci.lvl = .95) +
+  labs(title = "Predicted ERN amplitude",
+       x     = "Trial (standardized)",
+       y     = "ERN [μV]") +
+  my_figure_theme +
+  coord_cartesian(ylim = c(-6,2)) +
+  scale_y_continuous(breaks=seq(-6, 2, 2), expand = c(0,0)) +
+  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("slategray3", "navy"))
+plot_ERN_trial_predicted
+
+
+
+# ERN plot interaction stimulation * trial * group 
+plot_ERN_trial_group_predicted <- plot_model(LMM_ERN_number_trials,
+                                type   = "pred",
+                                terms  = c("trial_standardized","verum_sham", "group"),
+                                ci.lvl = .95) +
+  labs(title = "Predicted ERN amplitude",
+       x     = "Trial (standardized)",
+       y     = "ERN [μV]") +
+  my_figure_theme +
+  coord_cartesian(ylim = c(-12,4)) +
+  scale_y_continuous(breaks=seq(-12, 4, 2), expand = c(0,0)) +
+  scale_color_manual(name = "Stimulation condition", labels = c("sham","verum"), values = c("slategray3", "navy"))
+plot_ERN_trial_group_predicted
+
+
+
 # ERN check covariate medication
 LMM_ERN_medication <- lmer(MFN_0_100_FCz ~ verum_sham * group_medication + 
   (1 + verum_sham | participant_id),
@@ -1905,6 +1967,34 @@ tab_model(LMM_ERN_group_stimulus_type,LMM_CRN_group_stimulus_type,
 )
 
 
+
+# ERN check covariate trial number
+LMM_ERN_group_number_trials <- lmer(MFN_0_100_FCz ~ group/stimulation * trial_standardized  + 
+  (1 + stimulation | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+ 
+# CRN check covariate trial number
+LMM_CRN_group_number_trials <- lmer(MFN_0_100_FCz ~ group/stimulation * trial_standardized  + 
+  (1 + stimulation | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# Display models in one table
+tab_model(LMM_ERN_group_number_trials, LMM_CRN_group_number_trials,
+  dv.labels = c("ERN [μV], covariate trial number","CRN [μV], covariate trial number"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+
+
 # ERN check covariate medication
 LMM_ERN_group_medication <- lmer(MFN_0_100_FCz ~ group_medication/stimulation  + 
   (1 + stimulation | participant_id),
@@ -2161,6 +2251,21 @@ tab_model(LMM_Pe_stimulus_type,
 )
 
 
+# Pe check covariate trial number
+LMM_Pe_number_trials <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * trial_standardized  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) 
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_number_trials,
+  dv.labels = "Pe [μV], covariate trial number", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+
 # Pe check covariate medication
 LMM_Pe_medication <- lmer(Pe_200_400_Pz ~ verum_sham * group_medication + 
   (1 + verum_sham | participant_id),
@@ -2395,6 +2500,21 @@ tab_model(LMM_Pe_group_stimulus_type,
   dv.labels = "Pe [μV], covariate stimulus type", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
+)
+
+
+# Pe check covariate trial number
+LMM_Pe_group_number_trials <- lmer(Pe_200_400_Pz ~ group/stimulation * trial_standardized  + 
+  (1 + stimulation | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) 
+# Convergence, singulatrity, PCA checked, all ok
+tab_model(LMM_Pe_group_number_trials,
+  dv.labels = "Pe [μV], covariate trial number", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
 )
 
 
