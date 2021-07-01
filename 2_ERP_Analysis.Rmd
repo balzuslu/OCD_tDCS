@@ -1070,9 +1070,9 @@ Notes for assumption check would be the same as written for the MFN model.
 
 ```{r ERN-equivalence-test}
 
-# Equivalence bounds (refers to difference in raw values of 1 microvolt, not standardized differences in means)
-bound_l <- -1 # lower equivalence bound
-bound_u <-  1 # upper equivalence bound (the more positive this number, the less negative verum ERN compared to sham ERN) - this is the boundary of interest
+# Equivalence bounds (refers to difference in raw values of 1.34 microvolt, not standardized differences in means)
+bound_l <- -1.34 # lower equivalence bound
+bound_u <-  1.34 # upper equivalence bound (the more positive this number, the less negative verum ERN compared to sham ERN) - this is the boundary of interest
 
 
 # Use the contest1D functions of the lmerTest package to perform tests centered on the lower and upper equivalence bound, using the rhs option
@@ -1101,12 +1101,8 @@ Test against upper bound: t(`r round(upper$df, 2)`) = `r round(upper$"t value", 
 *Since the test against the upper bound is not significant, we cannot reject that the true value is not equal to or more extreme than the upper equivalence bound (i.e., we cannot reject that the verum ERN is at least 1 microvolt less negative than the sham ERN), which means that we did not obtain an equivalent result.* <br><br>
 
 **The ERN amplitude in the sham vs. verum condition is not statistically equivalent and not statistically different (or trend only)** <br>
-"Based on equivalence bounds (= smalles effect size of interest, SESOI) of -1.0 microvolt and 1.0 microvolt for the stimulation effect on the ERN quantified as mean amplitude from 0 to 100 ms at FCz, **we cannot reject effect sizes that we still consider meaningful**, t(44.18) = −0.33, p = .371. Because the effect was also not statistically different from 0 in a traditional null-hypothesis test, the result is inconclusive. **We can neither conclude that the effect is different from zero, nor that the effect is too small to matter**. We need to collect more data to draw conclusions about the presence of an effect, or the absence of a meaningful effect (or both)." <br> *citation: Improving Inferences About Null Effects With Bayes Factors and Equivalence Tests (Lakens et al., 2020)* <br><br>
+"Based on equivalence bounds (= smalles effect size of interest, SESOI) of -1.34 microvolt and 1.34 microvolt for the stimulation effect on the ERN quantified as mean amplitude from 0 to 100 ms at FCz, **we cannot reject effect sizes that we still consider meaningful**, t(44.18) = −1.12, p = .134. Because the effect was also not statistically different from 0 in a traditional null-hypothesis test, the result is inconclusive. **We can neither conclude that the effect is different from zero, nor that the effect is too small to matter**. We need to collect more data to draw conclusions about the presence of an effect, or the absence of a meaningful effect (or both)." <br> *citation: Improving Inferences About Null Effects With Bayes Factors and Equivalence Tests (Lakens et al., 2020)* <br><br>
 
-*Is this SESOI justified? Wy do we consider changes of at least 1 (or 1.5°) microvolt as meaningful and below as not meaningful? E.g. can it be based on the fact that 1 microvolt ERN reduction in OCD would lead to comparable ERN magnitude in OCD and HC? Does an ERN change of 1 microvolt predict something meaningful? The effect is considerably smalller than the one reported by Reinhart & Woodman (2014) and much smaller than reported ERN modification effects by Klawohn et al. (2015°°; 2020). But we should rather refer only to the Woodman paper here, not to Julia's.*
-
-*°would still lead to the same conclusion*
-*°° also used mean amplitude* <br><br>
 
 **Possible justification of SESOI of 1 microvolt: effect size 25% smaller than effect reported by Reinhart & Woodman**
 
