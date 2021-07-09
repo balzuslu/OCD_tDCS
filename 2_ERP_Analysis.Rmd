@@ -866,6 +866,11 @@ tab_model(LMM_MFN,
   show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
+
+
+# Display random effects
+print("Random effects:")
+print(VarCorr(LMM_MFN), digits = 3, comp = "Std.Dev.")
 ```
 <br><br>
 There is a main effect of stimulation and response type and a trend for group. 
@@ -1260,6 +1265,14 @@ tab_model(LMM_ERN_P3, LMM_CRN_P3,
 )
 
 
+# Display random effects
+print("Random effects ERN:")
+print(VarCorr(LMM_ERN_P3), digits = 3, comp = "Std.Dev.")
+
+print("Random effects CRN:")
+print(VarCorr(LMM_CRN_P3), digits = 3, comp = "Std.Dev.")
+
+
 # Plot predicted effects for interaction P3 and stimulation
 plot_P3_stimulation <- plot_model(LMM_ERN_P3,
                                 type   = "pred",
@@ -1453,6 +1466,31 @@ tab_model(LMM_ERN_stimulus_type, LMM_CRN_stimulus_type,
 )
 
 
+# ERN check covariate trial number
+LMM_ERN_number_trials0 <- lmer(MFN_0_100_FCz ~ verum_sham * group * trial  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+ 
+# CRN check covariate trial number
+LMM_CRN_number_trials0 <- lmer(MFN_0_100_FCz ~ verum_sham * group * trial  + 
+  (1 + verum_sham | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# Display models in one table
+tab_model(LMM_ERN_number_trials0, LMM_CRN_number_trials0,
+  dv.labels = c("ERN [μV], covariate trial number","CRN [μV], covariate trial number"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
 
 # ERN check covariate trial number
 LMM_ERN_number_trials <- lmer(MFN_0_100_FCz ~ verum_sham * group * trial_standardized  + 
@@ -1535,6 +1573,15 @@ tab_model(LMM_ERN_medication, LMM_CRN_medication,
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
 )
+
+
+# Display random effects
+print("Random effects ERN:")
+print(VarCorr(LMM_ERN_medication), digits = 3, comp = "Std.Dev.")
+
+print("Random effects CRN:")
+print(VarCorr(LMM_CRN_medication), digits = 3, comp = "Std.Dev.")
+
 
 
 # ERN plot interaction stimulation * group_medication 
@@ -1999,6 +2046,32 @@ tab_model(LMM_ERN_group_number_trials, LMM_CRN_group_number_trials,
 )
 
 
+# ERN check covariate trial number
+LMM_ERN_group_number_trials2 <- lmer(MFN_0_100_FCz ~ stimulation/group * trial_standardized  + 
+  (1 + stimulation | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+ 
+# CRN check covariate trial number
+LMM_CRN_group_number_trials2 <- lmer(MFN_0_100_FCz ~ stimulation/group * trial_standardized  + 
+  (1 + stimulation | participant_id),
+data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
+REML = TRUE,
+control = lmerControl(optimizer = "bobyqa")
+) # Convergence, singulatrity, PCA checked, all ok
+
+
+# Display models in one table
+tab_model(LMM_ERN_group_number_trials2, LMM_CRN_group_number_trials2,
+  dv.labels = c("ERN [μV], covariate trial number","CRN [μV], covariate trial number"), show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
+  show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
+  string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
+)
+
+
 
 # ERN check covariate medication
 LMM_ERN_group_medication <- lmer(MFN_0_100_FCz ~ group_medication/stimulation  + 
@@ -2173,6 +2246,11 @@ tab_model(LMM_Pe_P3,
 )
 
 
+# Display random effects
+print("Random effects:")
+print(VarCorr(LMM_Pe_P3), digits = 3, comp = "Std.Dev.")
+
+
 # Pe check covariate N2
 LMM_Pe_N2 <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * N2_200_300_FCz_standardized  + 
   (1 + verum_sham | participant_id),
@@ -2291,6 +2369,12 @@ tab_model(LMM_Pe_medication,
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
+
+
+# Display random effects
+print("Random effects:")
+print(VarCorr(LMM_Pe_medication), digits = 3, comp = "Std.Dev.")
+
 
 
 # Plot interaction stimulation * group_medication 
@@ -2637,6 +2721,10 @@ tab_model(LMM_N2,LMM_P3,
   show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
 )
+
+# Display random effects
+print("Random effects P3:")
+print(VarCorr(LMM_P3), digits = 3, comp = "Std.Dev.")
 ```
 <br><br>
 There is a stimulation effect on P3 (P3 more positive for verum than sham) and an effect of response type (see tab "ERP Visualization") on P3. There are no group differences or further interactions.
