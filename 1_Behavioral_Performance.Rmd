@@ -546,7 +546,7 @@ my_table_template(descriptive_statistics_rt_display[,c(2:5,8:9)],
 )
 
 
-##### Accuarcy 
+##### Accuracy 
 descriptive_statistics_accuracy_no_session_no_stim_type <- summarySEwithinO(
   data          = single_trial_data_clean,
   measurevar    = "accuracy_numeric",
@@ -1030,6 +1030,10 @@ tab_model(LMM_rt,
   show.re.var = TRUE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
+
+# Display random effects
+print("Random effects:")
+print(VarCorr(LMM_rt), digits = 1, comp = "Std.Dev.")
 ```
 <br><br>
 Incorrect responses are faster than correct responses. There is no evidence for an effect of group or stimulation. Trend for the following interaction is present stimulation:group:response_type. 
@@ -1347,6 +1351,11 @@ tab_model(LMM_pes,
   show.re.var = TRUE, show.ngroups = FALSE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 80, digits.re = 3
 )
+
+
+# Display random effects
+print("Random effects:")
+print(VarCorr(LMM_pes), digits = 4, comp = "Std.Dev.")
 ```
 <br><br>
 There is PES (intercept is significant). There is no evidence for an effect of group or stimulation. 
@@ -1487,7 +1496,7 @@ tab_model(LMM_pes_number_feedback_faster,
 
 This model will be reported in the manuscript. <br>
 
-```{r GLMM-accuracy, cache = knitr_cache_enabled, fig.width = 4, results = 'asis'}
+```{r GLMM-accuracy, cache = knitr_cache_enabled}
 
 # Run model with maximal random-effects structure
 GLMM_accuracy <- glmer(accuracy_numeric ~ stimulation * group +
@@ -1514,6 +1523,13 @@ tab_model(GLMM_accuracy,
   string.ci = "95 % CI", string.p = "p value", wrap.labels = 80, digits.re = 3
 )
 
+
+# Display random effects
+print("Random effects:")
+print(VarCorr(GLMM_accuracy), digits = 2, comp = "Std.Dev.")
+```
+
+```{r GLMM-accuracy-plot, cache = knitr_cache_enabled, fig.width = 4}
 # Plot interaction stimulation * group
 plot_acc_predicted <- plot_model(GLMM_accuracy,
                                 type   = "pred",
