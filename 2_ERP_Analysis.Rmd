@@ -1193,7 +1193,7 @@ LMM_ERN_P3_main_effect <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC + P3_300_500_
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate P3 (added only as main effect)
@@ -1202,7 +1202,7 @@ LMM_CRN_P3_main_effect <- lmer(MFN_0_100_FCz ~ stimulation * OCD_HC + P3_300_500
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1219,7 +1219,7 @@ LMM_ERN_P3_int_stim <- lmer(MFN_0_100_FCz ~ stimulation * (group + P3_300_500_CP
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate P3 (added only in interaction with stimulation)
@@ -1228,7 +1228,7 @@ LMM_CRN_P3_int_stim <- lmer(MFN_0_100_FCz ~ verum_sham * (OCD_HC + P3_300_500_CP
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1245,7 +1245,7 @@ LMM_ERN_P3 <- lmer(MFN_0_100_FCz ~ verum_sham * group * P3_300_500_CPz_standardi
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate P3
@@ -1254,7 +1254,7 @@ LMM_CRN_P3 <- lmer(MFN_0_100_FCz ~ verum_sham * group * P3_300_500_CPz_standardi
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1316,7 +1316,7 @@ LMM_ERN_N2 <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * N2_200_300_FCz_standard
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate N2
@@ -1325,7 +1325,7 @@ LMM_CRN_N2 <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * N2_200_300_FCz_standard
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1342,7 +1342,7 @@ LMM_ERN_baseline_EEG <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * MFN_baseline_
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate baseline EEG
@@ -1351,7 +1351,7 @@ LMM_CRN_baseline_EEG <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * MFN_baseline_
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1368,7 +1368,7 @@ LMM_ERN_session <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * session  +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate session
@@ -1377,7 +1377,7 @@ LMM_CRN_session <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * session  +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1394,7 +1394,7 @@ LMM_ERN_number_errors <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * number_error
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
  
 # CRN check covariate number of errors (predictor was z standardized)
@@ -1403,7 +1403,7 @@ LMM_CRN_number_errors <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * number_error
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1420,7 +1420,7 @@ LMM_ERN_number_feedback_faster <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * num
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate number of feedback faster (predictor was z standardized)
@@ -1429,7 +1429,7 @@ LMM_CRN_number_feedback_faster <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * num
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1446,7 +1446,7 @@ LMM_ERN_stimulus_type <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * stimulus_typ
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate stimulus_type
@@ -1455,7 +1455,7 @@ LMM_CRN_stimulus_type <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC * stimulus_typ
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1472,7 +1472,7 @@ LMM_ERN_number_trials0 <- lmer(MFN_0_100_FCz ~ verum_sham * group * trial  +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok 
 
  
 # CRN check covariate trial number
@@ -1481,7 +1481,7 @@ LMM_CRN_number_trials0 <- lmer(MFN_0_100_FCz ~ verum_sham * group * trial  +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1492,22 +1492,23 @@ tab_model(LMM_ERN_number_trials0, LMM_CRN_number_trials0,
 )
 
 
-# ERN check covariate trial number
+# ERN check covariate trial number 
 LMM_ERN_number_trials <- lmer(MFN_0_100_FCz ~ verum_sham * group * trial_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + verum_sham * trial_standardized || participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok (but corr betw. random terms had to be removed)
 
  
 # CRN check covariate trial number
 LMM_CRN_number_trials <- lmer(MFN_0_100_FCz ~ verum_sham * group * trial_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + verum_sham * trial_standardized | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
+
 
 
 # Display models in one table
@@ -1516,6 +1517,16 @@ tab_model(LMM_ERN_number_trials, LMM_CRN_number_trials,
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
 )
+
+
+# Display random effects
+print("Random effects ERN:")
+print(VarCorr(LMM_ERN_number_trials), digits = 3, comp = "Std.Dev.")
+
+print("Random effects CRN:")
+print(VarCorr(LMM_CRN_number_trials), digits = 3, comp = "Std.Dev.")
+
+
 
 # ERN plot interaction stimulation * trial 
 plot_ERN_trial_predicted <- plot_model(LMM_ERN_number_trials,
@@ -1555,7 +1566,7 @@ LMM_ERN_medication <- lmer(MFN_0_100_FCz ~ verum_sham * group_medication +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate medication
@@ -1564,7 +1575,7 @@ LMM_CRN_medication <- lmer(MFN_0_100_FCz ~ verum_sham * group_medication +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1622,7 +1633,7 @@ LMM_ERN_medication_OCD <- lmer(MFN_0_100_FCz ~ verum_sham * medication  +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$group == "OCD",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate medication (only OCD group)
@@ -1631,7 +1642,7 @@ LMM_CRN_medication_OCD <- lmer(MFN_0_100_FCz ~ verum_sham * medication  +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct" & single_trial_data_clean$group == "OCD",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1648,7 +1659,7 @@ LMM_ERN_unmedicated <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$medication == "no",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN  include only unmedicated participants
@@ -1657,7 +1668,7 @@ LMM_CRN_unmedicated <- lmer(MFN_0_100_FCz ~ verum_sham * OCD_HC +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct" & single_trial_data_clean$medication == "no",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1674,7 +1685,7 @@ LMM_ERN_unmedicated_OCD <- lmer(MFN_0_100_FCz ~ verum_sham  +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$medication == "no" & single_trial_data_clean$group == "OCD",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN  include only unmedicated patients
@@ -1683,7 +1694,7 @@ LMM_CRN_unmedicated_OCD <- lmer(MFN_0_100_FCz ~ verum_sham  +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct" & single_trial_data_clean$medication == "no" & single_trial_data_clean$group == "OCD",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1843,7 +1854,7 @@ LMM_ERN_group_P3 <- lmer(MFN_0_100_FCz ~ group/stimulation * P3_300_500_CPz_stan
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate P3
@@ -1852,7 +1863,7 @@ LMM_CRN_group_P3 <- lmer(MFN_0_100_FCz ~ group/stimulation * P3_300_500_CPz_stan
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1869,7 +1880,7 @@ LMM_ERN_group_N2 <- lmer(MFN_0_100_FCz ~ group/stimulation * N2_200_300_FCz_stan
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate N2
@@ -1878,7 +1889,7 @@ LMM_CRN_group_N2 <- lmer(MFN_0_100_FCz ~ group/stimulation * N2_200_300_FCz_stan
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1895,7 +1906,7 @@ LMM_ERN_group_baseline_EEG <- lmer(MFN_0_100_FCz ~ group/stimulation * MFN_basel
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate baseline EEG
@@ -1904,7 +1915,7 @@ LMM_CRN_group_baseline_EEG <- lmer(MFN_0_100_FCz ~ group/stimulation * MFN_basel
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1921,7 +1932,7 @@ LMM_ERN_group_session <- lmer(MFN_0_100_FCz ~ group/stimulation * session  +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate session
@@ -1930,7 +1941,7 @@ LMM_CRN_group_session <- lmer(MFN_0_100_FCz ~ group/stimulation * session  +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1947,7 +1958,7 @@ LMM_ERN_group_number_errors <- lmer(MFN_0_100_FCz ~ group/stimulation * number_e
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate number of errors (predictor was z standardized)
@@ -1956,7 +1967,7 @@ LMM_CRN_group_number_errors <- lmer(MFN_0_100_FCz ~ group/stimulation * number_e
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1973,7 +1984,7 @@ LMM_ERN_group_number_feedback_faster <- lmer(MFN_0_100_FCz ~ group/stimulation *
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate number of feedback faster (predictor was z standardized)
@@ -1982,7 +1993,7 @@ LMM_CRN_group_number_feedback_faster <- lmer(MFN_0_100_FCz ~ group/stimulation *
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -1999,7 +2010,7 @@ LMM_ERN_group_stimulus_type <- lmer(MFN_0_100_FCz ~ group/stimulation * stimulus
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate stimulus_type
@@ -2008,7 +2019,7 @@ LMM_CRN_group_stimulus_type <- lmer(MFN_0_100_FCz ~ group/stimulation * stimulus
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -2021,21 +2032,21 @@ tab_model(LMM_ERN_group_stimulus_type,LMM_CRN_group_stimulus_type,
 
 
 # ERN check covariate trial number
-LMM_ERN_group_number_trials <- lmer(MFN_0_100_FCz ~ group/stimulation * trial_standardized  + 
-  (1 + stimulation | participant_id),
+LMM_ERN_group_number_trials <- lmer(MFN_0_100_FCz ~ group/verum_sham * trial_standardized  + 
+  (1 + verum_sham * trial_standardized || participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok (but corr betw. random terms had to be removed)
 
  
 # CRN check covariate trial number
-LMM_CRN_group_number_trials <- lmer(MFN_0_100_FCz ~ group/stimulation * trial_standardized  + 
-  (1 + stimulation | participant_id),
+LMM_CRN_group_number_trials <- lmer(MFN_0_100_FCz ~ group/verum_sham * trial_standardized  + 
+  (1 + verum_sham * trial_standardized | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -2048,20 +2059,20 @@ tab_model(LMM_ERN_group_number_trials, LMM_CRN_group_number_trials,
 
 # ERN check covariate trial number
 LMM_ERN_group_number_trials2 <- lmer(MFN_0_100_FCz ~ stimulation/group * trial_standardized  + 
-  (1 + stimulation | participant_id),
+  (1 + verum_sham * trial_standardized || participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok (but corr betw. random terms had to be removed)
 
  
 # CRN check covariate trial number
 LMM_CRN_group_number_trials2 <- lmer(MFN_0_100_FCz ~ stimulation/group * trial_standardized  + 
-  (1 + stimulation | participant_id),
+  (1 + stimulation * trial_standardized | participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -2079,7 +2090,7 @@ LMM_ERN_group_medication <- lmer(MFN_0_100_FCz ~ group_medication/stimulation  +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN check covariate medication
@@ -2088,7 +2099,7 @@ LMM_CRN_group_medication <- lmer(MFN_0_100_FCz ~ group_medication/stimulation  +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -2105,7 +2116,7 @@ LMM_ERN_group_unmedicated <- lmer(MFN_0_100_FCz ~ group/stimulation +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$medication == "no",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # CRN  include only unmedicated participants
@@ -2114,7 +2125,7 @@ LMM_CRN_group_unmedicated <- lmer(MFN_0_100_FCz ~ group/stimulation +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "correct" & single_trial_data_clean$medication == "no",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 
 
 # Display models in one table
@@ -2238,7 +2249,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 ) 
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_P3,
   dv.labels = "Pe [μV], covariate P3", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2258,7 +2269,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 ) 
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_N2, 
   dv.labels = "Pe [μV], covariate N2", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2273,7 +2284,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_baseline_EEG,
   dv.labels = "Pe [μV], covariate baseline EEG", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2288,7 +2299,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_session,
   dv.labels = "Pe [μV], covariate session", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2303,7 +2314,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_number_errors,
   dv.labels = "Pe [μV], covariate number of errors", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2318,7 +2329,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_number_feedback_faster,
   dv.labels = "Pe [μV], covariate number of feedback faster", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2333,7 +2344,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_stimulus_type,
   dv.labels = "Pe [μV], covariate stimulus type", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2343,17 +2354,21 @@ tab_model(LMM_Pe_stimulus_type,
 
 # Pe check covariate trial number
 LMM_Pe_number_trials <- lmer(Pe_200_400_Pz ~ verum_sham * OCD_HC * trial_standardized  + 
-  (1 + verum_sham | participant_id),
+  (1 + verum_sham * trial_standardized || participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 ) 
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok (but corr betw. random terms had to be removed)
 tab_model(LMM_Pe_number_trials,
   dv.labels = "Pe [μV], covariate trial number", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
   string.ci = "95 % CI", string.p = "p value",  p.val = "satterthwaite", wrap.labels = 30, digits.re = 3
 )
+
+# Display random effects
+print("Random effects:")
+print(VarCorr(LMM_Pe_number_trials), digits = 3, comp = "Std.Dev.")
 
 
 # Pe check covariate medication
@@ -2363,7 +2378,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_medication,
   dv.labels = "Pe [μV], covariate medication (1 = HC, 2 = OCD no med, 3 = OCD med)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2398,7 +2413,7 @@ LMM_Pe_medication_OCD <- lmer(Pe_200_400_Pz ~ verum_sham * medication  +
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect" & single_trial_data_clean$group == "OCD",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
-) # Convergence, singulatrity, PCA checked, all ok
+) # Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_medication_OCD,
   dv.labels = "Pe [μV], covariate medication (only OCD group)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2413,7 +2428,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_unmedicated,
   dv.labels = "Pe [μV], only unmedicated participants", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2428,7 +2443,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_unmedicated_OCD,
   dv.labels = "Pe [μV], only unmedicated patients", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2501,7 +2516,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 ) 
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_group_P3,
   dv.labels = "Pe [μV], covariate P3", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2516,7 +2531,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 ) 
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_group_N2, 
   dv.labels = "Pe [μV], covariate N2", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2531,7 +2546,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_group_baseline_EEG,
   dv.labels = "Pe [μV], covariate baseline EEG", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2546,7 +2561,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_group_session,
   dv.labels = "Pe [μV], covariate session", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2561,7 +2576,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_group_number_errors,
   dv.labels = "Pe [μV], covariate number of errors", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2576,7 +2591,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_group_number_feedback_faster,
   dv.labels = "Pe [μV], covariate number of feedback faster", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2591,7 +2606,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_group_stimulus_type,
   dv.labels = "Pe [μV], covariate stimulus type", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2600,13 +2615,13 @@ tab_model(LMM_Pe_group_stimulus_type,
 
 
 # Pe check covariate trial number
-LMM_Pe_group_number_trials <- lmer(Pe_200_400_Pz ~ group/stimulation * trial_standardized  + 
-  (1 + stimulation | participant_id),
+LMM_Pe_group_number_trials <- lmer(Pe_200_400_Pz ~ group/verum_sham * trial_standardized  + 
+  (1 + verum_sham * trial_standardized || participant_id),
 data = single_trial_data_clean[single_trial_data_clean$response_type == "incorrect",],
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 ) 
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_group_number_trials,
   dv.labels = "Pe [μV], covariate trial number", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2621,7 +2636,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_group_medication,
   dv.labels = "Pe [μV], covariate medication (1 = HC, 2 = OCD no med, 3 = OCD med)", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
@@ -2636,7 +2651,7 @@ data = single_trial_data_clean[single_trial_data_clean$response_type == "incorre
 REML = TRUE,
 control = lmerControl(optimizer = "bobyqa")
 )
-# Convergence, singulatrity, PCA checked, all ok
+# Convergence, singularity, PCA checked, all ok
 tab_model(LMM_Pe_group_unmedicated,
   dv.labels = "Pe [μV], only unmedicated participants", show.stat = TRUE, show.icc = TRUE, show.r2 = TRUE, 
   show.re.var = FALSE, show.ngroups = TRUE, string.est = "b", string.stat = "t value", 
